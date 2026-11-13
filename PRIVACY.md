@@ -1,51 +1,32 @@
 # Privacy
 
-lot-map is a mod for Claude Code that draws a map of the work in a pane beside the chat. It runs inside Claude Code on your computer. There is no lot-map service, no account and no server: nothing the mod sees leaves your machine through it.
+The extension draws a live map of the work: which stations are used, when, for how long, and how the calls were named. This page says exactly what it observes, what it keeps, and where it goes.
 
-This page describes version 0.7.0. It changes only together with the code, and the [changelog](CHANGELOG.md) says when it did.
+## What it observes
 
-## What the mod is handed
+To draw the map, the extension's workspace hook is handed every tool call's whole input, including command lines and the text written to files, and the loopback proxy, when you turn it on, sees the model's request and response streams pass through unchanged. That is how a mod that follows tool calls works; it is also the whole of what the extension can see.
 
-Claude Code passes a mod that follows tool calls the whole input of every call: command lines, file paths, web addresses, the text written to files, the prompts of subagents. It also passes the text that your settings hooks add to a session or a message. Any of that can hold personal data, such as a name in a path or an address in a file.
+## What it takes from that
 
-The mod does not look for personal data and has no use for it. It takes a name for the row it draws and drops the rest:
+Names, and nothing else. The code that does so is `clean`, `hostOf` and `classifyShell` in `hooks/classify.ts`, and `classifyCopilot` in `vscode-extension/src/classifyCopilot.ts`:
 
 - a file: the last two parts of its path;
 - a web address: the host alone, without a login, password, path or query;
-- a shell command or a monitor: the short description Claude wrote for it, or the command's name, never the command line;
-- a search: the tool's name for `Grep` and `Glob`, the words `web search` for a web search and `loading tools` for a tool search, in the map's language, never the pattern or the query;
-- a memory call: the tool's name and a record number or short identifier, never the text or the query;
-- a subagent: the short description it was started with;
-- those descriptions are written by the model, and the mod shows them as written, up to 120 characters: it does not check what they say;
-- a background task's report: that it ended and whether it failed;
-- a hook's refusal: the name of the tool it stopped, and its first line only if you turn `hookReasons` on;
-- context a hook added: that it was added, and record numbers only if you turn `hookRecords` on.
+- a shell command: the short description the model wrote for it, or the command's name, never the command line;
+- a search, a memory call, a subagent: the tool's name, or the short description it was started with, never the pattern, the query or the text.
 
-The mod asks for one thing by itself: the environment variable `COLORFGBG`, and only with `terminalView` set to `picture` and `theme` on `auto`. It holds the terminal's colour numbers, by which the picture is painted light or dark. The mod keeps that answer, light or dark, for the session and nothing else from it, and reads no other variable.
+Control characters are taken out of every label before it is drawn.
 
-## What it keeps
+## What it keeps, and where
 
-- **During a session:** the rows of the map, which of them you opened to read whole, the counters under the stations and the last model step, in Claude Code's state for the session. They are gone when the session ends.
-- **Between sessions:** one value per folder, the name of the model last used there, so that the map can show a change of model. It is stored under the folder's full path in Claude Code's own store for the plugin, on your computer. A folder's path usually contains your account name.
-- **Between sessions, from the VS Code pane:** how far you zoomed the map out and whether you hid it, a number and a yes or no, the same for every folder. They are in the same store and say nothing of what the map showed.
-- **Your options** (language, colours, memory servers and the rest) are kept by Claude Code in your settings, as for any plugin.
+- The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The extension reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`.
+- The extension keeps one line of state per workspace between sessions, in VS Code's own store for the extension: the name of the model last used, the row last opened and whether the pane is folded.
+- Nothing else is written anywhere, and nothing is ever sent anywhere: the extension makes no network requests and talks to no one.
 
-To remove what it keeps, uninstall the plugin.
+## The proxy
 
-## What it does not do
+The loopback proxy is off by default. When you turn it on, it listens on `127.0.0.1` only, forwards each request to the base URL you set and reads the token usage from the stream. It writes nothing.
 
-- It makes no network requests and has no telemetry, analytics or crash reports.
-- It reads no files and runs no processes.
-- It calls no model and adds nothing to the conversation.
-- With `terminalView` set to `picture`, in a terminal that shows pictures it paints the map's picture itself, from the same rows, and hands it to Claude Code to draw in the pane. The picture holds nothing the map does not show.
-- It changes no tool call, result, prompt or context. It sees what your settings hooks decide about a call, hands that decision on as it was, and decides nothing about permissions itself.
+## Faults
 
-The code that takes names from a call is `classify` in [`hooks/classify.ts`](hooks/classify.ts); the hooks are in [`hooks/register.tsx`](hooks/register.tsx).
-
-## Where the code comes from
-
-Installed from this repository, the mod follows its `main` branch, so an update brings whatever is there. Read the diff before updating if that matters to you. Claude Code, the model and any catalogue you installed the mod from have their own terms, and this page does not speak for them.
-
-## Questions
-
-Open an issue: <https://github.com/alexeyw/lot-map/issues>.
+A fault in the extension or its hook never reaches a tool call or a model turn: the hook always exits `0` and answers `preToolUse` with a valid allow JSON, whatever happens to it.

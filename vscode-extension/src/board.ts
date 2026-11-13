@@ -1,4 +1,4 @@
-// The map's state, ported from the Claude Code mod's register.tsx: one board, entries begun and finished,
+// The map's state: one board, entries begun and finished,
 // counts, faults, agents, context. Nothing here touches VS Code; it is plain state in the extension host.
 import type { Board, Entry, StationId, Status } from '../../types'
 import { clean } from '../../hooks/classify'

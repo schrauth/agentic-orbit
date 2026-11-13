@@ -1,87 +1,22 @@
 # Contributing
 
-Thanks for wanting to help. lot-map is small and kept by one person in his own time, so a few rules keep it easy to review.
+Thank you for taking the time to help.
 
-## Before you write code
+## The project in one line
 
-- **A bug or a small fix:** open a pull request straight away.
-- **Anything larger** (a new option, a new station, a new way to draw the map, more than about 200 lines): open an issue first and say what you have in mind. Two people have already built the same feature in parallel; an issue saves that.
-- **A change to how the map looks:** attach a picture. How the map looks is the maintainer's call, and a picture is what he decides from.
-- **A security problem:** not in an issue. See [SECURITY.md](SECURITY.md).
+A VS Code extension that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names.
 
-## What the mod must stay
+## Before you send a change
 
-These are not style. A change that breaks one of them will not be merged. [PRINCIPLES.md](PRINCIPLES.md) says the same at length, with the test or check that holds each one and what it measured.
+- `cd vscode-extension && npm ci && npm run compile` passes with no errors.
+- Nothing new reaches the network, reads files outside its own workspace hook file, or starts processes other than the hook it installs.
+- A label never holds content: a file keeps the last two parts of its path, a web address its host, a shell command its description or name.
+- The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the extension is not running.
 
-- **It watches and changes nothing.** Every hook passes the event on as it came and returns what came back as it was: no input, result, prompt, context or permission decision is touched.
-- **A label holds a name, never content.** No command line, query, file text, path beyond its last two parts, or address beyond its host. The list is in the [README](README.md#what-it-shows-and-what-it-keeps) and in [PRIVACY.md](PRIVACY.md); if your change makes the mod read or keep something new, say so in the pull request.
-- **No network, no files, no processes.** The mod uses the engine's calls and nothing else.
-- **A fault on the map never reaches the work.** Engine calls go through `quietly`; a broken board must not stop a tool call or a turn.
-- **What a user has today stays as it is.** A new option's default keeps the present behaviour.
-- **The map stays calm.** Ten stations, one line of now, one line per row. New information goes into one of those or into an option, not into a new element.
+## Words
 
-## Running it
+Labels and rows live in `hooks/text.ts`. A new language is one more table there and one more value of `agenticOrbit.language`.
 
-You need Claude Code. The tests are known to pass on 2.1.321, the version CI uses.
+## Sending
 
-```bash
-claude plugin validate .
-```
-
-```bash
-claude plugin test .
-```
-
-```bash
-node scripts/check-surface.mjs
-```
-
-None of them needs an account. The third holds the mod to the list of what it hooks and calls, [`scripts/surface.txt`](scripts/surface.txt); if your change adds an engine call or reads something new, it fails until you run it with `--write`, and the changed list is part of your pull request. To see your change live, point Claude Code at your checkout:
-
-```bash
-claude --plugin-dir .
-```
-
-It takes the place of an installed lot-map for that session and starts with the default options. Afterwards you may find the engine's types in `.claude-plugin/types/` and a `tsconfig.json` beside them, for your editor; both are ignored by git.
-
-CI runs all three on every pull request. On your first one a maintainer has to approve the run, so it may wait a little.
-
-## A pull request
-
-- **Open it against `next`, not `main`.** Installs follow `main`, so it changes only at a release; `next` collects what the next release will hold. Branch from `next` too.
-- **One thing per pull request.** A fix and a feature are two.
-- **A test for what you changed.** Tests here state behaviour in their names (`a password never reaches a label…`); add yours the same way, and for a bug, one that fails without the fix.
-- **Say what you checked and what you did not:** the commands, the Claude Code version, the system, and whether you saw it in the desktop app or a terminal.
-- **Leave the version, `CHANGELOG.md` and the version line of `PRIVACY.md` alone.** They are written at release, and the changelog credits you by your GitHub login.
-- **Code written with an AI assistant is welcome**; most of this repository is. You answer for it all the same: read the diff and run the tests before you send it.
-
-## A new language
-
-Like [#20](https://github.com/alexeyw/lot-map/pull/20) and [#31](https://github.com/alexeyw/lot-map/pull/31):
-
-1. one more table in `hooks/text.ts`, with every key the English one has;
-2. one more value of `language` in `.claude-plugin/plugin.json`;
-3. the `language` row of the README's options;
-4. the two language tests in `hooks/lot-map.test.tsx`: the `LANGUAGES` list and the pane's row.
-
-Please translate a language you speak.
-
-## Where things are
-
-| File | What is in it |
-| --- | --- |
-| `hooks/classify.ts` | what a call is called and where it lands (`classify`) |
-| `hooks/setup.ts` | the stations and the options made ready to use |
-| `hooks/palette.ts` | the colours |
-| `hooks/draw.ts` | the drawing (`drawMap`) |
-| `hooks/feed.ts` | the rows under the map |
-| `hooks/map.ts` | hands the five above on under their old address |
-| `hooks/register.tsx` | the hooks and the pane |
-| `hooks/text.ts` | the words, one table per language |
-| `hooks/lot-map.test.tsx` | the tests |
-| `types/index.d.ts` | the board's shape |
-| `.claude-plugin/plugin.json` | the manifest and the options |
-
-## Licence
-
-By contributing you agree that your work is published under the repository's [licence](LICENSE).
+Open a pull request against `main`. Say what changed and why, and what you did not check.

@@ -44,9 +44,3 @@ export type Board = {
   /** How wide the editor draws the map, in CSS pixels; absent, as wide as the pane. Kept between sessions as well. */
   zoom?: number
 }
-
-declare module 'claude-code' {
-  interface PluginState {
-    'lot-map': { board: Shaped<Board> }
-  }
-}

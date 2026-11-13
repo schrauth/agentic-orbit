@@ -1,9 +1,5 @@
 .DS_Store
 *.log
-.claude-plugin/types/
-.mcpb-cache/
-tsconfig.json
-.kiro/
 vscode-extension/node_modules/
 vscode-extension/out/
 vscode-extension/*.vsix

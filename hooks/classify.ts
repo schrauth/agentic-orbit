@@ -9,8 +9,6 @@ export type Classified = { station: StationId; label: string }
 /** A path with Windows separators written as `/`, so that one rule reads paths from every system. */
 const slashes = (path: string): string => path.replace(/\\/g, '/')
 
-const lastTwo = (path: string): string => slashes(path).split('/').filter(Boolean).slice(-2).join('/')
-
 const HOST = /^(?:[\p{L}\p{N}.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/iu
 
 /**
@@ -37,12 +35,11 @@ export function clean(label: string, max = 120): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
-/** Claude Code's own memory folder counts for everyone; anything else is the person's to name. */
+/** Memory paths are the person's to name. */
 const isMemoryPath = (path: string, setup: Setup): boolean => {
   const p = slashes(path)
-  return /\/\.claude\/projects\/[^/]+\/memory\//.test(p) || setup.memoryPaths.some(part => p.includes(slashes(part)))
+  return setup.memoryPaths.some(part => p.includes(slashes(part)))
 }
-const str = (v: unknown): string => (typeof v === 'string' ? v : '')
 
 /** Commands that work on files and nothing else: they read, search, move or edit them in place. echo, cd and the like say nothing either way. */
 const FILE_WORDS = new Set(['cat', 'head', 'tail', 'sed', 'grep', 'rg', 'find', 'ls', 'wc', 'cp', 'mv', 'mkdir', 'touch', 'diff', 'cmp', 'sort', 'uniq', 'cut', 'tr', 'awk', 'tee', 'stat', 'file', 'du', 'tree', 'ln', 'basename', 'dirname', 'realpath', 'jq', 'rm', 'rmdir'])
@@ -226,105 +223,10 @@ export function classifyShell(command: string, description: string, setup: Setup
   return { station: 'shell', label }
 }
 
-export function classify(tool: string, input: Record<string, unknown>, setup: Setup): Classified {
-  const { t } = setup
-  switch (tool) {
-    case 'Read':
-    case 'Write':
-    case 'Edit':
-    case 'NotebookEdit': {
-      const path = str(input.file_path) || str(input.notebook_path)
-      return { station: isMemoryPath(path, setup) ? 'memory' : 'files', label: lastTwo(path) || tool }
-    }
-    case 'Grep':
-    case 'Glob':
-      return { station: 'files', label: tool }
-    case 'Bash':
-      return classifyShell(str(input.command), str(input.description), setup)
-    case 'PowerShell':
-      return classifyShell(str(input.command), str(input.description), setup, true)
-    case 'WebFetch':
-      return { station: 'web', label: hostOf(str(input.url)) }
-    case 'WebSearch':
-      return { station: 'web', label: t.webSearch }
-    case 'Artifact':
-      return { station: 'web', label: t.artifact }
-    // Work kept on claude.ai: an artifact's comments and data, a Claude Project.
-    case 'ArtifactComments':
-    case 'ArtifactData':
-    case 'SendToProject':
-    case 'SendToProjectContext':
-      return { station: 'web', label: tool }
-    case 'Agent':
-      return { station: 'agents', label: str(input.description) || t.subagent }
-    case 'Monitor':
-      return { station: 'shell', label: str(input.description) || tool }
-    case 'Workflow':
-      return { station: 'agents', label: t.workflow }
-    case 'SendMessage':
-    case 'TaskStop':
-    case 'ListAgents':
-    // Work that runs later, apart from the turn: schedules and routines.
-    case 'CronCreate':
-    case 'CronDelete':
-    case 'CronList':
-    case 'ScheduleWakeup':
-    case 'RemoteTrigger':
-      return { station: 'agents', label: tool }
-    case 'Skill':
-      return { station: 'skills', label: str(input.skill) || t.skill }
-    case 'ToolSearch':
-      return { station: 'skills', label: t.loadingTools }
-    // The skill and plugin catalogue.
-    case 'ListSkills':
-    case 'SearchSkills':
-    case 'SuggestSkills':
-    case 'ListPlugins':
-    case 'SearchPlugins':
-    case 'SuggestPluginInstall':
-      return { station: 'skills', label: tool }
-    case 'AskUserQuestion':
-      return { station: 'you', label: t.questionForYou }
-    case 'SendUserFile':
-      return { station: 'you', label: t.fileForYou }
-    // What is shown to or asked of the person: the task list, the plan, a notification, review findings.
-    // The name alone: a task's subject and description are content.
-    case 'TaskCreate':
-    case 'TaskUpdate':
-    case 'TaskList':
-    case 'TaskGet':
-    case 'TodoWrite':
-    case 'EnterPlanMode':
-    case 'ExitPlanMode':
-    case 'PushNotification':
-    case 'ReportFindings':
-      return { station: 'you', label: tool }
-  }
-  const mcp = /^mcp__([^_].*?)__(.+)$/.exec(tool)
-  if (mcp === null) return { station: 'shell', label: tool }
-  const [, server = '', name = ''] = mcp
-  if (setup.memoryServers.has(server)) {
-    // A number, or a short identifier: a longer string under `id` could be anything.
-    const id = typeof input.id === 'number' || (typeof input.id === 'string' && /^[\w-]{1,24}$/.test(input.id)) ? ` #${input.id}` : ''
-    return { station: 'memory', label: (setup.memoryLabels.get(name) ?? name.replace(/_+/g, ' ')) + id }
-  }
-  // A cloud session linked to the person's computer reaches the same browser under `remote-devices`.
-  const remote = server === 'remote-devices' ? /^Claude_Browser__(.+)$/.exec(name) : null
-  if (server === 'Claude_Browser' || server === 'claude-in-chrome' || remote !== null) {
-    const url = str(input.url)
-    const action = remote?.[1] ?? name
-    return { station: 'browser', label: url && /^[a-z]+:/i.test(url) ? hostOf(url) : action.replace(/_+/g, ' ') }
-  }
-  if (server === 'terminal') return { station: 'shell', label: name.replace(/_+/g, ' ') }
-  if (server === 'visualize' || server.startsWith('ccd_')) return { station: 'you', label: name.replace(/_+/g, ' ') }
-  if (server === 'plugin-authoring') return { station: 'skills', label: name.replace(/_+/g, ' ') }
-  return { station: 'web', label: `${server}: ${name.replace(/_+/g, ' ')}` }
-}
-
-/** `claude-opus-5-5` reads as `opus 5.5`. */
+/** `gpt-5.2-high` reads as `gpt 5.2 high`; a name that fits no pattern stays as it is. */
 export function shortModel(model: string): string {
-  const m = /claude-([a-z]+)-(\d+)(?:-(\d+))?/.exec(model)
-  return m === null ? model : `${m[1]} ${m[2]}${m[3] !== undefined ? `.${m[3]}` : ''}`
+  const m = /^([a-z]+)-(\d+)(?:\.(\d+))?(?:-([a-z0-9.]+))?$/i.exec(model)
+  return m === null ? model : `${m[1]} ${m[2]}${m[3] !== undefined ? `.${m[3]}` : ''}${m[4] !== undefined ? ` ${m[4]}` : ''}`
 }
 
 export function formatMs(ms: number, t: Strings): string {

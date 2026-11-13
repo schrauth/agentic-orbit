@@ -175,7 +175,7 @@ export class LotMapPanel {
   }
 }
 
-/** `gpt-4.1-mini` reads shorter here; the mod's own shortener knows Claude's names, this one the rest. */
+/** `gpt-4.1-mini` reads shorter here; the shared shortener knows the common patterns, this one the rest. */
 function shortOf(model: string): string {
   return model.length <= 14 ? model : `${model.slice(0, 13)}…`
 }

@@ -1,4 +1,4 @@
-<!-- Read CONTRIBUTING.md first. One thing per pull request, opened against `next`, not `main`. -->
+<!-- Read CONTRIBUTING.md first. One thing per pull request, opened against `main`. -->
 
 ## What and why
 
@@ -6,19 +6,13 @@
 
 ## Checked
 
-<!-- Commands, the Claude Code version, the system, and where you saw it: desktop app, terminal. Say also what you did not check. -->
+<!-- The commands you ran, and the system you tried it on. Say also what you did not check. -->
 
-- [ ] `claude plugin validate .`
-- [ ] `claude plugin test .`
-- [ ] A test covers the change; for a bug, it fails without the fix
-
-## It keeps to what the mod is
-
-- [ ] No hook changes an input, a result, a prompt, the context or a permission decision
+- [ ] `cd vscode-extension && npm ci && npm run compile` passes
+- [ ] No hook changes an input, a result, a prompt or a permission decision
 - [ ] No label holds content: no command line, query, file text or full path
-- [ ] No network request, file read or process
-- [ ] A new option's default keeps today's behaviour
-- [ ] The version, `CHANGELOG.md` and the version line of `PRIVACY.md` are untouched
+- [ ] No network request, file read or process beyond what the extension already does
+- [ ] A new setting's default keeps today's behaviour
 - [ ] For a change to how the map looks: a picture is attached
 
-<!-- If the mod now reads or keeps something it did not before, say what. -->
+<!-- If the extension now reads or keeps something it did not before, say what. -->

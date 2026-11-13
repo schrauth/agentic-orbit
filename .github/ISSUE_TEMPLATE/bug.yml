@@ -17,29 +17,17 @@ body:
   - type: input
     id: version
     attributes:
-      label: lot-map version
-      description: From `claude plugin list`, or the top of CHANGELOG.md in your copy.
-      placeholder: 0.5.3
+      label: Extension version
+      description: From the Extensions pane, or the top of CHANGELOG.md in your copy.
+      placeholder: 0.1.0
     validations:
       required: true
   - type: input
-    id: claude
+    id: copilot
     attributes:
-      label: Claude Code version
-      description: From `claude --version`.
-      placeholder: 2.1.321
-    validations:
-      required: true
-  - type: dropdown
-    id: surface
-    attributes:
-      label: Where
-      options:
-        - Desktop app
-        - Terminal
-        - VS Code
-        - JetBrains
-        - Other
+      label: VS Code and Copilot versions
+      description: From Help > About, and the Copilot chat pane.
+      placeholder: VS Code 1.105
     validations:
       required: true
   - type: input
@@ -48,10 +36,10 @@ body:
       label: System
       placeholder: macOS 26, Windows 11, Ubuntu 24.04
   - type: textarea
-    id: options
+    id: settings
     attributes:
-      label: Options you changed
-      description: Only the ones that differ from the defaults, such as `language` or `theme`.
+      label: Settings you changed
+      description: Only the ones that differ from the defaults, such as `agenticOrbit.language` or `agenticOrbit.theme`.
   - type: dropdown
     id: who
     attributes:

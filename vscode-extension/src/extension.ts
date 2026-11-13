@@ -23,7 +23,7 @@ const open = new Map<string, string>()
 let lastModel: string | undefined
 
 function config(): Record<string, unknown> {
-  const c = vscode.workspace.getConfiguration('lotMap')
+  const c = vscode.workspace.getConfiguration('agenticOrbit')
   const theme = c.get<string>('theme', 'auto')
   const kind = vscode.window.activeColorTheme.kind
   const isDark = kind === vscode.ColorThemeKind.Dark || kind === vscode.ColorThemeKind.HighContrast
@@ -124,7 +124,7 @@ function onHookEvent(e: HookEvent): void {
 }
 
 function onProxyTelemetry(tel: { model: string; promptTokens: number }): void {
-  const limit = vscode.workspace.getConfiguration('lotMap').get('contextWindowLimit', 128000)
+  const limit = vscode.workspace.getConfiguration('agenticOrbit').get('contextWindowLimit', 128000)
   const now = Date.now()
   const step = (board.step ?? 0) + 1
   const started = begin(board, { station: 'model', label: `${shortModel(tel.model) || tel.model || 'model'} · ${t().step(step)}`, patch: { model: tel.model, step } }, now)
@@ -135,7 +135,7 @@ function onProxyTelemetry(tel: { model: string; promptTokens: number }): void {
 function startHookWatcher(): void {
   const workspace = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (workspace === undefined) return
-  const override = vscode.workspace.getConfiguration('lotMap').get('hookEventsFile', '')
+  const override = vscode.workspace.getConfiguration('agenticOrbit').get('hookEventsFile', '')
   const file = eventsFileFor(workspace, typeof override === 'string' ? override : undefined)
   watcher?.close()
   watcher = watchEvents(file, onHookEvent)
@@ -144,52 +144,52 @@ function startHookWatcher(): void {
 async function installHooks(): Promise<void> {
   const folder = vscode.workspace.workspaceFolders?.[0]
   if (folder === undefined) {
-    void vscode.window.showWarningMessage('Lot Map: open a folder first, so the hooks have somewhere to live.')
+    void vscode.window.showWarningMessage('Agentic Orbit: open a folder first, so the hooks have somewhere to live.')
     return
   }
-  const dest = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'lot-map-hook.js')
-  const configUri = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'lot-map.json')
-  const source = vscode.Uri.file(path.join(vscode.extensions.getExtension('schrauth.lot-map-vscode')?.extensionPath ?? '', 'res', 'lot-map-hook.js'))
+  const dest = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'agentic-orbit-hook.js')
+  const configUri = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'agentic-orbit.json')
+  const source = vscode.Uri.file(path.join(vscode.extensions.getExtension('schrauth.agentic-orbit')?.extensionPath ?? '', 'res', 'agentic-orbit-hook.js'))
   try {
     await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(folder.uri, '.github', 'hooks'))
     await vscode.workspace.fs.copy(source, dest, { overwrite: true })
     const hook = {
       version: '1.0',
       hooks: {
-        sessionStart: [{ type: 'node', command: 'node .github/hooks/lot-map-hook.js event=sessionStart' }],
-        userPromptSubmitted: [{ type: 'node', command: 'node .github/hooks/lot-map-hook.js event=userPromptSubmitted' }],
-        preToolUse: [{ type: 'node', command: 'node .github/hooks/lot-map-hook.js event=preToolUse', allow: true }],
-        postToolUse: [{ type: 'node', command: 'node .github/hooks/lot-map-hook.js event=postToolUse' }],
-        agentStop: [{ type: 'node', command: 'node .github/hooks/lot-map-hook.js event=agentStop' }],
-        errorOccurred: [{ type: 'node', command: 'node .github/hooks/lot-map-hook.js event=errorOccurred' }],
+        sessionStart: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=sessionStart' }],
+        userPromptSubmitted: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=userPromptSubmitted' }],
+        preToolUse: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=preToolUse', allow: true }],
+        postToolUse: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=postToolUse' }],
+        agentStop: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=agentStop' }],
+        errorOccurred: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=errorOccurred' }],
       },
     }
     const encoded = new TextEncoder().encode(`${JSON.stringify(hook, null, 2)}\n`)
     await vscode.workspace.fs.writeFile(configUri, encoded)
     void vscode.window.showInformationMessage(
-      'Lot Map: hooks written to .github/hooks/. The event file is watched; nothing leaves this machine.',
+      'Agentic Orbit: hooks written to .github/hooks/. The event file is watched; nothing leaves this machine.',
     )
   } catch {
-    void vscode.window.showErrorMessage('Lot Map: the hook files could not be written.')
+    void vscode.window.showErrorMessage('Agentic Orbit: the hook files could not be written.')
   }
 }
 
 async function startProxyCommand(): Promise<void> {
-  const c = vscode.workspace.getConfiguration('lotMap')
+  const c = vscode.workspace.getConfiguration('agenticOrbit')
   const port = c.get('proxy.port', 8317)
   const target = c.get('proxy.targetBaseUrl', '')
   if (typeof target !== 'string' || target === '') {
-    void vscode.window.showWarningMessage('Lot Map: set lotMap.proxy.targetBaseUrl to your on-prem LLM first (e.g. https://llm.internal/v1).')
+    void vscode.window.showWarningMessage('Agentic Orbit: set agenticOrbit.proxy.targetBaseUrl to your on-prem LLM first (e.g. https://llm.internal/v1).')
     return
   }
   try {
     proxy?.close()
     proxy = await startProxy(port, target, onProxyTelemetry)
     void vscode.window.showInformationMessage(
-      `Lot Map: proxy listening on http://127.0.0.1:${proxy.port}/v1 — point your custom model's base URL at it.`,
+      `Agentic Orbit: proxy listening on http://127.0.0.1:${proxy.port}/v1 — point your custom model's base URL at it.`,
     )
   } catch (err) {
-    void vscode.window.showErrorMessage(`Lot Map: the proxy could not start (${String(err)}).`)
+    void vscode.window.showErrorMessage(`Agentic Orbit: the proxy could not start (${String(err)}).`)
   }
 }
 
@@ -202,26 +202,26 @@ export function activate(context: vscode.ExtensionContext): void {
     panel = new LotMapPanel(context.extensionUri, board, config, message => {
       if (message.type === 'minimize') {
         panel?.setMinimized(message.value === true)
-        void context.globalState.update('lotMap.minimized', message.value === true)
+        void context.globalState.update('agenticOrbit.minimized', message.value === true)
       } else if (message.type === 'zoom') {
         panel?.zoomStep(message.by === 1 ? 1 : -1)
       }
     })
-    const kept = context.globalState.get<boolean | undefined>('lotMap.minimized')
+    const kept = context.globalState.get<boolean | undefined>('agenticOrbit.minimized')
     if (kept === true) panel?.setMinimized(true)
   }
   context.subscriptions.push(
-    vscode.commands.registerCommand('lotMap.open', openMap),
-    vscode.commands.registerCommand('lotMap.installHooks', installHooks),
-    vscode.commands.registerCommand('lotMap.startProxy', startProxyCommand),
+    vscode.commands.registerCommand('agenticOrbit.open', openMap),
+    vscode.commands.registerCommand('agenticOrbit.installHooks', installHooks),
+    vscode.commands.registerCommand('agenticOrbit.startProxy', startProxyCommand),
   )
   startHookWatcher()
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('lotMap')) startHookWatcher()
+      if (e.affectsConfiguration('agenticOrbit')) startHookWatcher()
     }),
   )
-  if (vscode.workspace.getConfiguration('lotMap').get<boolean>('proxy.enabled', false) === true) void startProxyCommand()
+  if (vscode.workspace.getConfiguration('agenticOrbit').get<boolean>('proxy.enabled', false) === true) void startProxyCommand()
 }
 
 export function deactivate(): void {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// lot-map telemetry hook for GitHub Copilot. Fail-safe by contract:
+// Agentic Orbit telemetry hook for GitHub Copilot. Fail-safe by contract:
 //   - always exits 0, within a few milliseconds, whether the extension runs or not;
 //   - for preToolUse always prints a valid allow decision, so the agent is never blocked;
 //   - on any error it writes nothing and stays silent;
@@ -21,14 +21,14 @@ function allowJson() {
 }
 
 function outputPath() {
-  if (process.env.LOT_MAP_EVENTS_FILE && /^[\w./\\:-]{1,200}$/.test(process.env.LOT_MAP_EVENTS_FILE)) {
-    return process.env.LOT_MAP_EVENTS_FILE
+  if (process.env.AGENTIC_ORBIT_EVENTS_FILE && /^[\w./\\:-]{1,200}$/.test(process.env.AGENTIC_ORBIT_EVENTS_FILE)) {
+    return process.env.AGENTIC_ORBIT_EVENTS_FILE
   }
   var os = require('os')
   var crypto = require('crypto')
-  var workspace = process.env.LOT_MAP_WORKSPACE || process.cwd()
+  var workspace = process.env.AGENTIC_ORBIT_WORKSPACE || process.cwd()
   var key = crypto.createHash('sha1').update(workspace).digest('hex').slice(0, 12)
-  return require('path').join(os.tmpdir(), 'lot-map-' + key + '.jsonl')
+  return require('path').join(os.tmpdir(), 'agentic-orbit-' + key + '.jsonl')
 }
 
 // Only these fields are taken from the event, and only as names and figures. Everything else in it is content.
@@ -59,12 +59,15 @@ function oneLine(input, argv) {
     url: undefined,
     promptTokens: num(input.prompt_tokens) || num(input.promptTokens),
   }
-  // The name of a shell command only: never its arguments, never its line.
-  var command = str(input.command) || str(input.command_line) || str(input.commandLine)
+    // The name of a shell command only: never its arguments, never its line.
+  // Tool arguments usually sit in a nested object; both places are read.
+  var args = input.tool_input || input.toolInput || input.input || input.arguments
+  if (args === null || typeof args !== 'object') args = {}
+  var command = str(input.command) || str(input.command_line) || str(input.commandLine) || str(args.command)
   if (command !== '') out.commandName = short(firstWord(command), 40)
-  var path = str(input.file_path) || str(input.filePath) || str(input.path)
+  var path = str(input.file_path) || str(input.filePath) || str(input.path) || str(args.file_path) || str(args.filePath) || str(args.path)
   if (path !== '') out.filePath = short(path, 160)
-  var url = str(input.url) || str(input.uri)
+  var url = str(input.url) || str(input.uri) || str(args.url) || str(args.uri)
   if (url !== '') out.url = short(url, 160)
   var status = str(input.status) || str(input.result_status) || str(input.resultStatus)
   if (status !== '') out.status = short(status, 24)

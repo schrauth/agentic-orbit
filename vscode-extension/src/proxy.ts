@@ -137,7 +137,7 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
       )
       upstream.on('error', () => {
         if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' })
-        res.end(JSON.stringify({ error: { message: 'lot-map proxy: the on-prem LLM did not answer', type: 'proxy_target_unreachable' } }))
+        res.end(JSON.stringify({ error: { message: 'agentic-orbit proxy: the on-prem LLM did not answer', type: 'proxy_target_unreachable' } }))
       })
       upstream.end(payload)
     })

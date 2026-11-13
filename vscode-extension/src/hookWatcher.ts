@@ -29,7 +29,7 @@ export type HookEvent = {
 export function eventsFileFor(workspace: string, override?: string): string {
   if (override !== undefined && override !== '') return override
   const key = crypto.createHash('sha1').update(workspace).digest('hex').slice(0, 12)
-  return path.join(os.tmpdir(), `lot-map-${key}.jsonl`)
+  return path.join(os.tmpdir(), `agentic-orbit-${key}.jsonl`)
 }
 
 /** Reads the lines the watcher has not read yet. A line that is not one JSON object is dropped, never an error. */

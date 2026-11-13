@@ -1,6 +1,6 @@
 {
-  "name": "lot-map-vscode",
-  "displayName": "Lot Map for GitHub Copilot",
+  "name": "agentic-orbit",
+  "displayName": "Agentic Orbit for GitHub Copilot",
   "description": "A live map beside the chat: tool calls, agents, skills and hooks light up as they are used, ported from the lot-map Claude Code mod.",
   "version": "0.1.0",
   "publisher": "schrauth",
@@ -20,22 +20,22 @@
   "contributes": {
     "commands": [
       {
-        "command": "lotMap.open",
-        "title": "Lot Map: Open"
+        "command": "agenticOrbit.open",
+        "title": "Agentic Orbit: Open"
       },
       {
-        "command": "lotMap.installHooks",
-        "title": "Lot Map: Install Workspace Hooks"
+        "command": "agenticOrbit.installHooks",
+        "title": "Agentic Orbit: Install Workspace Hooks"
       },
       {
-        "command": "lotMap.startProxy",
-        "title": "Lot Map: Start Loopback Proxy"
+        "command": "agenticOrbit.startProxy",
+        "title": "Agentic Orbit: Start Loopback Proxy"
       }
     ],
     "configuration": {
-      "title": "Lot Map",
+      "title": "Agentic Orbit",
       "properties": {
-        "lotMap.language": {
+        "agenticOrbit.language": {
           "type": "string",
           "enum": [
             "en",
@@ -49,13 +49,13 @@
           "default": "en",
           "description": "The language of the labels on the map."
         },
-        "lotMap.coreName": {
+        "agenticOrbit.coreName": {
           "type": "string",
           "default": "COPILOT",
           "maxLength": 10,
           "description": "What the circle in the middle of the map says, up to ten characters."
         },
-        "lotMap.layout": {
+        "agenticOrbit.layout": {
           "type": "string",
           "enum": [
             "you-top",
@@ -64,7 +64,7 @@
           "default": "you-top",
           "description": "Where you are on the map: at the top, or at the bottom with the network and the browser at the top."
         },
-        "lotMap.motion": {
+        "agenticOrbit.motion": {
           "type": "string",
           "enum": [
             "full",
@@ -73,7 +73,7 @@
           "default": "full",
           "description": "With reduced, nothing on the map flies, spreads or spins."
         },
-        "lotMap.theme": {
+        "agenticOrbit.theme": {
           "type": "string",
           "enum": [
             "auto",
@@ -83,7 +83,7 @@
           "default": "auto",
           "description": "The map's colours: dark, light, or auto, which follows the workbench colour theme."
         },
-        "lotMap.background": {
+        "agenticOrbit.background": {
           "type": "string",
           "enum": [
             "solid",
@@ -92,45 +92,45 @@
           "default": "solid",
           "description": "The map's own background, or transparent, which lets the panel behind it show through."
         },
-        "lotMap.colors": {
+        "agenticOrbit.colors": {
           "type": "string",
           "default": "",
           "description": "Colours that replace the map's own, each written as name=#rrggbb, comma-separated. Names: background, node, line, spoke, text, label, faint, accent, active, error, memory, memoryActive, route."
         },
-        "lotMap.proxy.enabled": {
+        "agenticOrbit.proxy.enabled": {
           "type": "boolean",
           "default": false,
           "description": "Start the loopback proxy on 127.0.0.1 at activation, which measures the context window from the on-prem LLM stream. Point your custom model's base URL at http://127.0.0.1:<port>/v1."
         },
-        "lotMap.proxy.port": {
+        "agenticOrbit.proxy.port": {
           "type": "number",
           "default": 8317,
           "minimum": 1024,
           "maximum": 65535,
           "description": "The port the loopback proxy listens on, on 127.0.0.1 only."
         },
-        "lotMap.proxy.targetBaseUrl": {
+        "agenticOrbit.proxy.targetBaseUrl": {
           "type": "string",
           "default": "",
           "description": "The base URL of the on-prem LLM, e.g. https://llm.internal.example.com/v1. The proxy forwards /v1/chat/completions there unchanged."
         },
-        "lotMap.contextWindowLimit": {
+        "agenticOrbit.contextWindowLimit": {
           "type": "number",
           "default": 128000,
           "minimum": 1000,
           "description": "The context window of your model, in tokens, for the ring around the centre."
         },
-        "lotMap.hookEventsFile": {
+        "agenticOrbit.hookEventsFile": {
           "type": "string",
           "default": "",
-          "description": "Where the workspace hook appends its JSON event lines. Empty: lot-map-<workspace hash>.jsonl in the OS temp directory. The extension watches this file."
+          "description": "Where the workspace hook appends its JSON event lines. Empty: agentic-orbit-<workspace hash>.jsonl in the OS temp directory. The extension watches this file."
         },
-        "lotMap.showFeed": {
+        "agenticOrbit.showFeed": {
           "type": "boolean",
           "default": true,
           "description": "Show the rows of what happened under the map."
         },
-        "lotMap.memoryServers": {
+        "agenticOrbit.memoryServers": {
           "type": "array",
           "items": {
             "type": "string"
@@ -140,7 +140,7 @@
           ],
           "markdownDescription": "MCP server names whose tools read as Memory (the rest read as Web)."
         },
-        "lotMap.memoryCommands": {
+        "agenticOrbit.memoryCommands": {
           "type": "array",
           "items": {
             "type": "string"
@@ -148,7 +148,7 @@
           "default": [],
           "markdownDescription": "Shell command names that read as Memory."
         },
-        "lotMap.memorySubcommands": {
+        "agenticOrbit.memorySubcommands": {
           "type": "array",
           "items": {
             "type": "string"
@@ -156,7 +156,7 @@
           "default": [],
           "markdownDescription": "Shell subcommands that read as Memory."
         },
-        "lotMap.memoryPaths": {
+        "agenticOrbit.memoryPaths": {
           "type": "array",
           "items": {
             "type": "string"
@@ -164,7 +164,7 @@
           "default": [],
           "markdownDescription": "Path fragments: a file path holding one reads as Memory."
         },
-        "lotMap.memoryLabels": {
+        "agenticOrbit.memoryLabels": {
           "type": "array",
           "items": {
             "type": "string"

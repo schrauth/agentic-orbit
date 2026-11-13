@@ -40,7 +40,7 @@ export class LotMapPanel {
   ) {
     this.board = board
     this.setup = setupFrom(options())
-    this.panel = vscode.window.createWebviewPanel('lotMap', this.setup.t.title, vscode.ViewColumn.Beside, {
+    this.panel = vscode.window.createWebviewPanel('agenticOrbit', 'Agentic Orbit', vscode.ViewColumn.Beside, {
       enableScripts: true,
       retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out', 'vscode-extension', 'src', 'webview')],

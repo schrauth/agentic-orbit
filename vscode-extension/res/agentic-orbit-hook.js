@@ -16,8 +16,10 @@ function exit0() {
 }
 
 // The allow decision, printed before anything else can go wrong. A refusal shape is never produced.
+// preToolUse hooks in Copilot are fail-closed on a crash or a non-zero exit: this hook always
+// answers `permissionDecision: "allow"` and exits 0, so it never blocks a tool call.
 function allowJson() {
-  process.stdout.write(JSON.stringify({ decision: 'allow', allow: true, continue: true }))
+  process.stdout.write(JSON.stringify({ permissionDecision: 'allow' }))
 }
 
 function outputPath() {
@@ -61,7 +63,7 @@ function oneLine(input, argv) {
   }
     // The name of a shell command only: never its arguments, never its line.
   // Tool arguments usually sit in a nested object; both places are read.
-  var args = input.tool_input || input.toolInput || input.input || input.arguments
+  var args = input.tool_input || input.toolInput || input.toolArgs || input.input || input.arguments
   if (args === null || typeof args !== 'object') args = {}
   var command = str(input.command) || str(input.command_line) || str(input.commandLine) || str(args.command)
   if (command !== '') out.commandName = short(firstWord(command), 40)

@@ -148,20 +148,25 @@ async function installHooks(): Promise<void> {
     return
   }
   const dest = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'agentic-orbit-hook.js')
-  const configUri = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'agentic-orbit.json')
+  const configUri = vscode.Uri.joinPath(folder.uri, '.github', 'hooks', 'hooks.json')
   const source = vscode.Uri.file(path.join(vscode.extensions.getExtension('schrauth.agentic-orbit')?.extensionPath ?? '', 'res', 'agentic-orbit-hook.js'))
   try {
     await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(folder.uri, '.github', 'hooks'))
     await vscode.workspace.fs.copy(source, dest, { overwrite: true })
+    // Copilot's hook file format: version must be the number 1, each entry a command hook
+    // whose `command` runs on every shell. Events the map does not know are dropped by the watcher.
+    const command = (event: string) =>
+      `node .github/hooks/agentic-orbit-hook.js event=${event}`
     const hook = {
-      version: '1.0',
+      version: 1,
       hooks: {
-        sessionStart: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=sessionStart' }],
-        userPromptSubmitted: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=userPromptSubmitted' }],
-        preToolUse: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=preToolUse', allow: true }],
-        postToolUse: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=postToolUse' }],
-        agentStop: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=agentStop' }],
-        errorOccurred: [{ type: 'node', command: 'node .github/hooks/agentic-orbit-hook.js event=errorOccurred' }],
+        sessionStart: [{ type: 'command', command: command('sessionStart') }],
+        userPromptSubmitted: [{ type: 'command', command: command('userPromptSubmitted') }],
+        preToolUse: [{ type: 'command', command: command('preToolUse') }],
+        postToolUse: [{ type: 'command', command: command('postToolUse') }],
+        postToolUseFailure: [{ type: 'command', command: command('errorOccurred') }],
+        agentStop: [{ type: 'command', command: command('agentStop') }],
+        errorOccurred: [{ type: 'command', command: command('errorOccurred') }],
       },
     }
     const encoded = new TextEncoder().encode(`${JSON.stringify(hook, null, 2)}\n`)

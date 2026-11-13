@@ -52,7 +52,15 @@ function render(): void {
     return
   }
 
-  map.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 430" role="img" aria-label="${escapeHtml(view.alt)}" style="width:${view.width ?? 100}%;max-width:${view.width ?? 460}px;height:auto">${view.svg}</svg>`
+  map.innerHTML = view.svg
+  const svg = map.querySelector('svg')
+  if (svg !== null) {
+    svg.setAttribute('role', 'img')
+    svg.setAttribute('aria-label', view.alt)
+    svg.style.width = view.width === undefined ? '100%' : `${view.width}px`
+    svg.style.maxWidth = view.width === undefined ? '460px' : '100%'
+    svg.style.height = 'auto'
+  }
   document.getElementById('counts')!.textContent = view.counts
   feed.innerHTML = view.rows
     .map(row => {

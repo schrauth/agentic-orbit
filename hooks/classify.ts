@@ -18,7 +18,7 @@ const HOST = /^(?:[\p{L}\p{N}.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/iu
  * A password may hold `/`, `?` or `#` unencoded, so the first of them is not always where the host ends:
  * `user:pa/ss@host` reads as the host `host`, and an address that can be read both ways gives its scheme alone.
  */
-function hostOf(url: string): string {
+export function hostOf(url: string): string {
   const [, scheme = '', rest = ''] = /^(?:([a-z][a-z0-9+.-]*):\/\/)?(.*)$/is.exec(url) ?? []
   const end = rest.search(/[/?#]/)
   const first = end < 0 ? rest : rest.slice(0, end)
@@ -152,7 +152,7 @@ function memoryLabel(words: string[], setup: Setup): string {
 }
 
 /** The line of a shell tool. `powershell` adds PowerShell's own command names and reads every name in lower case. */
-function classifyShell(command: string, description: string, setup: Setup, powershell = false): Classified {
+export function classifyShell(command: string, description: string, setup: Setup, powershell = false): Classified {
   const name = (word?: string): string => (powershell ? base(word).toLowerCase() : base(word))
   // PowerShell runs a quoted path with `&` and keeps results in `$name = ...`: neither is the command.
   const own = (words: string[]): string[] => {

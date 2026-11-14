@@ -200,7 +200,7 @@ npm run compile   # tsc + webview assets
 npm run package   # → agentic-orbit-x.y.z.vsix
 ```
 
-`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch every station light up at once.
+`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch every station light up at once. For a longer look, `scripts/subagent-storm.sh` runs about a minute of made-up subagent traffic — up to six planets circling the Agents station in overlapping waves.
 
 Words live in `hooks/text.ts`; a new language is one more table there. Before you send a change, read [CONTRIBUTING.md](CONTRIBUTING.md).
 

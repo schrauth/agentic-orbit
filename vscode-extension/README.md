@@ -7,7 +7,7 @@ lives in the repository's [hooks/](../hooks) folder; only this folder knows abou
 
 ## Install
 
-- **From the .vsix:** `code --install-extension agentic-orbit-0.1.0.vsix --force`
+- **From the .vsix:** `code --install-extension agentic-orbit-0.2.0.vsix --force`
 - **Commands:** `Agentic Orbit: Open` (the panel, beside the active editor), `Agentic Orbit: Install Workspace Hooks`, `Agentic Orbit: Start Proxy`.
 
 ## How it sees Copilot work

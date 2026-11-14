@@ -17,7 +17,7 @@ cd vscode-extension
 npm install
 npm run compile
 npm run package
-code --install-extension agentic-orbit-0.1.0.vsix --force
+code --install-extension agentic-orbit-0.2.0.vsix --force
 ```
 
 Then, in the folder you want to watch:
@@ -107,7 +107,7 @@ The centre and the **Model** station ring for a few seconds, and the feed gets a
 
 ### Subagents
 
-Each subagent still at work circles the **Agents** station as a small dot on its own orbit — one dashed ring per subagent, drawn around the station, which sits a little further out than the ring — and its calls start from there.
+Each subagent still at work circles the **Agents** station as a small planet on a wide orbit of its own — one dashed ring per subagent, drawn around the station, which sits far out beyond the ring — and its calls start from there.
 
 ### The answer
 

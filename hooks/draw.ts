@@ -24,10 +24,10 @@ const AGENT_RY = 270
 const NODE = 22
 const CORE = 40
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */
-const PLANET = 11
+const PLANET = 10
 /** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
 const ORBIT_FIRST = 40
-const ORBIT_STEP = 13
+const ORBIT_STEP = 15
 const MAX_CREW = 6
 /** How long a subagent's planet keeps circling after its loop is over, and how long it then takes to go out. */
 export const AGENT_HOLD_MS = 60_000
@@ -82,16 +82,28 @@ const orbitRadius = (k: number): number => ORBIT_FIRST + k * ORBIT_STEP
 const orbitAngle = (k: number, count: number): number => (2 * Math.PI * (k + 0.5)) / count
 /** The point on its ring a subagent's planet sits at. */
 const orbitDot = (k: number, base: Point, angle: number): Point => ({ x: base.x + orbitRadius(k) * Math.sin(angle), y: base.y - orbitRadius(k) * Math.cos(angle) })
-/** The drawn ring of one subagent's orbit, dashed as faintly as the core's contours. */
+/** The drawn ring of one subagent's orbit, dashed like the core's contours, but firm enough to read as a path. */
 const orbitRing = (k: number, base: Point, c: Palette): string =>
-  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width="1" stroke-dasharray="3 6" opacity=".5"/>`
+  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width="1.4" stroke-dasharray="3 6" opacity=".65"/>`
 /** The palette place of the color one subagent's planet wears: one hue per orbit ring, innermost first. */
 const CREW_HUES: (keyof Palette)[] = ['crew0', 'crew1', 'crew2', 'crew3', 'crew4', 'crew5']
 /** A subagent's planet: a node in the stations' own shape, filled with the hue of its seat,
- * with a small ring that reads the same from any side, drawn on the ground it stands out from. */
-const planet = (p: Point, c: Palette, hue: string): string =>
-  `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET}" fill="${hue}" stroke="${c.line}" stroke-width="1.2"/>` +
-  `<path transform="translate(${n1(p.x)} ${n1(p.y)})" d="M-2.6 0a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0" fill="none" stroke="${c.ground}" stroke-width="1.25" stroke-linecap="round"/>`
+ * with a small ring that reads the same from any side, drawn on the ground it stands out from.
+ * While its agent works, a halo of its own hue pulses around it; a planet lately over sits still. */
+const planet = (p: Point, c: Palette, hue: string, isWorking: boolean, isStill: boolean): string => {
+  const halo =
+    !isWorking
+      ? ''
+      : isStill
+        ? `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET + 4}" fill="none" stroke="${hue}" stroke-width="1.2" opacity=".35"/>`
+        : `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET + 1}" fill="none" stroke="${hue}" stroke-width="1.3" opacity="0">` +
+          `<animate attributeName="r" values="${PLANET + 1};${PLANET + 6};${PLANET + 1}" dur="2.2s" repeatCount="indefinite"/>` +
+          `<animate attributeName="opacity" values=".55;.12;.55" dur="2.2s" repeatCount="indefinite"/></circle>`
+  return (
+    `${halo}<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET}" fill="${hue}" stroke="${c.line}" stroke-width="1.2"/>` +
+    `<path transform="translate(${n1(p.x)} ${n1(p.y)})" d="M-2.6 0a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0" fill="none" stroke="${c.ground}" stroke-width="1.25" stroke-linecap="round"/>`
+  )
+}
 
 /** A pulse with a short tail behind it. A hollow one is a signal nobody asked for. */
 function pulse(a: Point, b: Point, color: string, age: number, radius: number, isHollow = false): string {
@@ -375,14 +387,14 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     // Standing still, each keeps its own place on its orbit.
     if (isStill) {
       const still = orbitDot(k, agentsAt, orbitAngle(k, crew.length))
-      body += `${planet(still, c, hue)}${shut}`
+      body += `${planet(still, c, hue, age < 0, true)}${shut}`
       return
     }
     const lap = orbitLap(k)
     const seatPoint = orbitDot(k, agentsAt, 0)
     body +=
       `<g><animateTransform attributeName="transform" type="rotate" from="0 ${spin}" to="${k % 2 === 0 ? 360 : -360} ${spin}" begin="${clock(-((now + (k * lap) / crew.length) % lap))}" dur="${clock(lap)}" repeatCount="indefinite"/>` +
-      `${planet(seatPoint, c, hue)}</g>${shut}`
+      `${planet(seatPoint, c, hue, age < 0, false)}</g>${shut}`
   })
 
   // The legend in the corner below: each hue with the name of the agent whose planet wears it,

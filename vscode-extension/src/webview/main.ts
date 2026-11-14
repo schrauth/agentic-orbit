@@ -28,6 +28,8 @@ type ViewModel = {
   /** The width the map is drawn at by nature, in CSS pixels, for its widest default size. */
   mapWidth: number
   aspect: number
+  /** The pane's buttons' names, sent by the extension host; the webview holds no words of its own. */
+  labels: { zoomOut: string; zoomIn: string; hideMap: string; showMap: string }
 }
 
 let view: ViewModel | undefined
@@ -49,7 +51,7 @@ function render(): void {
     map.innerHTML = ''
     feed.innerHTML = ''
     nowline.textContent = ''
-    buttons.innerHTML = `<button id="show" class="btn" title="${escapeHtml(view.alt)}">▢</button>`
+    buttons.innerHTML = `<button id="show" class="btn" title="${escapeHtml(view.labels.showMap)}" aria-label="${escapeHtml(view.labels.showMap)}">▢</button>`
     bind('show', () => vscode?.postMessage({ type: 'minimize', value: false }))
     return
   }
@@ -69,11 +71,11 @@ function render(): void {
       const text = `${row.mark} ${row.station}  ${row.label}${row.times > 1 ? `  +${row.times - 1}` : ''}`
       const time = row.took !== '' ? `<span class="time">${escapeHtml(row.took)}</span>` : ''
       const cls = `row${row.dim ? ' dim' : ''}${row.color === 'err' ? ' err' : row.color === 'link' ? ' link' : ''}`
-      return `<div class="${cls}"${row.isLong ? ` data-id="${row.id}" role="button" tabindex="0"` : ''}><span class="label">${escapeHtml(text)}</span>${time}</div>`
+      return `<div class="${cls}"${row.isLong ? ` data-id="${escapeHtml(row.id)}" role="button" tabindex="0"` : ''}><span class="label">${escapeHtml(text)}</span>${time}</div>`
     })
     .join('')
   nowline.textContent = view.nowline
-  buttons.innerHTML = `<button id="zoom-out" class="btn">–</button><button id="zoom-in" class="btn">+</button><button id="hide" class="btn">×</button>`
+  buttons.innerHTML = `<button id="zoom-out" class="btn" title="${escapeHtml(view.labels.zoomOut)}" aria-label="${escapeHtml(view.labels.zoomOut)}">–</button><button id="zoom-in" class="btn" title="${escapeHtml(view.labels.zoomIn)}" aria-label="${escapeHtml(view.labels.zoomIn)}">+</button><button id="hide" class="btn" title="${escapeHtml(view.labels.hideMap)}" aria-label="${escapeHtml(view.labels.hideMap)}">×</button>`
   bind('zoom-out', () => vscode?.postMessage({ type: 'zoom', by: -1 }))
   bind('zoom-in', () => vscode?.postMessage({ type: 'zoom', by: 1 }))
   bind('hide', () => vscode?.postMessage({ type: 'minimize', value: true }))

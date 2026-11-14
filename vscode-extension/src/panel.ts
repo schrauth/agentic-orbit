@@ -5,9 +5,10 @@ import type { Board } from '../../types'
 import { MAP_ASPECT, MAP_WIDTH, STATIONS, describeNow, drawMap, foldRows, formatMs, nowParts } from '../../hooks/map'
 import { setupFrom } from '../../hooks/setup'
 import type { Setup } from '../../hooks/setup'
+import { LANGUAGES } from '../../hooks/text'
 
 /** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
-const ZOOMS = [160, 200, 240, 280, 340, 400, 480, 520, 560]
+const ZOOMS = [160, 200, 240, 280, 340, 400, 480, 520]
 const LONG_LABEL = 28
 /** A label longer than this may not fit the pane, so its row gets a control that opens it. */
 
@@ -45,7 +46,7 @@ export class LotMapPanel {
       retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'out', 'vscode-extension', 'src', 'webview')],
     })
-    this.panel.webview.html = this.html(this.panel.webview, extensionUri)
+    this.panel.webview.html = this.html(this.panel.webview, extensionUri, options().language)
     this.panel.webview.onDidReceiveMessage(m => onMessage?.(m as { type: string }))
     this.panel.onDidDispose(() => {
       this.disposed = true
@@ -79,7 +80,7 @@ export class LotMapPanel {
     this.panel.dispose()
   }
 
-  /** One step of zoom out (-1) or in (+1) from a width; the last width is the pane's whole width. */
+  /** One step of zoom out (-1) or in (+1) from a width; past the last step the map is as wide as the pane. */
   zoomStep(by: -1 | 1): void {
     const at = this.zoom === undefined ? ZOOMS.length : ZOOMS.indexOf(this.zoom)
     this.zoom = ZOOMS[Math.min(ZOOMS.length, Math.max(0, (at < 0 ? ZOOMS.length : at) + by))]
@@ -151,13 +152,15 @@ export class LotMapPanel {
       width,
       aspect: MAP_ASPECT,
       mapWidth: MAP_WIDTH,
+      labels: { zoomOut: t.zoomOut, zoomIn: t.zoomIn, hideMap: t.hideMap, showMap: t.showMap },
     })
   }
 
-  private html(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+  private html(webview: vscode.Webview, extensionUri: vscode.Uri, language: unknown): string {
     const base = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'vscode-extension', 'src', 'webview'))
+    const lang = typeof language === 'string' && LANGUAGES.includes(language) ? language : 'en'
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src ${webview.cspSource} data:; script-src ${webview.cspSource};">

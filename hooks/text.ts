@@ -420,3 +420,6 @@ const pt: Strings = {
 const TABLES = new Map<unknown, Strings>([['en', en], ['ru', ru], ['es', es], ['fr', fr], ['de', de], ['it', it], ['pt', pt]])
 
 export const stringsFor = (language: unknown): Strings => TABLES.get(language) ?? en
+
+/** The language codes the tables hold; anything else reads as `en`, here as in the settings. */
+export const LANGUAGES: readonly string[] = [...TABLES.keys()].map(String)

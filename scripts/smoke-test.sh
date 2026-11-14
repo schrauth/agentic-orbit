@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Agentic Orbit smoke test: fires one harmless, synthetic event of each kind through the real
-# hook script, so every station lights up on the map in a controlled way.
+# Agentic Orbit smoke test: fires harmless, synthetic events of each kind through the real
+# hook script, so every station lights up on the map in a controlled way. Three subagents
+# run at once, so their planets circle the Agents station together.
 #
 #   - Nothing is read, written or sent: the events carry names and figures only.
 #   - Open the map first (Agentic Orbit: Open); each pulse appears as it fires.
@@ -69,24 +70,30 @@ echo "6. Skills / Toolsuche                    → Skills"
 fire preToolUse  '{"tool_name":"search_tools","tool_use_id":"t6"}'
 fire postToolUse '{"tool_name":"search_tools","tool_use_id":"t6"}'
 
-echo "7. Subagent                              → Agents (recherche), Planet kreist auf eigenem Orbit"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"t7","agent_id":"a1","description":"recherche","tool_input":{"description":"recherche"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"t7","agent_id":"a1"}'
+echo "7. Subagents gleichzeitig                → Agents: drei Planeten kreisen zusammen"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7a","agent_id":"a1","description":"recherche","tool_input":{"description":"recherche"}}'
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7b","agent_id":"a2","description":"texte schreiben","tool_input":{"description":"texte schreiben"}}'
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7c","agent_id":"a3","description":"vergleichen","tool_input":{"description":"vergleichen"}}'
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7a","agent_id":"a1"}'
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7b","agent_id":"a2"}'
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7c","agent_id":"a3"}'
 
 echo "8. Fehlgeschlagener Aufruf               → rot, bis zur nächsten Nachricht"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"t8","tool_input":{"command":"date"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"t8","error":true}'
 
-echo "— Subagent fertig                       → Planet verschwindet"
+echo "— Subagents fertig                      → Planeten verschwinden nacheinander"
 fire agentStop '{"agent_id":"a1"}'
+fire agentStop '{"agent_id":"a2"}'
+fire agentStop '{"agent_id":"a3"}'
 
 echo "— Antwort fertig                        → breiter Ring"
 fire agentStop '{}'
 
 AFTER=$(wc -l < "$FILE")
 echo
-echo "Zeilen nachher: ${AFTER} (erwartet: $((BEFORE + 20)))"
-if [ "$AFTER" -ge "$((BEFORE + 20))" ]; then
+echo "Zeilen nachher: ${AFTER} (erwartet: $((BEFORE + 26)))"
+if [ "$AFTER" -ge "$((BEFORE + 26))" ]; then
   echo "✓ Alle Events geschrieben. Panel offen? Dann sollten alle Stationen geleuchtet haben."
 else
   echo "✕ Es fehlen Zeilen — der Hook hat nicht jedes Event geschrieben."

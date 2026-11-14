@@ -7,7 +7,7 @@ import { setupFrom } from '../../hooks/setup'
 import type { Setup } from '../../hooks/setup'
 
 /** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
-const ZOOMS = [160, 200, 240, 280, 340, 400, 480]
+const ZOOMS = [160, 200, 240, 280, 340, 400, 480, 520, 560]
 const LONG_LABEL = 28
 /** A label longer than this may not fit the pane, so its row gets a control that opens it. */
 

@@ -69,7 +69,10 @@ export function classifyCopilot(tool: string, input: Record<string, unknown>, se
     }
     case 'grep_search':
     case 'search_files':
+    case 'grep':
       return { station: 'files', label: 'Grep' }
+    case 'glob':
+      return { station: 'files', label: 'Glob' }
     case 'run_in_terminal':
       return shellLike()
 
@@ -131,6 +134,13 @@ export function classifyCopilot(tool: string, input: Record<string, unknown>, se
     return { station: 'web', label: `${server}: ${name.replace(/_+/g, ' ')}` }
   }
   if (tool.startsWith('mcp_')) return { station: 'web', label: tool.replace(/^mcp_/, '').replace(/_/g, ' ').slice(0, 40) }
+
+  // A tool whose arguments tell what it worked on: the file it names is Files, its command is the
+  // shell classifier's to read, its address is Network. Only a tool with no such argument, and no
+  // station the map knows, is the model working on its own.
+  if (str(input.file_path) !== '' || str(input.path) !== '') return { station: 'files', label: lastTwo(str(input.file_path) || str(input.path)) }
+  if (str(input.command) !== '') return shellLike()
+  if (str(input.url) !== '' || str(input.uri) !== '') return { station: 'web', label: hostOf(str(input.url) || str(input.uri)) }
 
   // Anything else is the model working on its own: tools the map has no station for yet.
   return { station: 'model', label: tool }

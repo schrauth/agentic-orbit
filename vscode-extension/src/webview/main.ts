@@ -25,6 +25,8 @@ type ViewModel = {
   hidden: boolean
   /** The width the map is drawn at, in CSS pixels; absent, as wide as the pane. */
   width?: number
+  /** The width the map is drawn at by nature, in CSS pixels, for its widest default size. */
+  mapWidth: number
   aspect: number
 }
 
@@ -58,7 +60,7 @@ function render(): void {
     svg.setAttribute('role', 'img')
     svg.setAttribute('aria-label', view.alt)
     svg.style.width = view.width === undefined ? '100%' : `${view.width}px`
-    svg.style.maxWidth = view.width === undefined ? '460px' : '100%'
+    svg.style.maxWidth = view.width === undefined ? `${view.mapWidth}px` : '100%'
     svg.style.height = 'auto'
   }
   document.getElementById('counts')!.textContent = view.counts

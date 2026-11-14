@@ -2,12 +2,12 @@
 // every time the board changes and once a second while something runs, so the map's own animations carry on.
 import * as vscode from 'vscode'
 import type { Board } from '../../types'
-import { MAP_ASPECT, STATIONS, describeNow, drawMap, foldRows, formatMs, nowParts } from '../../hooks/map'
+import { MAP_ASPECT, MAP_WIDTH, STATIONS, describeNow, drawMap, foldRows, formatMs, nowParts } from '../../hooks/map'
 import { setupFrom } from '../../hooks/setup'
 import type { Setup } from '../../hooks/setup'
 
 /** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
-const ZOOMS = [160, 200, 240, 280, 340, 400]
+const ZOOMS = [160, 200, 240, 280, 340, 400, 480]
 const LONG_LABEL = 28
 /** A label longer than this may not fit the pane, so its row gets a control that opens it. */
 
@@ -150,6 +150,7 @@ export class LotMapPanel {
       hidden: this.minimized,
       width,
       aspect: MAP_ASPECT,
+      mapWidth: MAP_WIDTH,
     })
   }
 

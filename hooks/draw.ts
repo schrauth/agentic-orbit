@@ -8,14 +8,16 @@ import { STATIONS } from './setup'
 import type { Setup } from './setup'
 import type { Strings } from './text'
 
-const W = 460
-const H = 430
+const W = 560
+const H = 530
+/** The width the map is drawn at, in CSS pixels, for the pane to scale it to. */
+export const MAP_WIDTH = W
 /** Height over width of the drawing, for a surface that sizes it itself. */
 export const MAP_ASPECT = H / W
-const CX = 230
-const CY = 212
-const RX = 176
-const RY = 164
+const CX = 280
+const CY = 260
+const RX = 200
+const RY = 195
 const NODE = 22
 const CORE = 40
 /** Where spokes and pulses meet the core: outside the context ring. */
@@ -258,7 +260,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   let body = setup.background === 'transparent' ? '' : `<rect width="${W}" height="${H}" rx="12" fill="${c.ground}"/>`
 
   // Contours around the core.
-  for (const [rx, ry] of [[66, 62], [104, 97], [142, 132]]) {
+  for (const [rx, ry] of [[75, 70], [117, 110], [160, 149]]) {
     body += `<ellipse cx="${CX}" cy="${CY}" rx="${rx}" ry="${ry}" fill="none" stroke="${c.line}" stroke-width=".7" opacity=".45" stroke-dasharray="2 5"/>`
   }
 

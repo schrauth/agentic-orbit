@@ -8,50 +8,49 @@ import { STATIONS } from './setup'
 import type { Setup } from './setup'
 import type { Strings } from './text'
 
-const W = 820
-const H = 770
+const W = 900
+const H = 845
 /** The width the map is drawn at, in CSS pixels, for the pane to scale it to. */
 export const MAP_WIDTH = W
 /** Height over width of the drawing, for a surface that sizes it itself. */
 export const MAP_ASPECT = H / W
-const CX = 410
-const CY = 375
-const RX = 225
-const RY = 215
+const CX = 450
+const CY = 412
+const RX = 248
+const RY = 237
 /** The agents station sits far out beyond the ring, so the wide orbits of its planets never touch its neighbours. */
-const AGENT_RX = 288
-const AGENT_RY = 270
-const NODE = 22
-const CORE = 40
+const AGENT_RX = 322
+const AGENT_RY = 324
+const NODE = 24
+const CORE = 44
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */
-const PLANET = 10
+const PLANET = 10.5
 /** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
-const ORBIT_FIRST = 50
-const ORBIT_STEP = 13
+const ORBIT_FIRST = 55
+const ORBIT_STEP = 14
 const MAX_CREW = 6
 /** How long a subagent's planet keeps circling after its loop is over, and how long it then takes to go out. */
 export const AGENT_HOLD_MS = 60_000
 export const AGENT_FADE_MS = 20_000
 /** One lap of a planet around the agents station: the innermost ring is the slowest, each one a little faster. */
-const orbitLap = (k: number): number => 28_000 - k * 3_000
+const orbitLap = (k: number): number => 34_000 - k * 3_500
 /** Where spokes and pulses meet the core: outside the context ring. */
 const HUB = CORE + 8
 
 const FONT = 'font-family="SF Mono, ui-monospace, Menlo, monospace"'
 
-const PULSE_MS = 800
-const RIPPLE_MS = 450
-const GLOW_MS = 3200
+const PULSE_MS = 950
+const RIPPLE_MS = 540
+const GLOW_MS = 3800
 const ALARM_MS = 6000
 const SWITCH_MS = 8000
-const DONE_MS = 1100
+const DONE_MS = 1250
 const TRAIL_STOPS = 7
 /** A leg of the route stays for a while after it was drawn, then fades: the route shows where the work is going, and the spokes keep where it went. */
 export const TRAIL_HOLD_MS = 40_000
 export const TRAIL_FADE_MS = 20_000
 
 type Point = { x: number; y: number }
-
 /** The angle of place `i` on a ring turned `shift` places. */
 const turn = (i: number, shift: number): number => ((i + shift) * 2 * Math.PI) / STATIONS.length
 const at = (a: number, f = 1, own?: { rx: number; ry: number }): Point => ({ x: CX + (own?.rx ?? RX) * f * Math.sin(a), y: CY - (own?.ry ?? RY) * f * Math.cos(a) })
@@ -61,6 +60,17 @@ const indexOf = (id: StationId): number => STATIONS.findIndex(s => s.id === id)
 const n1 = (v: number): string => (Math.round(v * 10) / 10).toString()
 /** A moment on the drawing's own clock, which starts at zero each time it is drawn; a past moment is negative. */
 const clock = (ms: number): string => `${(ms / 1000).toFixed(3)}s`
+
+/** Where a thing is in its fade at this moment: the opacity it truly sits at, and the piece of the fade
+ * still ahead of it. Both are written into the drawing as it stands, so a redraw never flashes the
+ * thing back to full strength for the one frame before the animation takes over — the same cure the
+ * planet's place on its orbit got. The fade never begins in the past; mid-fade, what remains of it
+ * runs from the opacity it has reached down to zero, in the time it has left. */
+function fadeAt(age: number, holdMs: number, fadeMs: number): { opacity: number; begin: number; dur: number } {
+  if (age < holdMs) return { opacity: 1, begin: holdMs - age, dur: fadeMs }
+  const remain = Math.max(0, holdMs + fadeMs - age)
+  return { opacity: remain / fadeMs, begin: 0, dur: remain }
+}
 
 /** Where a straight line from `from` to `to` meets the circle of radius `r` around `from`. */
 function edge(from: Point, to: Point, r: number): Point {
@@ -90,7 +100,7 @@ const orbitPhase = (k: number, count: number, when: number, lap: number): number
 const orbitDot = (k: number, base: Point, angle: number): Point => ({ x: base.x + orbitRadius(k) * Math.sin(angle), y: base.y - orbitRadius(k) * Math.cos(angle) })
 /** The drawn ring of one subagent's orbit, dashed like the core's contours, but firm enough to read as a path. */
 const orbitRing = (k: number, base: Point, c: Palette): string =>
-  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width="1.4" stroke-dasharray="3 6" opacity=".65"/>`
+  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width="2" stroke-dasharray="3 5.5" opacity=".8"/>`
 /** The palette place of the color one subagent's planet wears: one hue per orbit ring, innermost first. */
 const CREW_HUES: (keyof Palette)[] = ['crew0', 'crew1', 'crew2', 'crew3', 'crew4', 'crew5']
 /** A subagent's planet: a node in the stations' own shape, filled with the hue of its seat,
@@ -103,21 +113,21 @@ const planet = (p: Point, c: Palette, hue: string, isWorking: boolean, isStill: 
       : isStill
         ? `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET + 4}" fill="none" stroke="${hue}" stroke-width="1.2" opacity=".35"/>`
         : `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET + 1}" fill="none" stroke="${hue}" stroke-width="1.3" opacity="0">` +
-          `<animate attributeName="r" values="${PLANET + 1};${PLANET + 6};${PLANET + 1}" dur="2.2s" repeatCount="indefinite"/>` +
-          `<animate attributeName="opacity" values=".55;.12;.55" dur="2.2s" repeatCount="indefinite"/></circle>`
+          `<animate attributeName="r" values="${PLANET + 1};${PLANET + 6};${PLANET + 1}" dur="2.4s" repeatCount="indefinite"/>` +
+          `<animate attributeName="opacity" values=".55;.12;.55" dur="2.4s" repeatCount="indefinite"/></circle>`
   return (
     `${halo}<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET}" fill="${hue}" stroke="${c.line}" stroke-width="1.2"/>` +
-    `<path transform="translate(${n1(p.x)} ${n1(p.y)})" d="M-2.6 0a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0" fill="none" stroke="${c.ground}" stroke-width="1.25" stroke-linecap="round"/>`
+    `<path transform="translate(${n1(p.x)} ${n1(p.y)})" d="M-2.8 0a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0" fill="none" stroke="${c.ground}" stroke-width="1.25" stroke-linecap="round"/>`
   )
 }
 
 /** A pulse with a short tail behind it. A hollow one is a signal nobody asked for. */
-function pulse(a: Point, b: Point, color: string, age: number, radius: number, isHollow = false): string {
+function pulse(a: Point, b: Point, color: string, age: number, radius: number, isHollow: boolean, pulseMs: number): string {
   // A negative begin carries on where the last drawing left off, so a redraw never restarts a flight.
   const path = `M${n1(a.x)} ${n1(a.y)}L${n1(b.x)} ${n1(b.y)}`
   let out = ''
   for (let k = isHollow ? 0 : 2; k >= 0; k--) {
-    const timing = `begin="${clock(k * 45 - age)}" dur="${clock(PULSE_MS)}" fill="freeze"`
+    const timing = `begin="${clock(k * 45 - age)}" dur="${clock(pulseMs)}" fill="freeze"`
     const peak = n1(1 - 0.36 * k)
     const paint = isHollow ? `fill="none" stroke="${color}" stroke-width="1.4"` : `fill="${color}"`
     out +=
@@ -130,19 +140,19 @@ function pulse(a: Point, b: Point, color: string, age: number, radius: number, i
 }
 
 /** A ring that spreads from where a pulse lands, at the moment it lands. */
-function ripple(p: Point, r: number, color: string, age: number): string {
-  const timing = `begin="${clock(PULSE_MS - age)}" dur="${clock(RIPPLE_MS)}" fill="freeze"`
+function ripple(p: Point, r: number, color: string, age: number, rippleMs: number, pulseMs: number): string {
+  const timing = `begin="${clock(pulseMs - age)}" dur="${clock(rippleMs)}" fill="freeze"`
   return (
     `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${r}" fill="none" stroke="${color}" stroke-width="1.2" opacity="0">` +
-    `<animate attributeName="r" values="${r};${r + 11}" ${timing}/>` +
+    `<animate attributeName="r" values="${r};${r + 12}" ${timing}/>` +
     `<animate attributeName="opacity" values=".7;0" ${timing}/></circle>`
   )
 }
 
-function beam(a: Point, b: Point, color: string, age: number, isDashed: boolean): string {
+function beam(a: Point, b: Point, color: string, age: number, isDashed: boolean, glowMs: number): string {
   return (
     `<line x1="${n1(a.x)}" y1="${n1(a.y)}" x2="${n1(b.x)}" y2="${n1(b.y)}" stroke="${color}" stroke-width="1.4"${isDashed ? ' stroke-dasharray="3 4"' : ''} opacity="0">` +
-    `<animate attributeName="opacity" values=".75;0" begin="${clock(-age)}" dur="${clock(GLOW_MS / 2)}" fill="freeze"/></line>`
+    `<animate attributeName="opacity" values=".75;0" begin="${clock(-age)}" dur="${clock(glowMs / 2)}" fill="freeze"/></line>`
   )
 }
 
@@ -156,8 +166,9 @@ function orbitBeam(
   color: string,
   age: number,
   isDashed: boolean,
+  glowMs: number,
 ): string {
-  const life = GLOW_MS / 2
+  const life = glowMs / 2
   const steps = 16
   const from = -age
   const to = from + life
@@ -261,19 +272,19 @@ function station(s: (typeof STATIONS)[number], i: number, { entries, board, now,
   }
   if (running.length > 0) {
     const elapsed = now - Math.min(...running.map(e => e.startedAt))
-    const beat = `begin="${clock(-(elapsed % 1400))}" dur="1.4s" repeatCount="indefinite"`
+    const beat = `begin="${clock(-(elapsed % 1600))}" dur="1.6s" repeatCount="indefinite"`
     // The beat is a ring that spreads: with reduced motion the steady halo and the clock hands say the same.
     if (!isStill) {
       under +=
         `<circle cx="${x}" cy="${y}" r="${NODE}" fill="none" stroke="${color}" stroke-width="1.3">` +
-        `<animate attributeName="r" values="${NODE};${NODE + 15}" ${beat}/>` +
+        `<animate attributeName="r" values="${NODE};${NODE + 16}" ${beat}/>` +
         `<animate attributeName="opacity" values=".9;0" ${beat}/></circle>`
     }
     // Two hands of a clock around the node: the inner one goes round in a minute, the outer one in ten.
     const hand = (r: number, width: number, lapMs: number, isOnce: boolean): string =>
       `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${hot}" stroke-width="${width}" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1" transform="rotate(-90 ${x} ${y})">` +
       `<animate attributeName="stroke-dashoffset" values="1;0" begin="${clock(-(isOnce ? Math.min(elapsed, lapMs) : elapsed % lapMs))}" dur="${clock(lapMs)}" ${isOnce ? 'fill="freeze"' : 'repeatCount="indefinite"'}/></circle>`
-    under += hand(NODE + 4, 2.2, 60_000, false) + hand(NODE + 8, 1.2, 600_000, true)
+    under += hand(NODE + 4.5, 2.4, 60_000, false) + hand(NODE + 9, 1.3, 600_000, true)
   }
 
   // A lit node wears a ring of its color while something runs; afterwards the ring fades back to the resting line.
@@ -290,7 +301,7 @@ function station(s: (typeof STATIONS)[number], i: number, { entries, board, now,
   let over =
     `<circle cx="${x}" cy="${y}" r="${NODE}" fill="${c.raised}" stroke="${c.line}" stroke-width="1.2"/>${cooling}` +
     `<path transform="translate(${x} ${y})" d="${s.icon}" fill="none" stroke="${glyphColor}" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<text x="${x}" y="${n1(p.y + NODE + 15)}" text-anchor="middle" ${FONT} font-size="11.5" ${rim} fill="${isLit || isAlarm ? c.bone : c.ash}">${names[s.id]}</text>`
+    `<text x="${x}" y="${n1(p.y + NODE + 15)}" text-anchor="middle" ${FONT} font-size="12.5" ${rim} fill="${isLit || isAlarm ? c.bone : c.ash}">${names[s.id]}</text>`
 
   if (count > 0) {
     // Memory keeps two counts: what was asked for, and what a hook brought down unasked.
@@ -298,21 +309,21 @@ function station(s: (typeof STATIONS)[number], i: number, { entries, board, now,
     const asked = count - pushed
     const figures =
       pushed === 0 ? String(count) : `${asked > 0 ? `${asked} ` : ''}<tspan fill="${main}">↓${pushed}</tspan>`
-    over += `<text x="${x}" y="${n1(p.y + NODE + 28)}" text-anchor="middle" ${FONT} font-size="9.5" ${rim} fill="${c.dim}">${figures}</text>`
+    over += `<text x="${x}" y="${n1(p.y + NODE + 30)}" text-anchor="middle" ${FONT} font-size="10.5" ${rim} fill="${c.dim}">${figures}</text>`
   }
 
   // Top right: how many run at once. Top left: what went wrong since the last message, until the next one.
   const corner = NODE * 0.74
   if (running.length > 1) {
     over +=
-      `<circle cx="${n1(p.x + corner)}" cy="${n1(p.y - corner)}" r="8" fill="${c.raised}" stroke="${color}" stroke-width="1"/>` +
-      `<text x="${n1(p.x + corner)}" y="${n1(p.y - corner + 3)}" text-anchor="middle" ${FONT} font-size="8.5" fill="${hot}">×${running.length}</text>`
+      `<circle cx="${n1(p.x + corner)}" cy="${n1(p.y - corner)}" r="9" fill="${c.raised}" stroke="${color}" stroke-width="1"/>` +
+      `<text x="${n1(p.x + corner)}" y="${n1(p.y - corner + 3.2)}" text-anchor="middle" ${FONT} font-size="9.5" fill="${hot}">×${running.length}</text>`
   }
   const faults = board.faults?.[s.id] ?? 0
   if (faults > 0) {
     over +=
-      `<circle cx="${n1(p.x - corner)}" cy="${n1(p.y - corner)}" r="7.5" fill="${c.red}"/>` +
-      `<text x="${n1(p.x - corner)}" y="${n1(p.y - corner + 3.1)}" text-anchor="middle" ${FONT} font-size="9" font-weight="700" fill="${c.ground}">${faults > 99 ? '99+' : faults}</text>`
+      `<circle cx="${n1(p.x - corner)}" cy="${n1(p.y - corner)}" r="8.2" fill="${c.red}"/>` +
+      `<text x="${n1(p.x - corner)}" y="${n1(p.y - corner + 3.4)}" text-anchor="middle" ${FONT} font-size="10" font-weight="700" fill="${c.ground}">${faults > 99 ? '99+' : faults}</text>`
   }
   return { under, over }
 }
@@ -327,9 +338,15 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   // With reduced motion nothing flies, spreads or spins. A call still shows: its spoke flashes and fades, its station
   // lights and cools, the route gets its leg; those only change their opacity. The clock hands stay, as slow as a clock's.
   const isStill = setup.motion === 'reduced'
-  const flights = isStill ? [] : recent.filter(e => now - e.startedAt < PULSE_MS + RIPPLE_MS).slice(-14)
-  const returns = isStill ? [] : recent.filter(e => e.endedAt !== undefined && e.from !== 'inbound' && now - e.endedAt < PULSE_MS + RIPPLE_MS).slice(-14)
-  const beams = recent.filter(e => now - e.startedAt < GLOW_MS / 2).slice(-10)
+  // At slow pace every exchange of data takes twice as long to fly, spread and fade.
+  const isSlow = setup.pace === 'slow'
+  const pulseMs = isSlow ? 2 * PULSE_MS : PULSE_MS
+  const rippleMs = isSlow ? 2 * RIPPLE_MS : RIPPLE_MS
+  const glowMs = isSlow ? 2 * GLOW_MS : GLOW_MS
+  const doneMs = isSlow ? 2 * DONE_MS : DONE_MS
+  const flights = isStill ? [] : recent.filter(e => now - e.startedAt < pulseMs + rippleMs).slice(-14)
+  const returns = isStill ? [] : recent.filter(e => e.endedAt !== undefined && e.from !== 'inbound' && now - e.endedAt < pulseMs + rippleMs).slice(-14)
+  const beams = recent.filter(e => now - e.startedAt < glowMs / 2).slice(-10)
   const anyRunning = recent.some(e => e.status === 'run')
   const agentsAt = place(indexOf('agents'), shift)
   /** The subagents that get a planet of their own, each in the seat it was given: those at work,
@@ -344,7 +361,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   let body = setup.background === 'transparent' ? '' : `<rect width="${W}" height="${H}" rx="12" fill="${c.ground}"/>`
 
   // Contours around the core.
-  for (const [rx, ry] of [[75, 70], [117, 110], [160, 149]]) {
+  for (const [rx, ry] of [[82, 77], [129, 121], [176, 164]]) {
     body += `<ellipse cx="${CX}" cy="${CY}" rx="${rx}" ry="${ry}" fill="none" stroke="${c.line}" stroke-width=".7" opacity=".45" stroke-dasharray="2 5"/>`
   }
 
@@ -398,25 +415,25 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
       if (k >= 0) {
         const lap = orbitLap(k)
         // The rotation is already mid-lap at drawing time; the beam must sample it at absolute moments, as agentFrom does.
-        body += orbitBeam(lap, when => orbitDot(k, agentsAt, orbitPhase(k, crew.length, now + when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false)
+        body += orbitBeam(lap, when => orbitDot(k, agentsAt, orbitPhase(k, crew.length, now + when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false, glowMs)
         continue
       }
     }
-    body += beam(a, b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, e.from === 'inbound')
+    body += beam(a, b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, e.from === 'inbound', glowMs)
   }
   for (const e of flights) {
     const [a, b] = aside(...ends(e), lane(flights, e))
     const age = now - e.startedAt
     const color = e.status === 'block' ? c.red : tone(e)[1]
     if (e.from === 'inbound') {
-      body += pulse(b, a, color, age, 3.8, true) + ripple(core, HUB - 2, color, age)
+      body += pulse(b, a, color, age, 3.8, true, pulseMs) + ripple(core, HUB - 2, color, age, rippleMs, pulseMs)
     } else {
-      body += pulse(a, b, color, age, 3.8) + ripple(place(indexOf(e.station), shift), NODE, color, age)
+      body += pulse(a, b, color, age, 3.8, false, pulseMs) + ripple(place(indexOf(e.station), shift), NODE, color, age, rippleMs, pulseMs)
     }
   }
   for (const e of returns) {
     const [a, b] = aside(...ends(e), lane(returns, e))
-    body += pulse(b, a, e.status === 'ok' ? c.ash : c.red, now - (e.endedAt as number), 2.6)
+    body += pulse(b, a, e.status === 'ok' ? c.ash : c.red, now - (e.endedAt as number), 2.6, false, pulseMs)
   }
 
   // Each subagent circles the agents station as a planet of its own, one wide orbit per subagent,
@@ -427,9 +444,11 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
     const hue = c[CREW_HUES[k] ?? 'crew0']
     const spin = `${n1(agentsAt.x)} ${n1(agentsAt.y)}`
-    // The fade is written into the drawing, so a planet goes out on time even when nothing redraws the map.
-    const out = age < 0 ? '' : `<animate attributeName="opacity" values="1;0" begin="${clock(AGENT_HOLD_MS - age)}" dur="${clock(AGENT_FADE_MS)}" fill="freeze"/>`
-    const hold = out === '' ? '' : `<g opacity="1">${out}`
+    // The fade is written into the drawing, so a planet goes out on time even when nothing redraws the map —
+    // and mid-fade, the group already sits at the opacity the fade has really reached.
+    const fading = age >= 0 ? fadeAt(age, AGENT_HOLD_MS, AGENT_FADE_MS) : undefined
+    const out = fading === undefined ? '' : `<animate attributeName="opacity" values="${n1(fading.opacity)};0" begin="${clock(fading.begin)}" dur="${clock(fading.dur)}" fill="freeze"/>`
+    const hold = out === '' ? '' : `<g opacity="${n1(fading?.opacity ?? 1)}">${out}`
     const shut = out === '' ? '' : '</g>'
     body += `${hold}${orbitRing(k, agentsAt, c)}`
     // Standing still, each keeps its own place on its orbit.
@@ -453,18 +472,19 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   // fading out together with the planet it explains, so nothing outlives what it stood for.
   // Only the short description a subagent was started with; never anything of its prompt.
   if (crew.length > 0) {
-    const legendX = 22
-    const legendBottom = H - 16
+    const legendX = 24
+    const legendBottom = H - 18
     crew.forEach((seat, k) => {
       const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
       const hue = c[CREW_HUES[k] ?? 'crew0']
-      const out = age < 0 ? '' : `<animate attributeName="opacity" values="1;0" begin="${clock(AGENT_HOLD_MS - age)}" dur="${clock(AGENT_FADE_MS)}" fill="freeze"/>`
-      const hold = out === '' ? '' : `<g opacity="1">${out}`
+      const fading = age >= 0 ? fadeAt(age, AGENT_HOLD_MS, AGENT_FADE_MS) : undefined
+      const out = fading === undefined ? '' : `<animate attributeName="opacity" values="${n1(fading.opacity)};0" begin="${clock(fading.begin)}" dur="${clock(fading.dur)}" fill="freeze"/>`
+      const hold = out === '' ? '' : `<g opacity="${n1(fading?.opacity ?? 1)}">${out}`
       const shut = out === '' ? '' : '</g>'
-      const y = legendBottom - (crew.length - 1 - k) * 13
-      const name = (seat.name ?? setup.t.subagent).length > 26 ? `${(seat.name ?? setup.t.subagent).slice(0, 25)}…` : seat.name ?? setup.t.subagent
-      body += `${hold}<circle cx="${legendX}" cy="${n1(y - 3)}" r="4" fill="${hue}"/>` +
-        `<text x="${legendX + 10}" y="${n1(y)}" ${FONT} font-size="9.5" fill="${c.ash}">${escapeXml(name)}</text>${shut}`
+      const y = legendBottom - (crew.length - 1 - k) * 16
+      const name = (seat.name ?? setup.t.subagent).length > 28 ? `${(seat.name ?? setup.t.subagent).slice(0, 27)}…` : seat.name ?? setup.t.subagent
+      body += `${hold}<circle cx="${legendX}" cy="${n1(y - 4)}" r="5" fill="${hue}"/>` +
+        `<text x="${legendX + 13}" y="${n1(y)}" ${FONT} font-size="11" fill="${c.ash}">${escapeXml(name)}</text>${shut}`
     })
   }
 
@@ -472,27 +492,27 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
 
   // A name longer than three letters shrinks to stay inside the circle.
   const coreName = board.model === undefined ? setup.core : modelFamily(board.model)
-  const coreSize = Math.min(17, 62 / (0.75 * coreName.length))
+  const coreSize = Math.min(18.5, 68 / (0.75 * coreName.length))
 
   // The core breathes at rest and quickens while something runs.
-  const period = anyRunning ? 1600 : 4800
+  const period = anyRunning ? 1800 : 5400
   const breath = `begin="${clock(-(now % period))}" dur="${clock(period)}" repeatCount="indefinite"`
   body +=
     (isStill
-      ? `<circle cx="${CX}" cy="${CY}" r="${CORE + 8}" fill="${c.accent}" opacity="${anyRunning ? '.16' : '.08'}"/>`
-      : `<circle cx="${CX}" cy="${CY}" r="${CORE + 6}" fill="${c.accent}" opacity=".08">` +
-        `<animate attributeName="r" values="${CORE + 3};${CORE + 13};${CORE + 3}" ${breath}/>` +
+      ? `<circle cx="${CX}" cy="${CY}" r="${CORE + 9}" fill="${c.accent}" opacity="${anyRunning ? '.16' : '.08'}"/>`
+      : `<circle cx="${CX}" cy="${CY}" r="${CORE + 7}" fill="${c.accent}" opacity=".08">` +
+        `<animate attributeName="r" values="${CORE + 3};${CORE + 14};${CORE + 3}" ${breath}/>` +
         `<animate attributeName="opacity" values=".05;${anyRunning ? '.24' : '.12'};.05" ${breath}/></circle>`) +
     `<circle cx="${CX}" cy="${CY}" r="${CORE}" fill="${c.raised}" stroke="${anyRunning ? c.accent : c.line}" stroke-width="1.3"/>`
 
   // The context window as a ring around the core: it fills as the session goes and empties at a compaction.
   if (board.context !== undefined) {
     const full = Math.max(0, Math.min(100, Math.round(board.context)))
-    const ring = `cx="${CX}" cy="${CY}" r="${CORE + 5}" fill="none" stroke-width="2.2"`
+    const ring = `cx="${CX}" cy="${CY}" r="${CORE + 5.5}" fill="none" stroke-width="2.4"`
     body +=
       `<circle ${ring} stroke="${c.line}" opacity=".7"/>` +
       `<circle ${ring} stroke="${full >= 90 ? c.red : full >= 70 ? c.accent : c.ash}" pathLength="100" stroke-dasharray="${full} 100" transform="rotate(-90 ${CX} ${CY})"/>` +
-      `<text x="${CX}" y="${CY - 19}" text-anchor="middle" ${FONT} font-size="8" fill="${c.dim}">${full}%</text>`
+      `<text x="${CX}" y="${n1(CY - 21)}" text-anchor="middle" ${FONT} font-size="8.5" fill="${c.dim}">${full}%</text>`
   }
 
   const switchAge = board.switchedAt === undefined ? Infinity : now - board.switchedAt
@@ -500,7 +520,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   // The core names the family of the model at work; before the first request it is the core the person set.
   body += `<text x="${CX}" y="${CY + (board.model === undefined ? 6 : 1)}" text-anchor="middle" ${FONT} font-size="${n1(coreSize)}" letter-spacing="${n1(coreSize * 0.147)}" fill="${c.bone}">${escapeXml(coreName)}</text>`
   if (board.model !== undefined) {
-    body += `<text x="${CX}" y="${CY + 17}" text-anchor="middle" ${FONT} font-size="9" fill="${isSwitching ? c.hot : c.ash}">${escapeXml(shortModel(board.model))}</text>`
+    body += `<text x="${CX}" y="${n1(CY + 19)}" text-anchor="middle" ${FONT} font-size="10" fill="${isSwitching ? c.hot : c.ash}">${escapeXml(shortModel(board.model))}</text>`
   }
 
   // A changed model rings at the core and at its station for a few seconds.
@@ -511,18 +531,18 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
       const ringing = `begin="${clock(-(switchAge % 1600))}" dur="1.6s" repeatCount="${laps}" fill="freeze"`
       body +=
         `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${r}" fill="none" stroke="${c.bone}" stroke-width="1.4" opacity="0">` +
-        `<animate attributeName="r" values="${r};${r + 26}" ${ringing}/>` +
+        `<animate attributeName="r" values="${r};${r + 29}" ${ringing}/>` +
         `<animate attributeName="opacity" values=".7;0" ${ringing}/></circle>`
     }
   }
 
   // The answer leaves the core as one wide ring.
   const done = recent.filter(e => e.mark === 'done').pop()
-  if (done !== undefined && now - done.startedAt < DONE_MS && !isStill) {
-    const leaving = `begin="${clock(done.startedAt - now)}" dur="${clock(DONE_MS)}" fill="freeze"`
+  if (done !== undefined && now - done.startedAt < doneMs && !isStill) {
+    const leaving = `begin="${clock(done.startedAt - now)}" dur="${clock(doneMs)}" fill="freeze"`
     body +=
-      `<circle cx="${CX}" cy="${CY}" r="${CORE}" fill="none" stroke="${c.bone}" stroke-width="1.6" opacity="0">` +
-      `<animate attributeName="r" values="${CORE};${CORE + 38}" ${leaving}/>` +
+      `<circle cx="${CX}" cy="${CY}" r="${CORE}" fill="none" stroke="${c.bone}" stroke-width="1.7" opacity="0">` +
+      `<animate attributeName="r" values="${CORE};${CORE + 42}" ${leaving}/>` +
       `<animate attributeName="opacity" values=".6;0" ${leaving}/></circle>`
   }
 

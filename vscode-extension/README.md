@@ -44,6 +44,7 @@ from the stream (fallback: a character-based estimate). The ring turns amber at 
 | `agenticOrbit.language` | `en` | Map texts |
 | `agenticOrbit.theme` | `auto` | `auto` / `dark` / `light` |
 | `agenticOrbit.motion` | `full` | Animation level |
+| `agenticOrbit.pace` | `normal` | `normal` / `slow`: the speed of the data exchanges |
 | `agenticOrbit.memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
 
 ## Build

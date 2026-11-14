@@ -32,7 +32,7 @@ What each version changed is in [CHANGELOG.md](CHANGELOG.md).
 
 | Station | When it lights up |
 | --- | --- |
-| **You** | your messages, questions and files sent to you, the task list and the plan |
+| **Operator** | your messages, questions and files sent to you, the task list and the plan |
 | **Model** | each model request |
 | **Memory** | MCP servers you name in the settings, and shell commands or paths you name there — without any of these, the station stays dark |
 | **Files** | file tools, and shell commands that work on files and nothing else — they read, search, move, delete or edit in place (`cat`, `grep`, `mv`, `rm`, `sed`, `tee`, `find … -delete`) |
@@ -163,6 +163,7 @@ Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [settings]
 | `agenticOrbit.language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |
 | `agenticOrbit.theme` | `auto` | `auto` / `dark` / `light` |
 | `agenticOrbit.motion` | `full` | `full` / `reduced` |
+| `agenticOrbit.pace` | `normal` | `normal` / `slow`, which draws every data exchange at half speed |
 | `agenticOrbit.memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
 | `agenticOrbit.memoryCommands` | `[]` | Shell command names that read as Memory |
 | `agenticOrbit.memorySubcommands` | `[]` | Shell subcommands that read as Memory |
@@ -216,7 +217,7 @@ What it offers:
 
 - four made-up scenarios — a calm turn, a ten-planet subagent storm, errors and refusals, a filling context window;
 - a clock you can pause, reset and run at 0.25× to 8×, so a minute-long stay of a planet can be watched in seconds;
-- the same settings the extension has — theme, layout, motion, language — switched while it runs, plus zoom and the pane's buttons;
+- the same settings the extension has — theme, layout, motion, pace, language — switched while it runs, plus zoom and the pane's buttons;
 - a copy of the board's state as JSON, for a look at what the drawing was fed.
 
 The drawing is the real one from `hooks/`; the fake backend is `demo/engine.ts`, which replays the same event handling the extension host performs. The extension's own `npm run compile` does not build or see the demo.

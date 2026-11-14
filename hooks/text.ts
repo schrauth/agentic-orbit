@@ -55,7 +55,7 @@ const en: Strings = {
   hideMap: 'Hide map',
   showMap: 'Show map',
   stations: {
-    you: 'You',
+    you: 'Operator',
     model: 'Model',
     memory: 'Memory',
     files: 'Files',
@@ -108,7 +108,7 @@ const ru: Strings = {
   hideMap: 'Скрыть карту',
   showMap: 'Показать карту',
   stations: {
-    you: 'Ты',
+    you: 'Оператор',
     model: 'Модель',
     memory: 'Память',
     files: 'Файлы',
@@ -161,7 +161,7 @@ const es: Strings = {
   hideMap: 'Ocultar mapa',
   showMap: 'Mostrar mapa',
   stations: {
-    you: 'Tú',
+    you: 'Operador',
     model: 'Modelo',
     memory: 'Memoria',
     files: 'Archivos',
@@ -214,7 +214,7 @@ const fr: Strings = {
   hideMap: 'Masquer la carte',
   showMap: 'Afficher la carte',
   stations: {
-    you: 'Vous',
+    you: 'Opérateur',
     model: 'Modèle',
     memory: 'Mémoire',
     files: 'Fichiers',
@@ -267,7 +267,7 @@ const de: Strings = {
   hideMap: 'Karte ausblenden',
   showMap: 'Karte zeigen',
   stations: {
-    you: 'Du',
+    you: 'Operator',
     model: 'Modell',
     memory: 'Gedächtnis',
     files: 'Dateien',
@@ -320,7 +320,7 @@ const it: Strings = {
   hideMap: 'Nascondi mappa',
   showMap: 'Mostra mappa',
   stations: {
-    you: 'Tu',
+    you: 'Operatore',
     model: 'Modello',
     memory: 'Memoria',
     files: 'File',
@@ -374,7 +374,7 @@ const pt: Strings = {
   hideMap: 'Ocultar mapa',
   showMap: 'Mostrar mapa',
   stations: {
-    you: 'Tu',
+    you: 'Operador',
     model: 'Modelo',
     memory: 'Memória',
     files: 'Ficheiros',

@@ -8,7 +8,7 @@ const BASE = 1_770_000_000_000
 /** How often the map is redrawn while it runs: the panel keeps the same beat. */
 const REDRAW_MS = 1000
 
-type Options = { scenario: number; speed: number; playing: boolean; theme: 'dark' | 'light' | 'auto'; layout: 'you-top' | 'you-bottom'; motion: 'full' | 'reduced'; language: string }
+type Options = { scenario: number; speed: number; playing: boolean; theme: 'dark' | 'light' | 'auto'; layout: 'you-top' | 'you-bottom'; motion: 'full' | 'reduced'; pace: 'normal' | 'slow'; language: string }
 
 const state: Options & { clock: number; applied: number; zoom: number; minimized: boolean } = {
   scenario: 0,
@@ -17,6 +17,7 @@ const state: Options & { clock: number; applied: number; zoom: number; minimized
   theme: 'dark',
   layout: 'you-top',
   motion: 'full',
+  pace: 'normal',
   language: 'en',
   clock: 0,
   applied: 0,
@@ -27,7 +28,7 @@ const state: Options & { clock: number; applied: number; zoom: number; minimized
 const session = new FakeSession(BASE)
 let lastDrawn = -1
 
-const setup = () => demoSetup({ theme: state.theme, layout: state.layout, motion: state.motion, language: state.language })
+const setup = () => demoSetup({ theme: state.theme, layout: state.layout, motion: state.motion, pace: state.pace, language: state.language })
 const scenario = () => SCENARIOS[state.scenario] ?? SCENARIOS[0]
 
 /** Back to the start of the scenario: the board emptied, the clock at zero. */
@@ -176,6 +177,12 @@ function wireControls(): void {
   const motion = <HTMLSelectElement>document.getElementById('motion')!
   motion.onchange = () => {
     state.motion = motion.value as Options['motion']
+    render(true)
+  }
+
+  const pace = <HTMLSelectElement>document.getElementById('pace')!
+  pace.onchange = () => {
+    state.pace = pace.value as Options['pace']
     render(true)
   }
 

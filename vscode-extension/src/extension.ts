@@ -32,6 +32,7 @@ function config(): Record<string, unknown> {
     coreName: c.get('coreName', 'COPILOT'),
     layout: c.get('layout', 'you-top'),
     motion: c.get('motion', 'full'),
+    pace: c.get('pace', 'normal'),
     theme: theme === 'auto' ? (isDark ? 'dark' : 'light') : theme,
     background: c.get('background', 'solid'),
     colors: c.get('colors', ''),

@@ -32,7 +32,7 @@ export type Scenario = { name: string; steps: Step[] }
 const CONTEXT_LIMIT = 128000
 
 /** The widths, in CSS pixels, the map may be drawn at; the same ladder the panel uses. */
-export const ZOOMS = [160, 200, 240, 280, 340, 400, 480, 520, 560, 600]
+export const ZOOMS = [180, 220, 260, 310, 370, 440, 530, 570, 620, 660]
 const LONG_LABEL = 28
 
 /** A turn of the demo clock. `at` is ms from the scenario's start; the absolute stamp is `base + at`. */
@@ -230,12 +230,13 @@ export function escapeHtml(text: string): string {
 }
 
 /** The options the demo's controls hold, made into the same `Setup` the extension makes of its own. */
-export function demoSetup(options: { theme?: string; layout?: string; motion?: string; language?: string }): Setup {
+export function demoSetup(options: { theme?: string; layout?: string; motion?: string; pace?: string; language?: string }): Setup {
   return setupFrom({
     language: options.language ?? 'en',
     theme: options.theme ?? 'dark',
     layout: options.layout ?? 'you-top',
     motion: options.motion ?? 'full',
+    pace: options.pace ?? 'normal',
     coreName: 'COPILOT',
     background: 'solid',
   })

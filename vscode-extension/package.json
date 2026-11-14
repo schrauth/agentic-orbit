@@ -73,6 +73,15 @@
           "default": "full",
           "description": "With reduced, nothing on the map flies, spreads or spins."
         },
+        "agenticOrbit.pace": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "slow"
+          ],
+          "default": "normal",
+          "description": "The speed of the data exchanges on the map: with slow, every flight, ripple and fade takes twice as long."
+        },
         "agenticOrbit.theme": {
           "type": "string",
           "enum": [

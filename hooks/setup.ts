@@ -49,6 +49,8 @@ export type Setup = {
   layout: 'you-top' | 'you-bottom'
   /** With `reduced` nothing on the map flies, spreads or spins: what changes only fades. */
   motion: 'full' | 'reduced'
+  /** How fast the exchanges move: at `slow` every flight and fade takes twice as long. */
+  pace: 'normal' | 'slow'
   /** The size of the words under the map, a step on the surface's own scale. A terminal has one size. */
   textSize: 'caption' | 'footnote' | 'body'
   /** How the map looks in a terminal: the rows alone, as always, or the map's picture above them. */
@@ -90,6 +92,7 @@ export function setupFrom(options: Readonly<Record<string, unknown>> = {}): Setu
     colors: colorsFrom(options.colors),
     layout: options.layout === 'you-bottom' ? 'you-bottom' : 'you-top',
     motion: options.motion === 'reduced' ? 'reduced' : 'full',
+    pace: options.pace === 'slow' ? 'slow' : 'normal',
     textSize: options.textSize === 'caption' || options.textSize === 'body' ? options.textSize : 'footnote',
     terminalView: options.terminalView === 'picture' ? 'picture' : 'text',
     cellShape: cellShapeFrom(options.cellShape),

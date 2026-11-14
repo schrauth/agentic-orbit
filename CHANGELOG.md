@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A planet no longer blinks back to full strength while it fades out: mid-fade the drawing already sits at the opacity the fade has reached, the same cure the planet's place on its orbit got.
+- The orbit paths read stronger, the whole map a good tenth larger, and the Agents station sits farther out with it. The legend under the map grew with the map.
+- The map moves a bit slower: pulses, ripples, the station beat and the core's breath all take a little longer.
+- The **You** station is now called **Operator** — in every language the map speaks.
+- New setting `agenticOrbit.pace`: with `slow`, every flight, ripple and fade on the map takes twice as long. The demo carries a pace switch of its own beside the motion one.
 - A planet no longer flashes back to the top of its orbit for a frame whenever the map is redrawn: the rotation now starts from the angle the orbit is really in, so the very first frame already shows the planet where it belongs.
 - A browser demo under `demo/` runs the extension's own drawing on fake events, so the map's design can be worked on and judged without packaging and installing the extension. It ships nothing and changes nothing of the extension itself.
 - Subagent planets turn much slower, their orbit rings sit closer together, and a subagent that is done keeps circling for a minute before a quiet fade.

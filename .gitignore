@@ -3,5 +3,7 @@
 vscode-extension/node_modules/
 vscode-extension/out/
 vscode-extension/*.vsix
+demo/node_modules/
+demo/bundle.js
 .github/agents/
 .github/hooks/

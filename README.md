@@ -202,6 +202,25 @@ npm run package   # → agentic-orbit-x.y.z.vsix
 
 `scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch every station light up at once. For a longer look, `scripts/subagent-storm.sh` runs about a minute of made-up subagent traffic — up to six planets circling the Agents station in overlapping waves.
 
+### Working on the map's design: the browser demo
+
+To judge a change to the drawing you would otherwise package the extension, install it and reload the window. The demo in `demo/` spares you that: a plain page that runs the extension's own drawing, board and classification on **fake events** — nothing is read, written or sent, and nothing of the demo ships in the extension.
+
+```bash
+cd demo
+npm install
+npm run watch     # builds and serves http://localhost:8000
+```
+
+What it offers:
+
+- four made-up scenarios — a calm turn, a ten-planet subagent storm, errors and refusals, a filling context window;
+- a clock you can pause, reset and run at 0.25× to 8×, so a minute-long stay of a planet can be watched in seconds;
+- the same settings the extension has — theme, layout, motion, language — switched while it runs, plus zoom and the pane's buttons;
+- a copy of the board's state as JSON, for a look at what the drawing was fed.
+
+The drawing is the real one from `hooks/`; the fake backend is `demo/engine.ts`, which replays the same event handling the extension host performs. The extension's own `npm run compile` does not build or see the demo.
+
 Words live in `hooks/text.ts`; a new language is one more table there. Before you send a change, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- The browser workshop for the map's design: it runs the real drawing on fake events, so a change can be
+     judged without packaging the extension. Nothing on this page ships or speaks for the extension. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic Orbit — UI demo</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div id="controls">
+  <div class="group">
+    <select id="scenario" title="Which fake turn to replay"></select>
+    <button id="play" class="btn">❚❚ pause</button>
+    <button id="reset" class="btn">↺</button>
+    <input id="speed" type="range" min="0.25" max="8" step="0.25" value="1" title="How fast the fake clock runs">
+    <span id="clock"></span>
+  </div>
+  <div class="group">
+    <select id="theme" title="The map's palette">
+      <option value="dark">dark</option>
+      <option value="light">light</option>
+      <option value="auto">auto</option>
+    </select>
+    <select id="layout" title="Where you sit on the map">
+      <option value="you-top">you top</option>
+      <option value="you-bottom">you bottom</option>
+    </select>
+    <select id="motion" title="How much the map moves">
+      <option value="full">motion full</option>
+      <option value="reduced">motion reduced</option>
+    </select>
+    <select id="language" title="The language of the labels"></select>
+  </div>
+  <div class="group">
+    <button id="copy" class="btn" title="Copy the board's state as JSON">copy board state</button>
+  </div>
+</div>
+<pre id="board-dump" hidden></pre>
+<div id="map"></div>
+<div id="nowline"></div>
+<div id="counts"></div>
+<div id="buttons"></div>
+<div id="feed"></div>
+<script src="bundle.js"></script>
+</body>
+</html>

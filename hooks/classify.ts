@@ -223,10 +223,19 @@ export function classifyShell(command: string, description: string, setup: Setup
   return { station: 'shell', label }
 }
 
-/** `gpt-5.2-high` reads as `gpt 5.2 high`; a name that fits no pattern stays as it is. */
+/** `gpt-5.2-high` reads as `gpt 5.2 high`; a vendor's prefix is dropped and a version's `V` with it:
+ * `nvidia/GLM-5.3-NVFP4` reads as `GLM 5.3`, `deepseek-ai/DeepSeek-V4.1-Flash` as `DeepSeek 4.1 flash`. A name that fits no pattern stays as it is. */
 export function shortModel(model: string): string {
-  const m = /^([a-z]+)-(\d+)(?:\.(\d+))?(?:-([a-z0-9.]+))?$/i.exec(model)
-  return m === null ? model : `${m[1]} ${m[2]}${m[3] !== undefined ? `.${m[3]}` : ''}${m[4] !== undefined ? ` ${m[4]}` : ''}`
+  const last = model.split('/').pop() ?? model
+  const m = /^([a-z][a-z0-9]*)[-_]?(?:v)?(\d+)(?:\.(\d+))?(?:[-_]([a-z0-9.]+))?$/i.exec(last)
+  if (m === null) return model
+  const tag = m[4] ?? ''
+  return `${m[1]} ${m[2]}${m[3] !== undefined ? `.${m[3]}` : ''}${tag !== '' && !/^[A-Z0-9]{2,}$/.test(tag) ? ` ${tag}` : ''}`
+}
+
+/** The family a model belongs to, for the centre of the map: `GLM`, `DeepSeek`, `gpt`. */
+export function modelFamily(model: string): string {
+  return shortModel(model).split(/[\s/]/)[0] ?? model
 }
 
 export function formatMs(ms: number, t: Strings): string {

@@ -1,7 +1,7 @@
 // How the board is drawn: one SVG, the agent in the centre and a station for each kind of work.
 // Nothing here touches the engine.
 import type { Board, Entry, StationId } from '../types'
-import { shortModel } from './classify'
+import { shortModel, modelFamily } from './classify'
 import { DARK, LIGHT, lightRules } from './palette'
 import type { Palette } from './palette'
 import { STATIONS } from './setup'
@@ -328,7 +328,8 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   })
 
   // A name longer than three letters shrinks to stay inside the circle.
-  const coreSize = Math.min(17, 62 / (0.75 * setup.core.length))
+  const coreName = board.model === undefined ? setup.core : modelFamily(board.model)
+  const coreSize = Math.min(17, 62 / (0.75 * coreName.length))
 
   // The core breathes at rest and quickens while something runs.
   const period = anyRunning ? 1600 : 4800
@@ -353,7 +354,8 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
 
   const switchAge = board.switchedAt === undefined ? Infinity : now - board.switchedAt
   const isSwitching = switchAge >= 0 && switchAge < SWITCH_MS
-  body += `<text x="${CX}" y="${CY + (board.model === undefined ? 6 : 1)}" text-anchor="middle" ${FONT} font-size="${n1(coreSize)}" letter-spacing="${n1(coreSize * 0.147)}" fill="${c.bone}">${escapeXml(setup.core)}</text>`
+  // The core names the family of the model at work; before the first request it is the core the person set.
+  body += `<text x="${CX}" y="${CY + (board.model === undefined ? 6 : 1)}" text-anchor="middle" ${FONT} font-size="${n1(coreSize)}" letter-spacing="${n1(coreSize * 0.147)}" fill="${c.bone}">${escapeXml(coreName)}</text>`
   if (board.model !== undefined) {
     body += `<text x="${CX}" y="${CY + 17}" text-anchor="middle" ${FONT} font-size="9" fill="${isSwitching ? c.hot : c.ash}">${escapeXml(shortModel(board.model))}</text>`
   }

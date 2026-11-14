@@ -4,6 +4,7 @@
 
 - Subagent planets turn much slower, their orbit rings sit closer together, and a subagent that is done keeps circling for a minute before a quiet fade.
 - Each subagent's planet wears a hue of its own, and a legend under the map names every color with the short description its subagent was started with. The orbit paths read firmer, the planets are a touch smaller, and while an agent works its planet pulses in its own hue — a lingering one sits still.
+- A beam that leaves a subagent's planet now truly rides it along its orbit (it had clung to the wrong phase of the lap), drawn from twice as many positions so it hugs the arc, and the innermost orbit moved farther out so nothing crowds the station.
 
 ## 0.2.0
 

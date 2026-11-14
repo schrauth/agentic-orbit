@@ -26,8 +26,8 @@ const CORE = 40
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */
 const PLANET = 10
 /** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
-const ORBIT_FIRST = 40
-const ORBIT_STEP = 15
+const ORBIT_FIRST = 50
+const ORBIT_STEP = 13
 const MAX_CREW = 6
 /** How long a subagent's planet keeps circling after its loop is over, and how long it then takes to go out. */
 export const AGENT_HOLD_MS = 60_000
@@ -158,7 +158,7 @@ function orbitBeam(
   isDashed: boolean,
 ): string {
   const life = GLOW_MS / 2
-  const steps = 8
+  const steps = 16
   const from = -age
   const to = from + life
   const xs: string[] = []
@@ -397,7 +397,8 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
       const k = crew.findIndex(seat => seat.id === (e.agentId ?? ''))
       if (k >= 0) {
         const lap = orbitLap(k)
-        body += orbitBeam(lap, when => orbitDot(k, agentsAt, orbitPhase(k, crew.length, when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false)
+        // The rotation is already mid-lap at drawing time; the beam must sample it at absolute moments, as agentFrom does.
+        body += orbitBeam(lap, when => orbitDot(k, agentsAt, orbitPhase(k, crew.length, now + when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false)
         continue
       }
     }

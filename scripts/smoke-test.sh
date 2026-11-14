@@ -69,7 +69,7 @@ echo "6. Skills / Toolsuche                    → Skills"
 fire preToolUse  '{"tool_name":"search_tools","tool_use_id":"t6"}'
 fire postToolUse '{"tool_name":"search_tools","tool_use_id":"t6"}'
 
-echo "7. Subagent                              → Agents (recherche), Punkt kreist"
+echo "7. Subagent                              → Agents (recherche), Punkt kreist auf eigenem Orbit"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"t7","agent_id":"a1","description":"recherche","tool_input":{"description":"recherche"}}'
 fire postToolUse '{"tool_name":"task","tool_use_id":"t7","agent_id":"a1"}'
 

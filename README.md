@@ -107,7 +107,7 @@ The centre and the **Model** station ring for a few seconds, and the feed gets a
 
 ### Subagents
 
-Each subagent still at work circles the **Agents** station as a small dot, and its calls start from there.
+Each subagent still at work circles the **Agents** station as a small dot on its own orbit — one dashed ring per subagent, drawn around the station, which sits a little further out than the ring — and its calls start from there.
 
 ### The answer
 

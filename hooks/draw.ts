@@ -18,8 +18,15 @@ const CX = 320
 const CY = 295
 const RX = 225
 const RY = 215
+/** The agents station sits a little further out than the ring, so its small orbits never touch its neighbours. */
+const AGENT_RX = 243
+const AGENT_RY = 232
 const NODE = 22
 const CORE = 40
+/** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
+const ORBIT_FIRST = NODE + 8
+const ORBIT_STEP = 4.5
+const MAX_CREW = 6
 /** Where spokes and pulses meet the core: outside the context ring. */
 const HUB = CORE + 8
 
@@ -40,8 +47,8 @@ type Point = { x: number; y: number }
 
 /** The angle of place `i` on a ring turned `shift` places. */
 const turn = (i: number, shift: number): number => ((i + shift) * 2 * Math.PI) / STATIONS.length
-const at = (a: number, f = 1): Point => ({ x: CX + RX * f * Math.sin(a), y: CY - RY * f * Math.cos(a) })
-const place = (i: number, shift: number): Point => at(turn(i, shift))
+const at = (a: number, f = 1, own?: { rx: number; ry: number }): Point => ({ x: CX + (own?.rx ?? RX) * f * Math.sin(a), y: CY - (own?.ry ?? RY) * f * Math.cos(a) })
+const place = (i: number, shift: number): Point => at(turn(i, shift), 1, STATIONS[i]?.id === 'agents' ? { rx: AGENT_RX, ry: AGENT_RY } : undefined)
 const indexOf = (id: StationId): number => STATIONS.findIndex(s => s.id === id)
 
 const n1 = (v: number): string => (Math.round(v * 10) / 10).toString()
@@ -61,6 +68,16 @@ function aside(a: Point, b: Point, off: number): [Point, Point] {
   const dy = ((b.x - a.x) * off) / d
   return [{ x: a.x + dx, y: a.y + dy }, { x: b.x + dx, y: b.y + dy }]
 }
+
+/** A subagent's own orbit: each agent a little further out than the one before. */
+const orbitRadius = (k: number): number => ORBIT_FIRST + k * ORBIT_STEP
+/** A subagent's place on its orbit, spread apart from the others. */
+const orbitAngle = (k: number, count: number): number => (2 * Math.PI * (k + 0.5)) / count
+/** The point on its ring a subagent sits at. */
+const orbitDot = (k: number, base: Point, angle: number): Point => ({ x: base.x + orbitRadius(k) * Math.sin(angle), y: base.y - orbitRadius(k) * Math.cos(angle) })
+/** The drawn ring of one subagent's orbit, dashed as faintly as the core's contours. */
+const orbitRing = (k: number, base: Point, c: Palette): string =>
+  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width=".8" stroke-dasharray="2 4" opacity=".55"/>`
 
 /** A pulse with a short tail behind it. A hollow one is a signal nobody asked for. */
 function pulse(a: Point, b: Point, color: string, age: number, radius: number, isHollow = false): string {
@@ -253,6 +270,8 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   const beams = recent.filter(e => now - e.startedAt < GLOW_MS / 2).slice(-10)
   const anyRunning = recent.some(e => e.status === 'run')
   const agentsAt = place(indexOf('agents'), shift)
+  /** The subagents that get an orbit of their own; a longer crew stays nameless at the station. */
+  const crew = (board.agents ?? []).slice(0, MAX_CREW)
   const isBad = (e: Entry): boolean => e.status === 'block' || e.status === 'err'
   const tone = (e: Entry): [string, string] => (e.station === 'memory' ? [c.mem, c.memHot] : [c.accent, c.hot])
 
@@ -281,11 +300,22 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   body += drawn.map(d => d.under).join('')
   body += trail(recent, now, c, isStill, shift)
 
-  /** The two ends of an entry's spoke: where it starts (the core or the agents station) and its own station. */
+  /** Where a subagent's flight leaves from: its own point on its orbit while it circles the agents station.
+   * An agent the drawing gives no orbit to, and one whose loop is over, leave from the station itself. */
+  const agentFrom = (e: Entry): Point => {
+    const k = crew.indexOf(e.agentId ?? '')
+    if (k < 0) return agentsAt
+    if (isStill) return orbitDot(k, agentsAt, orbitAngle(k, crew.length))
+    // The phase the orbit's rotation is in at this moment, as the drawing's own clock sees it.
+    const lap = 7000 - k * 900
+    const phase = (((now + (k * lap) / crew.length) % lap) / lap) * 2 * Math.PI
+    return orbitDot(k, agentsAt, k % 2 === 0 ? phase : -phase)
+  }
+  /** The two ends of an entry's spoke: where it starts (the core or the subagent's orbit) and its own station. */
   const ends = (e: Entry): [Point, Point] => {
     const p = place(indexOf(e.station), shift)
-    const start = e.from === 'agents' ? agentsAt : core
-    return [edge(start, p, e.from === 'agents' ? NODE : HUB), edge(p, start, NODE)]
+    const start = e.from === 'agents' ? agentFrom(e) : core
+    return [edge(start, p, e.from === 'agents' ? 4 : HUB), edge(p, start, NODE)]
   }
   /** Pulses that share a spoke and a moment fly in lanes, five apart. */
   const lane = (list: Entry[], e: Entry): number => {
@@ -312,22 +342,25 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     body += pulse(b, a, e.status === 'ok' ? c.ash : c.red, now - (e.endedAt as number), 2.6)
   }
 
-  body += drawn.map(d => d.over).join('')
-
-  // Each subagent still at work circles the agents station.
-  const crew = (board.agents ?? []).slice(0, 6)
+  // Each subagent still at work circles the agents station on a small orbit of its own, one ring per subagent.
+  // The orbits lie under the station's words, whose rim keeps a line that crosses them from striking them through.
   crew.forEach((_, k) => {
-    const lap = 7000
+    body += orbitRing(k, agentsAt, c)
     const spin = `${n1(agentsAt.x)} ${n1(agentsAt.y)}`
-    // Standing still, each keeps its own place on the circle.
+    // Standing still, each keeps its own place on its orbit.
     if (isStill) {
-      body += `<g transform="rotate(${n1((360 * k) / crew.length)} ${spin})"><circle cx="${n1(agentsAt.x)}" cy="${n1(agentsAt.y - NODE - 6)}" r="3" fill="${c.hot}"/></g>`
+      const still = orbitDot(k, agentsAt, orbitAngle(k, crew.length))
+      body += `<circle cx="${n1(still.x)}" cy="${n1(still.y)}" r="3" fill="${c.hot}"/>`
       return
     }
+    const lap = 7000 - k * 900
+    const seat = orbitDot(k, agentsAt, 0)
     body +=
-      `<g><animateTransform attributeName="transform" type="rotate" from="0 ${spin}" to="360 ${spin}" begin="${clock(-((now + (k * lap) / crew.length) % lap))}" dur="${clock(lap)}" repeatCount="indefinite"/>` +
-      `<circle cx="${n1(agentsAt.x)}" cy="${n1(agentsAt.y - NODE - 6)}" r="3" fill="${c.hot}"/></g>`
+      `<g><animateTransform attributeName="transform" type="rotate" from="0 ${spin}" to="${k % 2 === 0 ? 360 : -360} ${spin}" begin="${clock(-((now + (k * lap) / crew.length) % lap))}" dur="${clock(lap)}" repeatCount="indefinite"/>` +
+      `<circle cx="${n1(seat.x)}" cy="${n1(seat.y)}" r="3" fill="${c.hot}"/></g>`
   })
+
+  body += drawn.map(d => d.over).join('')
 
   // A name longer than three letters shrinks to stay inside the circle.
   const coreName = board.model === undefined ? setup.core : modelFamily(board.model)

@@ -27,8 +27,13 @@ const CORE = 40
 const PLANET = 11
 /** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
 const ORBIT_FIRST = 40
-const ORBIT_STEP = 15
+const ORBIT_STEP = 11
 const MAX_CREW = 6
+/** How long a subagent's planet keeps circling after its loop is over, and how long it then takes to go out. */
+export const AGENT_HOLD_MS = 60_000
+export const AGENT_FADE_MS = 20_000
+/** One lap of a planet around the agents station: the innermost ring is the slowest, each one a little faster. */
+const orbitLap = (k: number): number => 28_000 - k * 3_000
 /** Where spokes and pulses meet the core: outside the context ring. */
 const HUB = CORE + 8
 
@@ -276,8 +281,11 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   const beams = recent.filter(e => now - e.startedAt < GLOW_MS / 2).slice(-10)
   const anyRunning = recent.some(e => e.status === 'run')
   const agentsAt = place(indexOf('agents'), shift)
-  /** The subagents that get a planet of their own; a longer crew stays nameless at the station. */
-  const crew = (board.agents ?? []).slice(0, MAX_CREW)
+  /** The subagents that get a planet of their own, each in the seat it was given: those at work,
+   * and those whose stay is not yet up. A longer crew stays nameless at the station. */
+  const crew = (board.agents ?? [])
+    .filter(s => s.goneAt === undefined || now - s.goneAt < AGENT_HOLD_MS + AGENT_FADE_MS)
+    .slice(0, MAX_CREW)
   const isBad = (e: Entry): boolean => e.status === 'block' || e.status === 'err'
   const tone = (e: Entry): [string, string] => (e.station === 'memory' ? [c.mem, c.memHot] : [c.accent, c.hot])
 
@@ -309,11 +317,11 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   /** Where a subagent's flight leaves from: its own point on its orbit while it circles the agents station.
    * An agent the drawing gives no orbit to, and one whose loop is over, leave from the station itself. */
   const agentFrom = (e: Entry): Point => {
-    const k = crew.indexOf(e.agentId ?? '')
+    const k = crew.findIndex(seat => seat.id === (e.agentId ?? ''))
     if (k < 0) return agentsAt
     if (isStill) return orbitDot(k, agentsAt, orbitAngle(k, crew.length))
     // The phase the orbit's rotation is in at this moment, as the drawing's own clock sees it.
-    const lap = 7000 - k * 900
+    const lap = orbitLap(k)
     const phase = (((now + (k * lap) / crew.length) % lap) / lap) * 2 * Math.PI
     return orbitDot(k, agentsAt, k % 2 === 0 ? phase : -phase)
   }
@@ -348,22 +356,28 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     body += pulse(b, a, e.status === 'ok' ? c.ash : c.red, now - (e.endedAt as number), 2.6)
   }
 
-  // Each subagent still at work circles the agents station as a planet of its own, one wide orbit per subagent.
+  // Each subagent circles the agents station as a planet of its own, one wide orbit per subagent.
+  // One whose loop is over keeps its place for a while yet, then fades out on its own, even when nothing redraws the map.
   // The orbits lie under the station's words, whose rim keeps a line that crosses them from striking them through.
-  crew.forEach((_, k) => {
-    body += orbitRing(k, agentsAt, c)
+  crew.forEach((seat, k) => {
+    const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
     const spin = `${n1(agentsAt.x)} ${n1(agentsAt.y)}`
+    // The fade is written into the drawing, so a planet goes out on time even when nothing redraws the map.
+    const out = age < 0 ? '' : `<animate attributeName="opacity" values="1;0" begin="${clock(AGENT_HOLD_MS - age)}" dur="${clock(AGENT_FADE_MS)}" fill="freeze"/>`
+    const hold = out === '' ? '' : `<g opacity="1">${out}`
+    const shut = out === '' ? '' : '</g>'
+    body += `${hold}${orbitRing(k, agentsAt, c)}`
     // Standing still, each keeps its own place on its orbit.
     if (isStill) {
       const still = orbitDot(k, agentsAt, orbitAngle(k, crew.length))
-      body += planet(still, c)
+      body += `${planet(still, c)}${shut}`
       return
     }
-    const lap = 7000 - k * 900
-    const seat = orbitDot(k, agentsAt, 0)
+    const lap = orbitLap(k)
+    const seatPoint = orbitDot(k, agentsAt, 0)
     body +=
       `<g><animateTransform attributeName="transform" type="rotate" from="0 ${spin}" to="${k % 2 === 0 ? 360 : -360} ${spin}" begin="${clock(-((now + (k * lap) / crew.length) % lap))}" dur="${clock(lap)}" repeatCount="indefinite"/>` +
-      `${planet(seat, c)}</g>`
+      `${planet(seatPoint, c)}</g>${shut}`
   })
 
   body += drawn.map(d => d.over).join('')

@@ -2,8 +2,10 @@
 // counts, faults, agents, context. Nothing here touches VS Code; it is plain state in the extension host.
 import type { Board, Entry, StationId, Status } from '../../types'
 import { clean } from '../../hooks/classify'
+import { AGENT_FADE_MS, AGENT_HOLD_MS } from '../../hooks/draw'
 
 const KEEP = 80
+/** How many seats the board keeps around the agents station: those at work and those lately over, until their stay is up. */
 const CREW = 12
 
 export type BeginOptions = {
@@ -21,6 +23,10 @@ export type BeginOptions = {
 }
 
 const newId = (now: number): string => `${now.toString(36)}${Math.random().toString(36).slice(2, 7)}`
+
+/** When a seat's stay is up: held after its loop ended, then faded, then gone. */
+const seatOver = (seat: { goneAt?: number }, now: number): boolean =>
+  seat.goneAt === undefined ? false : now - seat.goneAt >= AGENT_HOLD_MS + AGENT_FADE_MS
 
 /** The newest rows, and beside them every background task still going, however long ago it started. */
 const kept = (entries: Entry[]): Entry[] => {
@@ -55,8 +61,15 @@ export function begin(board: Board, start: BeginOptions, now: number): { board: 
     entries: kept([...board.entries, entry]),
     counts: start.uncounted ? board.counts : { ...board.counts, [entry.station]: (board.counts[entry.station] ?? 0) + 1 },
     // A subagent's own calls start from the agents station; the agent itself circles there while it works.
-    ...(entry.agentId !== undefined && !(board.agents ?? []).includes(entry.agentId)
-      ? { agents: [...(board.agents ?? []), entry.agentId].slice(-CREW) }
+    // A seat that is still held keeps its place, so a subagent that starts again never gets a second seat;
+    // one back from its fade, the seat starts over. Seats whose stay is up leave only as a new one takes its place,
+    // for the board has no clock of its own.
+    ...(entry.agentId !== undefined
+      ? {
+          agents: (board.agents ?? []).some(seat => seat.id === entry.agentId)
+            ? (board.agents ?? []).map(seat => (seat.id === entry.agentId && seat.goneAt !== undefined ? { id: seat.id } : seat))
+            : [...(board.agents ?? []).filter(seat => !seatOver(seat, now)), { id: entry.agentId }].slice(-CREW),
+        }
       : {}),
   }
   return { board: next, id: entry.id }
@@ -92,11 +105,11 @@ export function settle(board: Board, task: string, status: Status, now: number):
   }
 }
 
-/** A subagent's loop is over: it leaves the agents station, and a call of its that never reported back is settled. */
+/** A subagent's loop is over: it keeps circling for a while yet, and a call of its that never reported back is settled. */
 export function agentDone(board: Board, agentId: string, now: number): Board {
   return {
     ...board,
-    agents: (board.agents ?? []).filter(id => id !== agentId),
+    agents: (board.agents ?? []).map(seat => (seat.id === agentId && seat.goneAt === undefined ? { ...seat, goneAt: now } : seat)),
     entries: board.entries.map(x =>
       x.status === 'run' && (x.agentId === agentId || x.task === agentId) ? { ...x, status: 'ok' as const, endedAt: now } : x,
     ),

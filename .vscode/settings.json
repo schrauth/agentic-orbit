@@ -1,3 +1,9 @@
 {
-  "agenticOrbit.memoryPaths": [".spec"]
+  "agenticOrbit.memoryPaths": [".spec"],
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".github/copilot-instructions.md"
+    }
+  ]
 }

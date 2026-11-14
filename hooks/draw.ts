@@ -8,16 +8,16 @@ import { STATIONS } from './setup'
 import type { Setup } from './setup'
 import type { Strings } from './text'
 
-const W = 560
-const H = 530
+const W = 640
+const H = 605
 /** The width the map is drawn at, in CSS pixels, for the pane to scale it to. */
 export const MAP_WIDTH = W
 /** Height over width of the drawing, for a surface that sizes it itself. */
 export const MAP_ASPECT = H / W
-const CX = 280
-const CY = 260
-const RX = 200
-const RY = 195
+const CX = 320
+const CY = 295
+const RX = 225
+const RY = 215
 const NODE = 22
 const CORE = 40
 /** Where spokes and pulses meet the core: outside the context ring. */

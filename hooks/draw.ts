@@ -25,15 +25,21 @@ const NODE = 24
 const CORE = 44
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */
 const PLANET = 10.5
-/** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
+/** A subagent's orbit around the agents station: the innermost ring's reach, and the step between the rings. */
 const ORBIT_FIRST = 55
 const ORBIT_STEP = 14
-const MAX_CREW = 6
+/** How many rings close to the station seat one subagent each; every subagent beyond them shares the outer ring. */
+const INNER_SEATS = 5
+/** The outer ring's reach: one step past the last inner ring, still clear of the map's rim in both layouts. */
+const ORBIT_OUTER = 125
+/** The places the outer ring hands out: with the five inner rings, a seat for every subagent the board keeps. */
+const OUTER_SLOTS = 7
 /** How long a subagent's planet keeps circling after its loop is over, and how long it then takes to go out. */
 export const AGENT_HOLD_MS = 60_000
 export const AGENT_FADE_MS = 20_000
-/** One lap of a planet around the agents station: the innermost ring is the slowest, each one a little faster. */
-const orbitLap = (k: number): number => 34_000 - k * 3_500
+/** One lap of a planet around the agents station: the innermost ring is the slowest, each one a little faster;
+ * the outer ring, farthest out, takes the longest of all. */
+const orbitLap = (ring: number): number => (ring >= INNER_SEATS ? 42_000 : 34_000 - ring * 3_500)
 /** Where spokes and pulses meet the core: outside the context ring. */
 const HUB = CORE + 8
 
@@ -86,22 +92,45 @@ function aside(a: Point, b: Point, off: number): [Point, Point] {
   return [{ x: a.x + dx, y: a.y + dy }, { x: b.x + dx, y: b.y + dy }]
 }
 
-/** A subagent's own orbit: each planet a ring further out than the one before. */
-const orbitRadius = (k: number): number => ORBIT_FIRST + k * ORBIT_STEP
-/** A subagent's place on its orbit, spread apart from the others. */
-const orbitAngle = (k: number, count: number): number => (2 * Math.PI * (k + 0.5)) / count
-/** The angle seat k's planet is at on its orbit at a given moment, as the drawing's own clock sees it:
- * the same phase the orbit's own rotation is in, so what rides the planet meets it exactly. */
-const orbitPhase = (k: number, count: number, when: number, lap: number): number => {
-  const phase = (((when + (k * lap) / count) % lap) / lap) * 2 * Math.PI
-  return k % 2 === 0 ? phase : -phase
+/** A subagent's own orbit: the inner rings one step apart, the outer ring a stretch beyond the last of them. */
+const orbitRadius = (ring: number): number => (ring < INNER_SEATS ? ORBIT_FIRST + ring * ORBIT_STEP : ORBIT_OUTER)
+/** The seat a subagent holds while it is on the map: its ring, its place on that ring, and the hue its planet wears. */
+type Seat = { ring: number; slot: number; hue: number }
+/** The seats subagents hold, kept from one drawing to the next: a planet keeps its ring, its place on it and its
+ * hue for as long as it is on the map, whatever else the crew does. Keyed by the agent's id. */
+const seats = new Map<string, Seat>()
+/** How many hues have been handed out past the last free one, for a crew too large for all-distinct hues. */
+let hueHandouts = 0
+/** Give each subagent on the map its seat, and take back the seats of those that have fully faded out:
+ * the first five the inner rings, one each, the rest a place on the outer ring. A seat becomes free only
+ * once its holder is gone from the map, and a holder of the outer ring never moves inward. */
+function seatCrew(crew: readonly { id: string }[]): void {
+  const onMap = new Set(crew.map(s => s.id))
+  for (const id of [...seats.keys()]) if (!onMap.has(id)) seats.delete(id)
+  for (const agent of crew) {
+    if (seats.has(agent.id)) continue
+    const held = [...seats.values()]
+    const ring = Array.from({ length: INNER_SEATS }, (_, r) => r).find(r => !held.some(s => s.ring === r))
+    const slot = Array.from({ length: OUTER_SLOTS }, (_, t) => t).find(t => !held.some(s => s.ring === INNER_SEATS && s.slot === t)) ?? 0
+    const hue = Array.from({ length: CREW_HUES.length }, (_, h) => h).find(h => !held.some(s => s.hue === h)) ?? hueHandouts++ % CREW_HUES.length
+    seats.set(agent.id, { ring: ring ?? INNER_SEATS, slot, hue })
+  }
+}
+/** A seat's fixed share of its ring: the inner rings spread their five places evenly, the outer ring its seven.
+ * The share is the seat's own, not the crew's: a planet keeps it whatever else joins or leaves. */
+const seatShare = (seat: Seat): number => (seat.ring < INNER_SEATS ? (seat.ring + 0.5) / INNER_SEATS : (seat.slot + 0.5) / OUTER_SLOTS)
+/** The angle a seat's planet is at on its ring at a given moment, as the drawing's own clock sees it:
+ * the same phase the ring's own rotation is in, so what rides the planet meets it exactly. */
+const seatAngle = (seat: Seat, when: number, lap: number): number => {
+  const phase = (((((when + seatShare(seat) * lap) % lap) + lap) % lap) / lap) * 2 * Math.PI
+  return seat.ring % 2 === 0 ? phase : -phase
 }
 /** The point on its ring a subagent's planet sits at. */
-const orbitDot = (k: number, base: Point, angle: number): Point => ({ x: base.x + orbitRadius(k) * Math.sin(angle), y: base.y - orbitRadius(k) * Math.cos(angle) })
+const orbitDot = (ring: number, base: Point, angle: number): Point => ({ x: base.x + orbitRadius(ring) * Math.sin(angle), y: base.y - orbitRadius(ring) * Math.cos(angle) })
 /** The drawn ring of one subagent's orbit, dashed like the core's contours, but firm enough to read as a path. */
-const orbitRing = (k: number, base: Point, c: Palette): string =>
-  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width="2" stroke-dasharray="3 5.5" opacity=".8"/>`
-/** The palette place of the color one subagent's planet wears: one hue per orbit ring, innermost first. */
+const orbitRing = (ring: number, base: Point, c: Palette): string =>
+  `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(ring))}" fill="none" stroke="${c.line}" stroke-width="2" stroke-dasharray="3 5.5" opacity=".8"/>`
+/** The palette places a subagent's planet can wear, handed out one each while the crew is small enough. */
 const CREW_HUES: (keyof Palette)[] = ['crew0', 'crew1', 'crew2', 'crew3', 'crew4', 'crew5']
 /** A subagent's planet: a node in the stations' own shape, filled with the hue of its seat,
  * with a small ring that reads the same from any side, drawn on the ground it stands out from.
@@ -349,11 +378,11 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   const beams = recent.filter(e => now - e.startedAt < glowMs / 2).slice(-10)
   const anyRunning = recent.some(e => e.status === 'run')
   const agentsAt = place(indexOf('agents'), shift)
-  /** The subagents that get a planet of their own, each in the seat it was given: those at work,
-   * and those whose stay is not yet up. A longer crew stays nameless at the station. */
-  const crew = (board.agents ?? [])
-    .filter(s => s.goneAt === undefined || now - s.goneAt < AGENT_HOLD_MS + AGENT_FADE_MS)
-    .slice(0, MAX_CREW)
+  /** The subagents that get a planet of their own: those at work, and those whose stay is not yet up.
+   * Each holds the seat it was given — an inner ring of its own, or a place on the outer one — and
+   * keeps it for as long as it is on the map: a planet never slides to another seat when the crew changes. */
+  const crew = (board.agents ?? []).filter(s => s.goneAt === undefined || now - s.goneAt < AGENT_HOLD_MS + AGENT_FADE_MS)
+  seatCrew(crew)
   const isBad = (e: Entry): boolean => e.status === 'block' || e.status === 'err'
   const tone = (e: Entry): [string, string] => (e.station === 'memory' ? [c.mem, c.memHot] : [c.accent, c.hot])
 
@@ -382,16 +411,16 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   body += drawn.map(d => d.under).join('')
   body += trail(recent, now, c, isStill, shift)
 
-  /** Where a subagent's flight leaves from: its own point on its orbit while it circles the agents station.
-   * An agent the drawing gives no orbit to, and one whose loop is over, leave from the station itself. */
+  /** Where a subagent's flight leaves from: its own point on its ring while it circles the agents station.
+   * An agent the drawing gives no seat to, and one whose loop is over, leave from the station itself. */
   const agentFrom = (e: Entry): Point => {
-    const k = crew.findIndex(seat => seat.id === (e.agentId ?? ''))
-    if (k < 0) return agentsAt
-    if (isStill) return orbitDot(k, agentsAt, orbitAngle(k, crew.length))
-    // The phase the orbit's rotation is in at this moment, as the drawing's own clock sees it.
-    const lap = orbitLap(k)
-    const phase = (((now + (k * lap) / crew.length) % lap) / lap) * 2 * Math.PI
-    return orbitDot(k, agentsAt, k % 2 === 0 ? phase : -phase)
+    const seat = seats.get(e.agentId ?? '')
+    if (seat === undefined) return agentsAt
+    const ring = seat.ring
+    if (isStill) return orbitDot(ring, agentsAt, seatShare(seat) * 2 * Math.PI)
+    // The phase the ring's rotation is in at this moment, as the drawing's own clock sees it.
+    const lap = orbitLap(ring)
+    return orbitDot(ring, agentsAt, seatAngle(seat, now, lap))
   }
   /** The two ends of an entry's spoke: where it starts (the core or the subagent's orbit) and its own station. */
   const ends = (e: Entry): [Point, Point] => {
@@ -411,11 +440,11 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     // A beam whose end rides a planet follows it along its orbit; everything else is nailed where it started.
     // Standing still, the planet is parked: the beam simply leaves from where it sits.
     if (!isStill && e.from === 'agents') {
-      const k = crew.findIndex(seat => seat.id === (e.agentId ?? ''))
-      if (k >= 0) {
-        const lap = orbitLap(k)
+      const seat = seats.get(e.agentId ?? '')
+      if (seat !== undefined) {
+        const lap = orbitLap(seat.ring)
         // The rotation is already mid-lap at drawing time; the beam must sample it at absolute moments, as agentFrom does.
-        body += orbitBeam(lap, when => orbitDot(k, agentsAt, orbitPhase(k, crew.length, now + when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false, glowMs)
+        body += orbitBeam(lap, when => orbitDot(seat.ring, agentsAt, seatAngle(seat, now + when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false, glowMs)
         continue
       }
     }
@@ -436,13 +465,19 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     body += pulse(b, a, e.status === 'ok' ? c.ash : c.red, now - (e.endedAt as number), 2.6, false, pulseMs)
   }
 
-  // Each subagent circles the agents station as a planet of its own, one wide orbit per subagent,
-  // each in the hue of its seat. One whose loop is over keeps its place for a while yet, then fades
-  // out on its own, even when nothing redraws the map. The orbits lie under the station's words,
-  // whose rim keeps a line that crosses them from striking them through.
-  crew.forEach((seat, k) => {
-    const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
-    const hue = c[CREW_HUES[k] ?? 'crew0']
+  // Each subagent circles the agents station as a planet of its own, on the ring its seat holds:
+  // the first five a ring each close to the station, the rest a place on the outer ring. A seat is
+  // held until its planet is gone from the map, so a subagent never slides to another place when
+  // the crew changes. One whose loop is over keeps its place for a while yet, then fades out on
+  // its own, even when nothing redraws the map. The orbits lie under the station's words, whose rim
+  // keeps a line that crosses them from striking them through.
+  let outerRingDrawn = false
+  crew.forEach(seatAgent => {
+    const seat = seats.get(seatAgent.id)
+    if (seat === undefined) return
+    const ring = seat.ring
+    const age = seatAgent.goneAt === undefined ? -1 : now - seatAgent.goneAt
+    const hue = c[CREW_HUES[seat.hue] ?? 'crew0']
     const spin = `${n1(agentsAt.x)} ${n1(agentsAt.y)}`
     // The fade is written into the drawing, so a planet goes out on time even when nothing redraws the map —
     // and mid-fade, the group already sits at the opacity the fade has really reached.
@@ -450,21 +485,31 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     const out = fading === undefined ? '' : `<animate attributeName="opacity" values="${n1(fading.opacity)};0" begin="${clock(fading.begin)}" dur="${clock(fading.dur)}" fill="freeze"/>`
     const hold = out === '' ? '' : `<g opacity="${n1(fading?.opacity ?? 1)}">${out}`
     const shut = out === '' ? '' : '</g>'
-    body += `${hold}${orbitRing(k, agentsAt, c)}`
-    // Standing still, each keeps its own place on its orbit.
+    // An inner ring belongs to the one planet on it, so it fades together with that planet.
+    // The outer ring belongs to everyone seated on it: it is drawn once and stays while any of them is there.
+    if (ring < INNER_SEATS) {
+      body += `${hold}${orbitRing(ring, agentsAt, c)}`
+    } else {
+      if (!outerRingDrawn) {
+        body += orbitRing(ring, agentsAt, c)
+        outerRingDrawn = true
+      }
+      body += hold
+    }
+    // Standing still, each keeps its own place on its ring.
     if (isStill) {
-      const still = orbitDot(k, agentsAt, orbitAngle(k, crew.length))
+      const still = orbitDot(ring, agentsAt, seatShare(seat) * 2 * Math.PI)
       body += `${planet(still, c, hue, age < 0, true)}${shut}`
       return
     }
-    const lap = orbitLap(k)
+    const lap = orbitLap(ring)
     // The angle the seat's rotation is in at this moment, the same phase the beam riders sample.
     // It is written into the group as it stands, so the planet sits mid-lap even in the frame before
     // the animation takes over: a redraw never flashes it back to the top of its orbit.
-    const theta = (orbitPhase(k, crew.length, now, lap) * 180) / Math.PI
-    const seatPoint = orbitDot(k, agentsAt, 0)
+    const theta = (seatAngle(seat, now, lap) * 180) / Math.PI
+    const seatPoint = orbitDot(ring, agentsAt, 0)
     body +=
-      `<g transform="rotate(${n1(theta)} ${spin})"><animateTransform attributeName="transform" type="rotate" from="${n1(theta)} ${spin}" to="${n1(theta + (k % 2 === 0 ? 360 : -360))} ${spin}" begin="0s" dur="${clock(lap)}" repeatCount="indefinite"/>` +
+      `<g transform="rotate(${n1(theta)} ${spin})"><animateTransform attributeName="transform" type="rotate" from="${n1(theta)} ${spin}" to="${n1(theta + (ring % 2 === 0 ? 360 : -360))} ${spin}" begin="0s" dur="${clock(lap)}" repeatCount="indefinite"/>` +
       `${planet(seatPoint, c, hue, age < 0, false)}</g>${shut}`
   })
 
@@ -474,15 +519,17 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   if (crew.length > 0) {
     const legendX = 24
     const legendBottom = H - 18
-    crew.forEach((seat, k) => {
-      const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
-      const hue = c[CREW_HUES[k] ?? 'crew0']
+    crew.forEach(seatAgent => {
+      const seat = seats.get(seatAgent.id)
+      if (seat === undefined) return
+      const age = seatAgent.goneAt === undefined ? -1 : now - seatAgent.goneAt
+      const hue = c[CREW_HUES[seat.hue] ?? 'crew0']
       const fading = age >= 0 ? fadeAt(age, AGENT_HOLD_MS, AGENT_FADE_MS) : undefined
       const out = fading === undefined ? '' : `<animate attributeName="opacity" values="${n1(fading.opacity)};0" begin="${clock(fading.begin)}" dur="${clock(fading.dur)}" fill="freeze"/>`
       const hold = out === '' ? '' : `<g opacity="${n1(fading?.opacity ?? 1)}">${out}`
       const shut = out === '' ? '' : '</g>'
-      const y = legendBottom - (crew.length - 1 - k) * 16
-      const name = (seat.name ?? setup.t.subagent).length > 28 ? `${(seat.name ?? setup.t.subagent).slice(0, 27)}…` : seat.name ?? setup.t.subagent
+      const y = legendBottom - (crew.length - 1 - crew.indexOf(seatAgent)) * 16
+      const name = (seatAgent.name ?? setup.t.subagent).length > 28 ? `${(seatAgent.name ?? setup.t.subagent).slice(0, 27)}…` : seatAgent.name ?? setup.t.subagent
       body += `${hold}<circle cx="${legendX}" cy="${n1(y - 4)}" r="5" fill="${hue}"/>` +
         `<text x="${legendX + 13}" y="${n1(y)}" ${FONT} font-size="11" fill="${c.ash}">${escapeXml(name)}</text>${shut}`
     })

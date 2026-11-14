@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Subagents keep their seat in the sky: the first five circle the five inner orbits, everyone after that shares one wide outer orbit, and no planet ever slides to another place when the crew changes. A seat only opens up again once its planet has fully faded, and the ones on the outer orbit stay there until they go — the inner ones never call them back. When more than six agents crowd the map, their hues now start cycling instead of a color being taken from a planet that is still in the sky.
 - A planet no longer blinks back to full strength while it fades out: mid-fade the drawing already sits at the opacity the fade has reached, the same cure the planet's place on its orbit got.
 - The orbit paths read stronger, the whole map a good tenth larger, and the Agents station sits farther out with it. The legend under the map grew with the map.
 - The map moves a bit slower: pulses, ripples, the station beat and the core's breath all take a little longer.

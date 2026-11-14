@@ -34,14 +34,22 @@ What each version changed is in [CHANGELOG.md](CHANGELOG.md).
 | --- | --- |
 | **You** | your messages, questions and files sent to you, the task list and the plan |
 | **Model** | each model request |
-| **Memory** | MCP servers you name in the settings |
+| **Memory** | MCP servers you name in the settings, and shell commands or paths you name there — without any of these, the station stays dark |
 | **Files** | file tools, and shell commands that work on files and nothing else — they read, search, move, delete or edit in place (`cat`, `grep`, `mv`, `rm`, `sed`, `tee`, `find … -delete`) |
 | **Shell** | every other shell command |
 | **Network** | web fetch and search, MCP servers, and shell commands known to reach the network: `curl`, `gh`, `ssh`, `rsync`, `git push`, `npm install`, `docker pull` and the like — also inside `$(…)` |
 | **Browser** | browser tools |
 | **Agents** | subagents; their own calls start from this station |
 | **Skills** | skills and tool search |
-| **Hooks** | hooks that refuse a call, ask for permission or take a moment |
+| **Hooks** | hooks that refuse a call, ask for permission or take a moment — none is reported yet, so the station waits |
+
+### Two stations that wait
+
+**Memory** lights up only for what you name in the settings: an MCP server in `agenticOrbit.memoryServers` (only the server `memory` is named by default), a shell command in `agenticOrbit.memoryCommands`, or a path fragment in `agenticOrbit.memoryPaths`. Without a memory server or command, the station never lights — and nothing is lost, it simply has nothing to watch.
+
+**Hooks** is drawn for guard hooks that intervene in a call — refusing it, asking for permission, or holding it up. The map can show such refusals in red, but the current extension's hook pipeline reports no blocking event, so nothing arrives at this station yet. It stays in place for the day one does.
+
+These two, and their signals, also stay outside the smoke test for the same reason: there is nothing to fire at them.
 
 ### How shell commands are read
 
@@ -156,6 +164,10 @@ Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [settings]
 | `agenticOrbit.theme` | `auto` | `auto` / `dark` / `light` |
 | `agenticOrbit.motion` | `full` | `full` / `reduced` |
 | `agenticOrbit.memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
+| `agenticOrbit.memoryCommands` | `[]` | Shell command names that read as Memory |
+| `agenticOrbit.memorySubcommands` | `[]` | Shell subcommands that read as Memory |
+| `agenticOrbit.memoryPaths` | `[]` | Path fragments: a file path holding one reads as Memory |
+| `agenticOrbit.memoryLabels` | `[]` | Tool relabelings as `tool=name`, e.g. `mcp__wiki__search=wiki` |
 
 ## What it shows and what it keeps
 
@@ -187,6 +199,8 @@ npm install
 npm run compile   # tsc + webview assets
 npm run package   # → agentic-orbit-x.y.z.vsix
 ```
+
+`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch every station light up at once.
 
 Words live in `hooks/text.ts`; a new language is one more table there. Before you send a change, read [CONTRIBUTING.md](CONTRIBUTING.md).
 

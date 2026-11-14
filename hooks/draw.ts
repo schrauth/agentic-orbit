@@ -80,6 +80,12 @@ function aside(a: Point, b: Point, off: number): [Point, Point] {
 const orbitRadius = (k: number): number => ORBIT_FIRST + k * ORBIT_STEP
 /** A subagent's place on its orbit, spread apart from the others. */
 const orbitAngle = (k: number, count: number): number => (2 * Math.PI * (k + 0.5)) / count
+/** The angle seat k's planet is at on its orbit at a given moment, as the drawing's own clock sees it:
+ * the same phase the orbit's own rotation is in, so what rides the planet meets it exactly. */
+const orbitPhase = (k: number, count: number, when: number, lap: number): number => {
+  const phase = (((when + (k * lap) / count) % lap) / lap) * 2 * Math.PI
+  return k % 2 === 0 ? phase : -phase
+}
 /** The point on its ring a subagent's planet sits at. */
 const orbitDot = (k: number, base: Point, angle: number): Point => ({ x: base.x + orbitRadius(k) * Math.sin(angle), y: base.y - orbitRadius(k) * Math.cos(angle) })
 /** The drawn ring of one subagent's orbit, dashed like the core's contours, but firm enough to read as a path. */
@@ -137,6 +143,36 @@ function beam(a: Point, b: Point, color: string, age: number, isDashed: boolean)
   return (
     `<line x1="${n1(a.x)}" y1="${n1(a.y)}" x2="${n1(b.x)}" y2="${n1(b.y)}" stroke="${color}" stroke-width="1.4"${isDashed ? ' stroke-dasharray="3 4"' : ''} opacity="0">` +
     `<animate attributeName="opacity" values=".75;0" begin="${clock(-age)}" dur="${clock(GLOW_MS / 2)}" fill="freeze"/></line>`
+  )
+}
+
+/** A beam whose near end rides a planet: the line is sampled along the orbit while the beam lives,
+ * so it follows the planet instead of hanging where the planet was when the drawing was made.
+ * A leg of the planet's own lap, walked between the beam's first and last moment. */
+function orbitBeam(
+  lap: number,
+  phaseAt: (when: number) => Point,
+  b: Point,
+  color: string,
+  age: number,
+  isDashed: boolean,
+): string {
+  const life = GLOW_MS / 2
+  const steps = 8
+  const from = -age
+  const to = from + life
+  const xs: string[] = []
+  const ys: string[] = []
+  for (let s = 0; s <= steps; s++) {
+    const p = phaseAt(from + (s * life) / steps)
+    xs.push(n1(p.x))
+    ys.push(n1(p.y))
+  }
+  return (
+    `<line x1="${xs[0]}" y1="${ys[0]}" x2="${n1(b.x)}" y2="${n1(b.y)}" stroke="${color}" stroke-width="1.4"${isDashed ? ' stroke-dasharray="3 4"' : ''} opacity="0">` +
+    `<animate attributeName="x1" values="${xs.join(';')}" begin="${clock(from)}" dur="${clock(life)}" fill="freeze"/>` +
+    `<animate attributeName="y1" values="${ys.join(';')}" begin="${clock(from)}" dur="${clock(life)}" fill="freeze"/>` +
+    `<animate attributeName="opacity" values=".75;0" begin="${clock(from)}" dur="${clock(life)}" fill="freeze"/></line>`
   )
 }
 
@@ -354,7 +390,18 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
 
   for (const e of beams) {
     const [a, b] = ends(e)
-    body += beam(a, b, isBad(e) ? c.red : tone(e)[0], now - e.startedAt, e.from === 'inbound')
+    const isBadBeam = isBad(e)
+    // A beam whose end rides a planet follows it along its orbit; everything else is nailed where it started.
+    // Standing still, the planet is parked: the beam simply leaves from where it sits.
+    if (!isStill && e.from === 'agents') {
+      const k = crew.findIndex(seat => seat.id === (e.agentId ?? ''))
+      if (k >= 0) {
+        const lap = orbitLap(k)
+        body += orbitBeam(lap, when => orbitDot(k, agentsAt, orbitPhase(k, crew.length, when, lap)), b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, false)
+        continue
+      }
+    }
+    body += beam(a, b, isBadBeam ? c.red : tone(e)[0], now - e.startedAt, e.from === 'inbound')
   }
   for (const e of flights) {
     const [a, b] = aside(...ends(e), lane(flights, e))

@@ -69,7 +69,7 @@ echo "6. Skills / Toolsuche                    → Skills"
 fire preToolUse  '{"tool_name":"search_tools","tool_use_id":"t6"}'
 fire postToolUse '{"tool_name":"search_tools","tool_use_id":"t6"}'
 
-echo "7. Subagent                              → Agents (recherche)"
+echo "7. Subagent                              → Agents (recherche), Punkt kreist"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"t7","agent_id":"a1","description":"recherche","tool_input":{"description":"recherche"}}'
 fire postToolUse '{"tool_name":"task","tool_use_id":"t7","agent_id":"a1"}'
 
@@ -77,13 +77,16 @@ echo "8. Fehlgeschlagener Aufruf               → rot, bis zur nächsten Nachri
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"t8","tool_input":{"command":"date"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"t8","error":true}'
 
+echo "— Subagent fertig                       → Punkt verschwindet"
+fire agentStop '{"agent_id":"a1"}'
+
 echo "— Antwort fertig                        → breiter Ring"
 fire agentStop '{}'
 
 AFTER=$(wc -l < "$FILE")
 echo
-echo "Zeilen nachher: ${AFTER} (erwartet: $((BEFORE + 19)))"
-if [ "$AFTER" -ge "$((BEFORE + 19))" ]; then
+echo "Zeilen nachher: ${AFTER} (erwartet: $((BEFORE + 20)))"
+if [ "$AFTER" -ge "$((BEFORE + 20))" ]; then
   echo "✓ Alle Events geschrieben. Panel offen? Dann sollten alle Stationen geleuchtet haben."
 else
   echo "✕ Es fehlen Zeilen — der Hook hat nicht jedes Event geschrieben."

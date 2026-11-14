@@ -439,9 +439,13 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
       return
     }
     const lap = orbitLap(k)
+    // The angle the seat's rotation is in at this moment, the same phase the beam riders sample.
+    // It is written into the group as it stands, so the planet sits mid-lap even in the frame before
+    // the animation takes over: a redraw never flashes it back to the top of its orbit.
+    const theta = (orbitPhase(k, crew.length, now, lap) * 180) / Math.PI
     const seatPoint = orbitDot(k, agentsAt, 0)
     body +=
-      `<g><animateTransform attributeName="transform" type="rotate" from="0 ${spin}" to="${k % 2 === 0 ? 360 : -360} ${spin}" begin="${clock(-((now + (k * lap) / crew.length) % lap))}" dur="${clock(lap)}" repeatCount="indefinite"/>` +
+      `<g transform="rotate(${n1(theta)} ${spin})"><animateTransform attributeName="transform" type="rotate" from="${n1(theta)} ${spin}" to="${n1(theta + (k % 2 === 0 ? 360 : -360))} ${spin}" begin="0s" dur="${clock(lap)}" repeatCount="indefinite"/>` +
       `${planet(seatPoint, c, hue, age < 0, false)}</g>${shut}`
   })
 

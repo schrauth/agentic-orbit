@@ -77,9 +77,10 @@ function onHookEvent(e: HookEvent): void {
     }
     case 'preToolUse': {
       const { station, label } = classifyEvent(e)
+      // A call that launches a subagent also names it: the short description only, its prompt is content.
       const started = begin(
         board,
-        { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId } : {}) },
+        { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(station === 'agents' ? { agentName: label } : {}) } : {}) },
         now,
       )
       board = started.board

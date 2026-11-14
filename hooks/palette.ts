@@ -13,6 +13,13 @@ export type Palette = {
   red: string
   mem: string
   memHot: string
+  /** The colors of the subagents' planets, one per orbit ring, innermost first: a hue of its own for every seat. */
+  crew0: string
+  crew1: string
+  crew2: string
+  crew3: string
+  crew4: string
+  crew5: string
   /** The route between stations: as light as the words on a dark ground, a soft grey on a light one, where a thin dark line weighs much more. */
   trail: string
 }
@@ -30,6 +37,12 @@ export const DARK: Palette = {
   red: '#e8654f',
   mem: '#62c7ba',
   memHot: '#a5e6dc',
+  crew0: '#61afef',
+  crew1: '#c678dd',
+  crew2: '#e08bce',
+  crew3: '#98c379',
+  crew4: '#4fc1e9',
+  crew5: '#e5c07b',
   // One step away from `bone`, so that the light rules can give the route a color of its own.
   trail: '#ebe6dd',
 }
@@ -47,6 +60,12 @@ export const LIGHT: Palette = {
   red: '#c5402b',
   mem: '#1c8c81',
   memHot: '#136a62',
+  crew0: '#2563eb',
+  crew1: '#7c3aed',
+  crew2: '#a21caf',
+  crew3: '#4d7c0f',
+  crew4: '#0e7490',
+  crew5: '#a16207',
   trail: '#9c978b',
 }
 

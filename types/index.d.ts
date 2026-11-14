@@ -31,8 +31,9 @@ export type Board = {
   pushed?: number
   /** Errors and refusals per station since the person's last message. */
   faults?: Partial<Record<StationId, number>>
-  /** The subagents' seats around the agents station: those still at work, and those lately over, kept until their stay is up. */
-  agents?: { id: string; goneAt?: number }[]
+  /** The subagents' seats around the agents station: those still at work, and those lately over, kept until their stay is up.
+   * A seat carries the short name the agent was started with; never anything of its prompt. */
+  agents?: { id: string; name?: string; goneAt?: number }[]
   /** How full the context window is, 0 to 100. */
   context?: number
   /** When the model last changed. */

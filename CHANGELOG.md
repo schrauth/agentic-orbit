@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Subagent planets turn much slower, their orbit rings sit closer together, and a subagent that is done keeps circling for a minute before a quiet fade.
+- Each subagent's planet wears a hue of its own, and a legend under the map names every color with the short description its subagent was started with.
+
 ## 0.2.0
 
 - The **Agents** station now sits far out beyond the ring of stations, and each subagent still at work circles it as a small planet in the stations' own style — one wide dashed orbit per subagent, with a ring glyph that reads the same from any side.

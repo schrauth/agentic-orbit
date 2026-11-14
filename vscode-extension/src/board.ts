@@ -14,6 +14,8 @@ export type BeginOptions = {
   from?: Entry['from']
   status?: Status
   agentId?: string
+  /** The short name the subagent was started with, from the call that launched it; its prompt is content. */
+  agentName?: string
   mark?: Entry['mark']
   /** Adds nothing to the station's count: a second view of something already counted. */
   uncounted?: boolean
@@ -62,13 +64,21 @@ export function begin(board: Board, start: BeginOptions, now: number): { board: 
     counts: start.uncounted ? board.counts : { ...board.counts, [entry.station]: (board.counts[entry.station] ?? 0) + 1 },
     // A subagent's own calls start from the agents station; the agent itself circles there while it works.
     // A seat that is still held keeps its place, so a subagent that starts again never gets a second seat;
-    // one back from its fade, the seat starts over. Seats whose stay is up leave only as a new one takes its place,
+    // the call that launched it tells its name, which later calls leave as it is. One back from its fade,
+    // the seat starts over. Seats whose stay is up leave only as a new one takes its place,
     // for the board has no clock of its own.
     ...(entry.agentId !== undefined
       ? {
           agents: (board.agents ?? []).some(seat => seat.id === entry.agentId)
-            ? (board.agents ?? []).map(seat => (seat.id === entry.agentId && seat.goneAt !== undefined ? { id: seat.id } : seat))
-            : [...(board.agents ?? []).filter(seat => !seatOver(seat, now)), { id: entry.agentId }].slice(-CREW),
+            ? (board.agents ?? []).map(seat =>
+                seat.id === entry.agentId && seat.goneAt !== undefined
+                  ? { id: seat.id, ...(start.agentName !== undefined ? { name: start.agentName } : seat.name !== undefined ? { name: seat.name } : {}) }
+                  : seat,
+              )
+            : [
+                ...(board.agents ?? []).filter(seat => !seatOver(seat, now)),
+                { id: entry.agentId, ...(start.agentName !== undefined ? { name: start.agentName } : {}) },
+              ].slice(-CREW),
         }
       : {}),
   }

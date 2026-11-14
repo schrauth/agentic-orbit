@@ -107,7 +107,7 @@ The centre and the **Model** station ring for a few seconds, and the feed gets a
 
 ### Subagents
 
-Each subagent still at work circles the **Agents** station as a small planet on a wide orbit of its own — one dashed ring per subagent, drawn around the station, which sits far out beyond the ring — and its calls start from there.
+Each subagent still at work circles the **Agents** station as a small planet on a wide orbit of its own — one dashed ring per subagent, drawn around the station, which sits far out beyond the ring — and its calls start from there. Every planet wears a hue of its own, and the legend in the corner below names each color with the short description its subagent was started with; a subagent that is done keeps its planet for a minute before it fades.
 
 ### The answer
 

@@ -27,7 +27,7 @@ const CORE = 40
 const PLANET = 11
 /** A subagent's orbit around the agents station: the innermost ring's reach, the step between rings, and how many get one. */
 const ORBIT_FIRST = 40
-const ORBIT_STEP = 11
+const ORBIT_STEP = 13
 const MAX_CREW = 6
 /** How long a subagent's planet keeps circling after its loop is over, and how long it then takes to go out. */
 export const AGENT_HOLD_MS = 60_000
@@ -85,10 +85,13 @@ const orbitDot = (k: number, base: Point, angle: number): Point => ({ x: base.x 
 /** The drawn ring of one subagent's orbit, dashed as faintly as the core's contours. */
 const orbitRing = (k: number, base: Point, c: Palette): string =>
   `<circle cx="${n1(base.x)}" cy="${n1(base.y)}" r="${n1(orbitRadius(k))}" fill="none" stroke="${c.line}" stroke-width="1" stroke-dasharray="3 6" opacity=".5"/>`
-/** A subagent's planet: a node in the stations' own style, with a small ring that reads the same from any side. */
-const planet = (p: Point, c: Palette): string =>
-  `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET}" fill="${c.raised}" stroke="${c.line}" stroke-width="1.2"/>` +
-  `<path transform="translate(${n1(p.x)} ${n1(p.y)})" d="M-2.6 0a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0" fill="none" stroke="${c.hot}" stroke-width="1.25" stroke-linecap="round"/>`
+/** The palette place of the color one subagent's planet wears: one hue per orbit ring, innermost first. */
+const CREW_HUES: (keyof Palette)[] = ['crew0', 'crew1', 'crew2', 'crew3', 'crew4', 'crew5']
+/** A subagent's planet: a node in the stations' own shape, filled with the hue of its seat,
+ * with a small ring that reads the same from any side, drawn on the ground it stands out from. */
+const planet = (p: Point, c: Palette, hue: string): string =>
+  `<circle cx="${n1(p.x)}" cy="${n1(p.y)}" r="${PLANET}" fill="${hue}" stroke="${c.line}" stroke-width="1.2"/>` +
+  `<path transform="translate(${n1(p.x)} ${n1(p.y)})" d="M-2.6 0a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0" fill="none" stroke="${c.ground}" stroke-width="1.25" stroke-linecap="round"/>`
 
 /** A pulse with a short tail behind it. A hollow one is a signal nobody asked for. */
 function pulse(a: Point, b: Point, color: string, age: number, radius: number, isHollow = false): string {
@@ -356,11 +359,13 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     body += pulse(b, a, e.status === 'ok' ? c.ash : c.red, now - (e.endedAt as number), 2.6)
   }
 
-  // Each subagent circles the agents station as a planet of its own, one wide orbit per subagent.
-  // One whose loop is over keeps its place for a while yet, then fades out on its own, even when nothing redraws the map.
-  // The orbits lie under the station's words, whose rim keeps a line that crosses them from striking them through.
+  // Each subagent circles the agents station as a planet of its own, one wide orbit per subagent,
+  // each in the hue of its seat. One whose loop is over keeps its place for a while yet, then fades
+  // out on its own, even when nothing redraws the map. The orbits lie under the station's words,
+  // whose rim keeps a line that crosses them from striking them through.
   crew.forEach((seat, k) => {
     const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
+    const hue = c[CREW_HUES[k] ?? 'crew0']
     const spin = `${n1(agentsAt.x)} ${n1(agentsAt.y)}`
     // The fade is written into the drawing, so a planet goes out on time even when nothing redraws the map.
     const out = age < 0 ? '' : `<animate attributeName="opacity" values="1;0" begin="${clock(AGENT_HOLD_MS - age)}" dur="${clock(AGENT_FADE_MS)}" fill="freeze"/>`
@@ -370,15 +375,34 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     // Standing still, each keeps its own place on its orbit.
     if (isStill) {
       const still = orbitDot(k, agentsAt, orbitAngle(k, crew.length))
-      body += `${planet(still, c)}${shut}`
+      body += `${planet(still, c, hue)}${shut}`
       return
     }
     const lap = orbitLap(k)
     const seatPoint = orbitDot(k, agentsAt, 0)
     body +=
       `<g><animateTransform attributeName="transform" type="rotate" from="0 ${spin}" to="${k % 2 === 0 ? 360 : -360} ${spin}" begin="${clock(-((now + (k * lap) / crew.length) % lap))}" dur="${clock(lap)}" repeatCount="indefinite"/>` +
-      `${planet(seatPoint, c)}</g>${shut}`
+      `${planet(seatPoint, c, hue)}</g>${shut}`
   })
+
+  // The legend in the corner below: each hue with the name of the agent whose planet wears it,
+  // fading out together with the planet it explains, so nothing outlives what it stood for.
+  // Only the short description a subagent was started with; never anything of its prompt.
+  if (crew.length > 0) {
+    const legendX = 22
+    const legendBottom = H - 16
+    crew.forEach((seat, k) => {
+      const age = seat.goneAt === undefined ? -1 : now - seat.goneAt
+      const hue = c[CREW_HUES[k] ?? 'crew0']
+      const out = age < 0 ? '' : `<animate attributeName="opacity" values="1;0" begin="${clock(AGENT_HOLD_MS - age)}" dur="${clock(AGENT_FADE_MS)}" fill="freeze"/>`
+      const hold = out === '' ? '' : `<g opacity="1">${out}`
+      const shut = out === '' ? '' : '</g>'
+      const y = legendBottom - (crew.length - 1 - k) * 13
+      const name = (seat.name ?? setup.t.subagent).length > 26 ? `${(seat.name ?? setup.t.subagent).slice(0, 25)}…` : seat.name ?? setup.t.subagent
+      body += `${hold}<circle cx="${legendX}" cy="${n1(y - 3)}" r="4" fill="${hue}"/>` +
+        `<text x="${legendX + 10}" y="${n1(y)}" ${FONT} font-size="9.5" fill="${c.ash}">${escapeXml(name)}</text>${shut}`
+    })
+  }
 
   body += drawn.map(d => d.over).join('')
 

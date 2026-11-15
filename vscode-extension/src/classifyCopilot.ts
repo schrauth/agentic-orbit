@@ -103,6 +103,7 @@ export function classifyCopilot(tool: string, input: Record<string, unknown>, se
       return { station: 'agents', label: tool }
 
     // ---- Skills and knowledge --------------------------------------------------------------------------------
+    case 'skill':
     case 'run_skill':
     case 'use_skill':
       return { station: 'skills', label: str(input.skill) !== '' ? str(input.skill) : t.skill }

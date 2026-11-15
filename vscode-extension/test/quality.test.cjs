@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
 const { test } = require('node:test')
 
 const { classifyShell } = require('../out/hooks/classify.js')
@@ -37,4 +39,20 @@ test('view projection includes feed rows, counts, and the shared drawing', () =>
   assert.ok(view.rows.some(row => row.label === 'README.md'))
   assert.match(view.counts, /Files 1/)
   assert.match(view.svg, /<svg/)
+})
+
+// M-001 / ADR-005: the panel loads this file as a classic <script src>, where
+// `require` and `import` do not exist. It must be the esbuild bundle, not the
+// tsc CommonJS emission, and must actually wire the message listener.
+const webviewMainPath = path.join(__dirname, '..', 'out', 'vscode-extension', 'src', 'webview', 'main.js')
+const webviewMainMissing = !fs.existsSync(webviewMainPath)
+
+test('shipped webview main.js is a self-contained bundle (no require/import)', {
+  skip: webviewMainMissing ? `out/vscode-extension/src/webview/main.js is missing — run 'npm run compile' first` : false,
+}, () => {
+  const main = fs.readFileSync(webviewMainPath, 'utf8')
+
+  assert.ok(!main.includes('require('), 'main.js must not contain require( — it is a classic script in the webview (M-001)')
+  assert.ok(!/(^|\W)import\s*[({'"]/.test(main), 'main.js must not contain import statements (M-001)')
+  assert.match(main, /addEventListener\(['"]message['"]/, 'main.js must register the message listener')
 })

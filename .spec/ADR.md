@@ -72,3 +72,19 @@ token usage from the stream.
 **Rationale:** The context-window ring needs token counts the hooks cannot
 provide. A strict loopback-only proxy keeps the no-network guarantee for
 everything else.
+
+### ADR-005: The webview ships as one bundled, module-free script
+
+**Status:** Accepted
+
+**Decision:** The panel loads exactly one classic script,
+`out/vscode-extension/src/webview/main.js`, built by bundling
+`src/webview/main.ts` at compile time (the demo's esbuild pattern); the
+shipped file must contain no `require` or `import`. Webview sources may
+import shared modules such as `./render`, resolved by the bundler.
+
+**Rationale:** The webview is a sandboxed browser page with no module
+loader: `tsc`'s CommonJS output throws on its first line, the message
+listener never registers and the panel stays blank (observed 2026-11-15
+after the render split, see M-001). Bundling keeps `renderView` a shared
+module for the demo while the extension ships a self-contained script.

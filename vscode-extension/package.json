@@ -181,15 +181,16 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p . && node -e \"require('fs').cpSync('src/webview', 'out/vscode-extension/src/webview', {recursive: true, filter: s => !s.endsWith('.ts')})\"",
+    "compile": "tsc -p . && esbuild src/webview/main.ts --bundle --outfile=out/vscode-extension/src/webview/main.js --format=iife && node -e \"require('fs').cpSync('src/webview', 'out/vscode-extension/src/webview', {recursive: true, filter: s => !s.endsWith('.ts')})\"",
     "test": "npm run compile && node --test test/*.test.cjs",
-    "watch": "tsc -watch -p .",
+    "watch": "tsc -watch -p . & esbuild src/webview/main.ts --bundle --outfile=out/vscode-extension/src/webview/main.js --format=iife --watch",
     "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.87.0",
     "@vscode/vsce": "^3.1.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.4.5"
   },
   "repository": {

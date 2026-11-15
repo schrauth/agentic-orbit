@@ -26,30 +26,39 @@ Then, in the folder you want to watch:
 2. Start a **new** Copilot session — hooks are loaded when a session starts.
 3. Open the panel with **Agentic Orbit: Open**.
 
+The context-window ring around the centre needs the optional loopback proxy: **Agentic Orbit: Start Loopback Proxy** starts it, or `agenticOrbit.proxy.enabled` starts it whenever the extension does. See [below](#how-it-sees-copilot-work).
+
 What each version changed is in [CHANGELOG.md](CHANGELOG.md).
 
 ## The stations
 
 | Station | When it lights up |
 | --- | --- |
-| **Operator** | your messages, questions and files sent to you, the task list and the plan |
-| **Model** | each model request |
+| **Operator** | your messages, and the questions and files sent to you |
+| **Model** | each model request the proxy measures, and tools the map knows no station for yet |
 | **Memory** | MCP servers you name in the settings, and shell commands or paths you name there — without any of these, the station stays dark |
 | **Files** | file tools, and shell commands that work on files and nothing else — they read, search, move, delete or edit in place (`cat`, `grep`, `mv`, `rm`, `sed`, `tee`, `find … -delete`) |
 | **Shell** | every other shell command |
 | **Network** | web fetch and search, MCP servers, and shell commands known to reach the network: `curl`, `gh`, `ssh`, `rsync`, `git push`, `npm install`, `docker pull` and the like — also inside `$(…)` |
-| **Browser** | browser tools |
+| **Browser** | browser tools — none of Copilot's reaches this station yet, so it waits |
 | **Agents** | subagents; their own calls start from this station |
 | **Skills** | skills and tool search |
 | **Hooks** | hooks that refuse a call, ask for permission or take a moment — none is reported yet, so the station waits |
 
-### Two stations that wait
+### Memory is yours to name
 
 **Memory** lights up only for what you name in the settings: an MCP server in `agenticOrbit.memoryServers` (only the server `memory` is named by default), a shell command in `agenticOrbit.memoryCommands`, or a path fragment in `agenticOrbit.memoryPaths`. Without a memory server or command, the station never lights — and nothing is lost, it simply has nothing to watch.
 
-**Hooks** is drawn for guard hooks that intervene in a call — refusing it, asking for permission, or holding it up. The map can show such refusals in red, but the current extension's hook pipeline reports no blocking event, so nothing arrives at this station yet. It stays in place for the day one does.
+### What waits
 
-These two, and their signals, also stay outside the smoke test for the same reason: there is nothing to fire at them.
+A few things on the map are drawn and ready, but nothing reports them yet:
+
+- **Browser** waits: no tool of Copilot's is read as this station, so pages Copilot fetches light **Network** instead.
+- **Hooks** waits: it is drawn for guard hooks that intervene in a call — refusing it, asking for permission, or holding it up. The map can show such refusals in red, but the hook pipeline reports no blocking event, so nothing arrives at this station yet.
+- **Memory has a second count** — a `↓` under the station, for what a hook put in front of the model unasked. No hook reports what it brought, so the `↓` never appears yet.
+- **A call in the background** would keep its light and its clock hands after the turn that started it is over, until the task reports it ended. No event yet says which call that is, so every call ends when its turn does.
+
+All of these stay outside the smoke test for the same reason: there is nothing to fire at them.
 
 ### How shell commands are read
 
@@ -62,7 +71,7 @@ The stations go by the command's *name*, not by what it does:
 
 ## Reading the map
 
-A pulse flies out when something starts and returns when it ends. Refusals and errors turn red.
+A pulse flies out when something starts and returns when it ends. Refusals and errors turn red. Your own message comes the other way: a hollow pulse on a dashed line, from **Operator** to the centre.
 
 ### The route
 
@@ -76,10 +85,6 @@ A spoke grows thicker and brighter the more its station is used, so at the end o
 
 Two clock hands grow around a station while a call runs: the inner one goes round in a minute, the outer one in ten.
 
-### Background work
-
-A command sent to the background stays lit on its station after the turn that started it is over — clock hands still growing — until the task reports that it ended. A task that failed leaves the red dot.
-
 ### Several calls at once
 
 Calls that start together fly side by side, and the station carries their number, such as `×3`.
@@ -90,12 +95,7 @@ A red dot with a count stays on a station from an error or a refusal until your 
 
 ### Memory
 
-Memory has a colour of its own:
-
-- a **solid pulse** is a memory call;
-- a **hollow pulse on a dashed line** is what a hook brought unasked.
-
-Under the station, the plain number counts the first and `↓` the second.
+A memory call flies as a **solid pulse** in a colour of its own, and the plain number under the station counts them.
 
 ### The context window
 
@@ -107,7 +107,7 @@ The centre and the **Model** station ring for a few seconds, and the feed gets a
 
 ### Subagents
 
-Each subagent still at work circles the **Agents** station as a small planet on a wide orbit of its own — one dashed ring per subagent, drawn around the station, which sits far out beyond the ring — and its calls start from there. Every planet wears a hue of its own, and the legend in the corner below names each color with the short description its subagent was started with; a subagent that is done keeps its planet for a minute before it fades.
+Each subagent still at work circles the **Agents** station — which sits far out beyond the ring of stations — as a small planet on an orbit of its own, and its calls start from there. The first five hold the five inner rings, one planet each; every subagent after that takes a place on one wide outer ring they all share. A planet keeps its seat — its ring, its place on it and its colour — for as long as it is on the map, whatever the rest of the crew does, and a seat opens again only once its planet has fully faded. Every planet wears a hue of its own; when more than six agents crowd the map, the hues start again from the first. The legend in the corner below names each colour with the short description its subagent was started with. A subagent that is done keeps circling for a minute before it fades.
 
 ### The answer
 
@@ -136,13 +136,17 @@ Finished calls that follow one another at one station fold into one row, marked 
 | --- | --- | --- |
 | ![A change of model](docs/map-switch.png) | ![After the answer](docs/map-after.png) | ![Light colours](docs/map-light.png) |
 
+| The layout turned (`you-bottom`) | Russian labels | Colours of your own |
+| --- | --- | --- |
+| ![The map turned, with the person at the bottom](docs/map-turned.png) | ![The map with Russian labels](docs/map-russian.png) | ![The map in colours of your own](docs/map-colors.png) |
+
 ## How it sees Copilot work
 
 Two decoupled sources, both optional:
 
 ### 1. Workspace hooks
 
-**Agentic Orbit: Install Workspace Hooks** writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the open project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: tool name, ids, timings, status. The extension watches that file and turns the lines into map events.
+**Agentic Orbit: Install Workspace Hooks** writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the open project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The extension watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn.
 
 The hook is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the extension is not running, so the agent is never blocked.
 
@@ -154,14 +158,17 @@ Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [settings]
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
+| `agenticOrbit.coreName` | `COPILOT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
 | `agenticOrbit.proxy.enabled` | `false` | Start the proxy on activation |
 | `agenticOrbit.proxy.port` | `8317` | Loopback port |
 | `agenticOrbit.proxy.targetBaseUrl` | — | Your on-prem LLM base URL, e.g. `https://llm.internal/v1` |
 | `agenticOrbit.contextWindowLimit` | `128000` | Tokens the ring is full at |
-| `agenticOrbit.hookEventsFile` | — | Override where hook events are read from |
+| `agenticOrbit.hookEventsFile` | — | Override where hook events are read from; empty means `agentic-orbit-<workspace hash>.jsonl` in the OS temp folder |
 | `agenticOrbit.layout` | `you-top` | `you-top` / `you-bottom` |
 | `agenticOrbit.language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |
 | `agenticOrbit.theme` | `auto` | `auto` / `dark` / `light` |
+| `agenticOrbit.background` | `solid` | `solid`, or `transparent`, which lets the panel behind the map show through |
+| `agenticOrbit.colors` | — | Colours that replace the map's own, each written as `name=#rrggbb`, comma-separated. Names: `background`, `node`, `line`, `spoke`, `text`, `label`, `faint`, `accent`, `active`, `error`, `memory`, `memoryActive`, `route` |
 | `agenticOrbit.motion` | `full` | `full` / `reduced` |
 | `agenticOrbit.pace` | `normal` | `normal` / `slow`, which draws every data exchange at half speed |
 | `agenticOrbit.memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
@@ -172,7 +179,7 @@ Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [settings]
 
 ## What it shows and what it keeps
 
-- The extension makes **no network requests**, reads **no files of yours**, calls **no model** and adds **nothing** to the conversation.
+- The extension itself makes **no network requests**, reads **no files of yours**, calls **no model** and adds **nothing** to the conversation. The loopback proxy, when you turn it on, only forwards what your model's client already sends.
 - Its rows live only for the session.
 - A fault on the map never reaches a tool call or a model turn.
 
@@ -202,7 +209,7 @@ npm test          # compile + focused regression tests
 npm run package   # → agentic-orbit-x.y.z.vsix
 ```
 
-`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch every station light up at once. For a longer look, `scripts/subagent-storm.sh` runs about a minute of made-up subagent traffic — up to six planets circling the Agents station in overlapping waves.
+`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch the stations light up in turn. For a longer look, `scripts/subagent-storm.sh` runs about a minute of made-up subagent traffic — ten subagents in overlapping waves, up to six planets circling the Agents station at once.
 
 ### Working on the map's design: the browser demo
 

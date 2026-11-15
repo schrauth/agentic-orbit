@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
+
 - The project's own agents are now part of the repository: the five generic definitions under `.github/agents/` — Architect, Builder, Memory & ADR, Reviewer and Version Control — are tracked instead of ignored, so a fresh clone carries the team that works on it.
 - Real Copilot calls are paired up again: the telemetry hook now reads the call id, the tool name and the agent id from both the flat and the array shape the host sends, and takes a tool call's short description from its arguments where the host puts it. Tool rows close when their call ends instead of lingering. A spawning subagent's planet keeps its true name after all: a launch parks the description under its call id, the child's first own call claims the oldest parked name in launch order, a failed launch hands its name back, and the end of the turn clears whatever was never claimed.
 - The demo grows a second long example, **Subagent project**: a made-up working session of some two and a half minutes — the main agent reading and editing between its own model steps while a dozen subagents come and go in overlapping waves, one tripping over a page that will not answer, an answer, a follow-up, and a second crew taking the orbits the first have let go of.

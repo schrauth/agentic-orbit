@@ -6,6 +6,7 @@
 - The map's options no longer carry the retired terminal renderer's settings: `textSize`, `terminalView` and `cellShape` are gone from the shared `Setup`, which now holds only what the map reads.
 - The shared helpers shed four exports nothing called anymore: `firstLine` and `memoryIds` from `classify`, `taskOf` and `taskNotice` from `feed`, along with their detour through the `map` re-export hub.
 - Twelve words the map never shows are gone from all seven language tables — the ones only the retired terminal panels ever read — and the tables' header no longer speaks of a manifest called `plugin.json`.
+- The background-task experiment that never ran is gone: `background()`, `settle()` and every read of an `Entry.task` that no code could ever write, including the shared contract's field.
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

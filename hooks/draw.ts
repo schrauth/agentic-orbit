@@ -255,12 +255,12 @@ export function routeOf(entries: readonly Entry[], max = TRAIL_STOPS): { station
  * none while it thinks. Reading the entries from the end: a call of the main loop still open ends the
  * answer, and so does the row the bare `agentStop` leaves (the `done` mark, or an aborted turn's fault);
  * the person's message is where it begins. A subagent's rows carry its id and are not the main loop's,
- * and a background task runs on without its caller, so neither counts against it. */
+ * so they do not count against it. */
 function isThinking(entries: readonly Entry[]): boolean {
   for (let i = entries.length - 1; i >= 0; i--) {
     const e = entries[i]
     if (e.station === 'you' && e.from === 'core' && (e.mark === 'done' || e.status === 'err')) return false
-    if (e.status === 'run' && e.agentId === undefined && e.task === undefined) return false
+    if (e.status === 'run' && e.agentId === undefined) return false
     if (e.station === 'you' && e.from === 'inbound' && e.mark === undefined) return true
   }
   return false

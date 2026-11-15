@@ -21,10 +21,10 @@ export function seated(board: Board, agentId: string): boolean {
   return (board.agents ?? []).some(seat => seat.id === agentId)
 }
 
-/** The newest rows, and beside them every background task still going, however long ago it started. */
+/** The newest rows. */
 const kept = (entries: Entry[]): Entry[] => {
   const from = entries.length - KEEP
-  return from <= 0 ? entries : entries.filter((e, i) => i >= from || (e.status === 'run' && e.task !== undefined))
+  return from <= 0 ? entries : entries.filter((e, i) => i >= from)
 }
 
 const isFault = (status: Status): boolean => status === 'err' || status === 'block'
@@ -89,31 +89,12 @@ export function finish(board: Board, id: string | undefined, status: Status, now
   }
 }
 
-/** The call started work that goes on after it answered: its row stays open under the task's id. */
-export function background(board: Board, id: string | undefined, task: string): Board {
-  if (id === undefined) return board
-  return { ...board, entries: board.entries.map(e => (e.id === id && e.status === 'run' ? { ...e, task } : e)) }
-}
-
-/** A background task ended: its row closes, as a fault when the task failed. */
-export function settle(board: Board, task: string, status: Status, now: number): Board {
-  const open = board.entries.find(e => e.task === task && e.status === 'run')
-  if (open === undefined) return board
-  return {
-    ...board,
-    entries: board.entries.map(e => (e === open ? { ...e, status, endedAt: now } : e)),
-    ...(isFault(status) ? { faults: oneMore(board.faults, open.station) } : {}),
-  }
-}
-
 /** A subagent's loop is over: it keeps circling for a while yet, and a call of its that never reported back is settled. */
 export function agentDone(board: Board, agentId: string, now: number): Board {
   return {
     ...board,
     agents: (board.agents ?? []).map(seat => (seat.id === agentId && seat.goneAt === undefined ? { ...seat, goneAt: now } : seat)),
-    entries: board.entries.map(x =>
-      x.status === 'run' && (x.agentId === agentId || x.task === agentId) ? { ...x, status: 'ok' as const, endedAt: now } : x,
-    ),
+    entries: board.entries.map(x => (x.status === 'run' && x.agentId === agentId ? { ...x, status: 'ok' as const, endedAt: now } : x)),
   }
 }
 
@@ -121,9 +102,7 @@ export function agentDone(board: Board, agentId: string, now: number): Board {
 export function sweepOpen(board: Board, now: number): Board {
   return {
     ...board,
-    entries: board.entries.map(x =>
-      x.status === 'run' && x.from === 'core' && x.task === undefined ? { ...x, status: 'ok' as const, endedAt: now } : x,
-    ),
+    entries: board.entries.map(x => (x.status === 'run' && x.from === 'core' ? { ...x, status: 'ok' as const, endedAt: now } : x)),
   }
 }
 

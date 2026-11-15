@@ -1,8 +1,8 @@
 # Thinking-Phase Indicator
 
-**Status:** Proposed — specced, not implemented. Written by the Architect on
-2026-11-14 after the design discussion in chat. Nothing here is built yet;
-when the user confirms a direction, this spec is the contract for it.
+**Status:** Accepted — implemented. Written by the Architect on 2026-11-14
+after the design discussion in chat; Option 1 was implemented on 2026-11-15
+in `hooks/draw.ts`, with no hook, schema, settings or type change.
 
 **Requirement:** After a prompt is submitted, the chat shows "Thinking" /
 "Analyzing" while the model works without calling a tool. The map shows
@@ -81,6 +81,14 @@ further tool call arrived before the `done` mark, the last gap was
 answer-writing. Whatever is drawn must never show reasoning *content* —
 timing and state only (ADR-002 applies; in fact only figures ever leave the
 hook).
+
+Two entry-shape collisions remain, both resolving safely and neither
+knowable from the entries alone without a contract change: a person-facing
+tool call that *fails* leaves the same row shape as an aborted turn's
+answer, and also ends the glow for that turn; and a subagent's own
+`userPromptSubmitted` — recorded as an inbound You row without `agentId` —
+acts as a prompt baseline, so the glow stays off while its launch call is
+open, which the criteria want anyway. Both are accepted as-is.
 
 ## Acceptance criteria (for whichever option is chosen)
 

@@ -1,12 +1,9 @@
 // Every word the map shows, in each language it speaks.
-// A new language is one more table here and one more value of `language` in plugin.json.
+// A new language is one more table here and one more value of `language` in package.json.
 import type { StationId } from '../types'
 
 export type Strings = {
   title: string
-  command: string
-  opened: string
-  cannotOpen: (reason: string) => string
   /** The pane's buttons in an editor, where the pane cannot be made taller. */
   zoomOut: string
   zoomIn: string
@@ -18,15 +15,6 @@ export type Strings = {
   turnAborted: string
   step: (n: number) => string
   subagent: string
-  compacting: string
-  addedContext: (when: string) => string
-  addedMemory: (when: string) => string
-  toMessage: string
-  atStart: string
-  records: (n: number, shown: string) => string
-  stopped: (tool: string) => string
-  askedPermission: (tool: string) => string
-  checkBefore: (tool: string) => string
   running: string
   nothingYet: string
   noCounts: string
@@ -47,9 +35,6 @@ export type Strings = {
 
 const en: Strings = {
   title: 'Work map',
-  command: 'Open the work map beside the chat',
-  opened: 'Work map opened.',
-  cannotOpen: reason => `Nowhere to show the map right now: ${reason}`,
   zoomOut: 'Zoom out',
   zoomIn: 'Zoom in',
   hideMap: 'Hide map',
@@ -71,15 +56,6 @@ const en: Strings = {
   turnAborted: 'turn interrupted',
   step: n => `step ${n}`,
   subagent: 'subagent',
-  compacting: 'compacting context',
-  addedContext: when => `added context ${when}`,
-  addedMemory: when => `added memory ${when}`,
-  toMessage: 'to the message',
-  atStart: 'at session start',
-  records: (n, shown) => `${n} record${n === 1 ? '' : 's'}: ${shown}`,
-  stopped: tool => `stopped ${tool}`,
-  askedPermission: tool => `asked permission: ${tool}`,
-  checkBefore: tool => `check before ${tool}`,
   running: 'running',
   nothingYet: 'Nothing yet.',
   noCounts: 'No counts yet.',
@@ -100,9 +76,6 @@ const en: Strings = {
 
 const ru: Strings = {
   title: 'Карта работы',
-  command: 'Открыть карту работы рядом с чатом',
-  opened: 'Карта работы открыта.',
-  cannotOpen: reason => `Карту сейчас негде показать: ${reason}`,
   zoomOut: 'Уменьшить',
   zoomIn: 'Увеличить',
   hideMap: 'Скрыть карту',
@@ -124,15 +97,6 @@ const ru: Strings = {
   turnAborted: 'ход прерван',
   step: n => `шаг ${n}`,
   subagent: 'субагент',
-  compacting: 'сжатие контекста',
-  addedContext: when => `добавил контекст ${when}`,
-  addedMemory: when => `подмешал память ${when}`,
-  toMessage: 'к сообщению',
-  atStart: 'при старте',
-  records: (n, shown) => `записей ${n}: ${shown}`,
-  stopped: tool => `остановил ${tool}`,
-  askedPermission: tool => `спросил разрешение: ${tool}`,
-  checkBefore: tool => `проверка перед ${tool}`,
   running: 'идёт',
   nothingYet: 'Пока ничего не было.',
   noCounts: 'Счётчики пусты.',
@@ -153,9 +117,6 @@ const ru: Strings = {
 
 const es: Strings = {
   title: 'Mapa de trabajo',
-  command: 'Abrir el mapa de trabajo junto al chat',
-  opened: 'Mapa de trabajo abierto.',
-  cannotOpen: reason => `Ahora no hay dónde mostrar el mapa: ${reason}`,
   zoomOut: 'Alejar',
   zoomIn: 'Acercar',
   hideMap: 'Ocultar mapa',
@@ -177,15 +138,6 @@ const es: Strings = {
   turnAborted: 'turno interrumpido',
   step: n => `paso ${n}`,
   subagent: 'subagente',
-  compacting: 'compactando el contexto',
-  addedContext: when => `añadió contexto ${when}`,
-  addedMemory: when => `añadió memoria ${when}`,
-  toMessage: 'al mensaje',
-  atStart: 'al iniciar la sesión',
-  records: (n, shown) => `${n} registro${n === 1 ? '' : 's'}: ${shown}`,
-  stopped: tool => `detuvo ${tool}`,
-  askedPermission: tool => `pidió permiso: ${tool}`,
-  checkBefore: tool => `comprobación antes de ${tool}`,
   running: 'en curso',
   nothingYet: 'Todavía nada.',
   noCounts: 'Aún no hay recuentos.',
@@ -206,9 +158,6 @@ const es: Strings = {
 
 const fr: Strings = {
   title: 'Carte du travail',
-  command: 'Ouvrir la carte du travail à côté du chat',
-  opened: 'Carte du travail ouverte.',
-  cannotOpen: reason => `Impossible d'afficher la carte pour le moment : ${reason}`,
   zoomOut: 'Dézoomer',
   zoomIn: 'Zoomer',
   hideMap: 'Masquer la carte',
@@ -230,15 +179,6 @@ const fr: Strings = {
   turnAborted: 'tour interrompu',
   step: n => `étape ${n}`,
   subagent: 'sous-agent',
-  compacting: 'compactage du contexte',
-  addedContext: when => `contexte ajouté ${when}`,
-  addedMemory: when => `mémoire ajoutée ${when}`,
-  toMessage: 'au message',
-  atStart: 'au démarrage de la session',
-  records: (n, shown) => `${n} enregistrement${n > 1 ? 's' : ''} : ${shown}`,
-  stopped: tool => `${tool} arrêté`,
-  askedPermission: tool => `autorisation demandée : ${tool}`,
-  checkBefore: tool => `vérification avant ${tool}`,
   running: 'en cours',
   nothingYet: 'Rien pour le moment.',
   noCounts: 'Aucun compteur pour le moment.',
@@ -259,9 +199,6 @@ const fr: Strings = {
 
 const de: Strings = {
   title: 'Arbeitskarte',
-  command: 'Arbeitskarte neben dem Chat öffnen',
-  opened: 'Arbeitskarte geöffnet.',
-  cannotOpen: reason => `Die Karte kann gerade nirgends angezeigt werden: ${reason}`,
   zoomOut: 'Verkleinern',
   zoomIn: 'Vergrößern',
   hideMap: 'Karte ausblenden',
@@ -283,15 +220,6 @@ const de: Strings = {
   turnAborted: 'Durchgang abgebrochen',
   step: n => `Schritt ${n}`,
   subagent: 'Subagent',
-  compacting: 'Kontext wird komprimiert',
-  addedContext: when => `Kontext ${when} hinzugefügt`,
-  addedMemory: when => `Erinnerungen ${when} hinzugefügt`,
-  toMessage: 'zur Nachricht',
-  atStart: 'beim Sitzungsstart',
-  records: (n, shown) => `${n} ${n === 1 ? 'Eintrag' : 'Einträge'}: ${shown}`,
-  stopped: tool => `${tool} gestoppt`,
-  askedPermission: tool => `um Erlaubnis gefragt: ${tool}`,
-  checkBefore: tool => `Prüfung vor ${tool}`,
   running: 'läuft',
   nothingYet: 'Noch nichts.',
   noCounts: 'Noch keine Zählerstände.',
@@ -312,9 +240,6 @@ const de: Strings = {
 
 const it: Strings = {
   title: 'Mappa del lavoro',
-  command: 'Apri la mappa del lavoro accanto alla chat',
-  opened: 'Mappa del lavoro aperta.',
-  cannotOpen: reason => `Al momento non c'è dove mostrare la mappa: ${reason}`,
   zoomOut: 'Riduci',
   zoomIn: 'Ingrandisci',
   hideMap: 'Nascondi mappa',
@@ -336,15 +261,6 @@ const it: Strings = {
   turnAborted: 'turno interrotto',
   step: n => `passo ${n}`,
   subagent: 'subagente',
-  compacting: 'compattazione del contesto',
-  addedContext: when => `contesto aggiunto ${when}`,
-  addedMemory: when => `memoria aggiunta ${when}`,
-  toMessage: 'al messaggio',
-  atStart: "all'avvio della sessione",
-  records: (n, shown) => `${n} ${n === 1 ? 'voce' : 'voci'}: ${shown}`,
-  stopped: tool => `${tool} fermato`,
-  askedPermission: tool => `permesso chiesto: ${tool}`,
-  checkBefore: tool => `controllo prima di ${tool}`,
   running: 'in corso',
   nothingYet: 'Ancora niente.',
   noCounts: 'Ancora nessun conteggio.',
@@ -366,9 +282,6 @@ const it: Strings = {
 // European Portuguese.
 const pt: Strings = {
   title: 'Mapa de trabalho',
-  command: 'Abrir o mapa de trabalho ao lado do chat',
-  opened: 'Mapa de trabalho aberto.',
-  cannotOpen: reason => `De momento não há onde mostrar o mapa: ${reason}`,
   zoomOut: 'Reduzir',
   zoomIn: 'Ampliar',
   hideMap: 'Ocultar mapa',
@@ -390,15 +303,6 @@ const pt: Strings = {
   turnAborted: 'turno interrompido',
   step: n => `passo ${n}`,
   subagent: 'subagente',
-  compacting: 'a compactar o contexto',
-  addedContext: when => `adicionou contexto ${when}`,
-  addedMemory: when => `adicionou memória ${when}`,
-  toMessage: 'à mensagem',
-  atStart: 'no início da sessão',
-  records: (n, shown) => `${n} registo${n === 1 ? '' : 's'}: ${shown}`,
-  stopped: tool => `travou ${tool}`,
-  askedPermission: tool => `pediu permissão: ${tool}`,
-  checkBefore: tool => `verificação antes de ${tool}`,
   running: 'em curso',
   nothingYet: 'Ainda nada.',
   noCounts: 'Ainda sem contagens.',

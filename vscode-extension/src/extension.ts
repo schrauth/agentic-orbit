@@ -6,7 +6,7 @@ import * as vscode from 'vscode'
 import type { Board, StationId } from '../../types'
 import { setupFrom } from '../../hooks/setup'
 import { shortModel } from '../../hooks/classify'
-import { agentDone, begin, clearFaults, emptyBoard, finish, seated, sweepOpen, withContext } from './board'
+import { emptyBoard, seated, transitionBoard } from './board'
 import { classifyCopilot } from './classifyCopilot'
 import { eventsFileFor, watchEvents } from './hookWatcher'
 import type { HookEvent } from './hookWatcher'
@@ -83,14 +83,18 @@ function onHookEvent(e: HookEvent): void {
   const now = Date.now()
   switch (e.event) {
     case 'sessionStart': {
-      board = emptyBoard()
+      board = transitionBoard(board, { type: 'reset' }, now).board
       // A new session launches no one: names parked for the old one belong to no child here.
       parkedNames.clear()
       if (e.model !== undefined) {
         const before = lastModel
         lastModel = e.model
         if (before !== undefined && before !== e.model) {
-          board = begin(board, { station: 'model', label: `${shortModel(before)} → ${shortModel(e.model)}`, status: 'ok', mark: 'switch', uncounted: true }, now).board
+          board = transitionBoard(
+            board,
+            { type: 'entryStarted', start: { station: 'model', label: `${shortModel(before)} → ${shortModel(e.model)}`, status: 'ok', mark: 'switch', uncounted: true } },
+            now,
+          ).board
         }
       }
       break
@@ -99,8 +103,7 @@ function onHookEvent(e: HookEvent): void {
       // A subagent's own prompt carries its agent id and must leave the parked names alone;
       // a message from the person themselves ends every launch of the turn before.
       if (e.agentId === undefined) parkedNames.clear()
-      board = clearFaults(board)
-      board = begin(board, { station: 'you', label: t().newMessage, from: 'inbound', status: 'ok' }, now).board
+      board = transitionBoard(board, { type: 'prompt', label: t().newMessage }, now).board
       break
     }
     case 'preToolUse': {
@@ -114,13 +117,16 @@ function onHookEvent(e: HookEvent): void {
       if (station === 'agents' && e.callId !== undefined && e.description !== undefined) {
         parkedNames.set(e.callId, label)
       }
-      const started = begin(
+      const started = transitionBoard(
         board,
-        { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(agentName !== undefined ? { agentName } : {}) } : {}) },
+        {
+          type: 'entryStarted',
+          start: { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(agentName !== undefined ? { agentName } : {}) } : {}) },
+        },
         now,
       )
       board = started.board
-      if (e.callId !== undefined) open.set(e.callId, started.id)
+      if (e.callId !== undefined && started.id !== undefined) open.set(e.callId, started.id)
       break
     }
     case 'postToolUse': {
@@ -129,20 +135,24 @@ function onHookEvent(e: HookEvent): void {
       // A launch that failed never started a child: its parked name goes back. A call that
       // ended well leaves the name where it is — the child may not have spoken yet.
       if (e.error === true) unparkName(e.callId)
-      board = finish(board, id, e.error === true ? 'err' : 'ok', now)
+      board = transitionBoard(board, { type: 'entryFinished', id, status: e.error === true ? 'err' : 'ok' }, now).board
       break
     }
     case 'agentStop': {
       if (e.agentId !== undefined) {
-        board = agentDone(board, e.agentId, now)
+        board = transitionBoard(board, { type: 'agentFinished', agentId: e.agentId }, now).board
       } else {
         // The turn is over: whatever name no child ever claimed belongs to no one now.
         parkedNames.clear()
-        board = sweepOpen(board, now)
         const aborted = e.aborted === true
-        board = begin(
+        board = transitionBoard(
           board,
-          { station: 'you', label: aborted ? t().turnAborted : t().answerReady, status: aborted ? 'err' : 'ok', ...(aborted ? {} : { mark: 'done' as const }) },
+          {
+            type: 'turnFinished',
+            label: aborted ? t().turnAborted : t().answerReady,
+            status: aborted ? 'err' : 'ok',
+            ...(aborted ? {} : { mark: 'done' as const }),
+          },
           now,
         ).board
       }
@@ -154,11 +164,7 @@ function onHookEvent(e: HookEvent): void {
       if (e.callId !== undefined) open.delete(e.callId)
       // The call failed, so the child it meant to start never came: its parked name goes back.
       unparkName(e.callId)
-      if (id !== undefined) {
-        board = finish(board, id, 'err', now)
-      } else {
-        board = begin(board, { station, label: e.tool ?? label, status: 'err', startedAt: now, endedAt: now }, now).board
-      }
+      board = transitionBoard(board, { type: 'failure', id, station, label: e.tool ?? label }, now).board
       break
     }
     default:
@@ -171,8 +177,18 @@ function onProxyTelemetry(tel: { model: string; promptTokens: number }): void {
   const limit = vscode.workspace.getConfiguration('agenticOrbit').get('contextWindowLimit', 128000)
   const now = Date.now()
   const step = (board.step ?? 0) + 1
-  const started = begin(board, { station: 'model', label: `${shortModel(tel.model) || tel.model || 'model'} · ${t().step(step)}`, patch: { model: tel.model, step } }, now)
-  board = finish(withContext(started.board, tel.promptTokens, limit), started.id, 'ok', now)
+  board = transitionBoard(
+    board,
+    {
+      type: 'modelStep',
+      model: tel.model,
+      step,
+      label: `${shortModel(tel.model) || tel.model || 'model'} · ${t().step(step)}`,
+      promptTokens: tel.promptTokens,
+      limit,
+    },
+    now,
+  ).board
   publish()
 }
 

@@ -1,8 +1,10 @@
 // The demo page: a fake clock walks the chosen scenario's steps through the fake session, and the map is
 // drawn from the same board and the same drawing the extension uses, on the same 1-second cadence the panel keeps.
 // The words on the controls live here: the demo is a workshop, not a shipped surface.
-import { FakeSession, SCENARIOS, ZOOMS, buildView, demoSetup, escapeHtml, rowsHtml, scenarioEnd } from './engine'
-import type { View } from './engine'
+import { FakeSession, SCENARIOS, ZOOMS, demoSetup, scenarioEnd } from './engine'
+import { projectView } from '../hooks/view'
+import type { ViewProjection } from '../types'
+import { renderView } from '../vscode-extension/src/webview/render'
 
 const BASE = 1_770_000_000_000
 /** How often the map is redrawn while it runs: the panel keeps the same beat. */
@@ -69,70 +71,28 @@ function tick(dtReal: number): void {
 function render(force: boolean): void {
   if (!force && state.clock - lastDrawn < REDRAW_MS && lastDrawn >= 0) return
   lastDrawn = state.clock
-  const view: View = buildView(session.board, BASE + state.clock, setup(), state.zoom >= ZOOMS.length ? undefined : ZOOMS[state.zoom], state.minimized)
-  const map = document.getElementById('map')
-  const feed = document.getElementById('feed')
-  const nowline = document.getElementById('nowline')
-  const buttons = document.getElementById('buttons')
-  if (map === null || feed === null || nowline === null || buttons === null) return
-
-  if (view.hidden) {
-    map.innerHTML = ''
-    feed.innerHTML = ''
-    nowline.textContent = ''
-    buttons.innerHTML = `<button id="show" class="btn" title="${escapeHtml(view.labels.showMap)}" aria-label="${escapeHtml(view.labels.showMap)}">▢</button>`
-    bind('show', () => {
+  const view: ViewProjection = projectView(session.board, BASE + state.clock, setup(), {
+    width: state.zoom >= ZOOMS.length ? undefined : ZOOMS[state.zoom],
+    hidden: state.minimized,
+  })
+  renderView(view, {
+    show: () => {
       state.minimized = false
       render(true)
-    })
-    return
-  }
-
-  map.innerHTML = view.svg
-  const svg = map.querySelector('svg')
-  if (svg !== null) {
-    svg.setAttribute('role', 'img')
-    svg.setAttribute('aria-label', view.alt)
-    svg.style.width = view.width === undefined ? '100%' : `${view.width}px`
-    svg.style.maxWidth = view.width === undefined ? `${view.mapWidth}px` : '100%'
-    svg.style.height = 'auto'
-  }
-  document.getElementById('counts')!.textContent = view.counts
-  feed.innerHTML = rowsHtml(view)
-  nowline.textContent = view.nowline
-  buttons.innerHTML = `<button id="zoom-out" class="btn" title="${escapeHtml(view.labels.zoomOut)}" aria-label="${escapeHtml(view.labels.zoomOut)}">–</button><button id="zoom-in" class="btn" title="${escapeHtml(view.labels.zoomIn)}" aria-label="${escapeHtml(view.labels.zoomIn)}">+</button><button id="hide" class="btn" title="${escapeHtml(view.labels.hideMap)}" aria-label="${escapeHtml(view.labels.hideMap)}">×</button>`
-  bind('zoom-out', () => {
-    state.zoom = Math.max(0, state.zoom - 1)
-    render(true)
+    },
+    zoomOut: () => {
+      state.zoom = Math.max(0, state.zoom - 1)
+      render(true)
+    },
+    zoomIn: () => {
+      state.zoom = Math.min(ZOOMS.length, state.zoom + 1)
+      render(true)
+    },
+    hide: () => {
+      state.minimized = true
+      render(true)
+    },
   })
-  bind('zoom-in', () => {
-    state.zoom = Math.min(ZOOMS.length, state.zoom + 1)
-    render(true)
-  })
-  bind('hide', () => {
-    state.minimized = true
-    render(true)
-  })
-
-  let expanded: string | undefined
-  for (const row of feed.querySelectorAll<HTMLDivElement>('.row[data-id]')) {
-    const toggle = (): void => {
-      expanded = expanded === row.dataset.id ? undefined : row.dataset.id
-      row.classList.toggle('open', expanded === row.dataset.id)
-    }
-    row.onclick = toggle
-    row.onkeydown = e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        toggle()
-      }
-    }
-  }
-}
-
-function bind(id: string, onPress: () => void): void {
-  const el = document.getElementById(id)
-  if (el !== null) el.onclick = onPress
 }
 
 /** The controls bar: the words on it are the demo's own, for it is a workshop and not a shipped surface. */

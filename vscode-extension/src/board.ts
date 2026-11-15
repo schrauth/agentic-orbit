@@ -1,6 +1,6 @@
 // The map's state: one board, entries begun and finished,
 // counts, faults, agents, context. Nothing here touches VS Code; it is plain state in the extension host.
-import type { Board, Entry, StationId, Status } from '../../types'
+import type { Board, BoardEntryStart, BoardTransition, BoardTransitionResult, Entry, StationId, Status } from '../../types'
 import { clean } from '../../hooks/classify'
 import { AGENT_FADE_MS, AGENT_HOLD_MS } from '../../hooks/draw'
 
@@ -8,21 +8,7 @@ const KEEP = 80
 /** How many seats the board keeps around the agents station: those at work and those lately over, until their stay is up. */
 const CREW = 12
 
-export type BeginOptions = {
-  station: StationId
-  label: string
-  from?: Entry['from']
-  status?: Status
-  agentId?: string
-  /** The short name the subagent was started with, from the call that launched it; its prompt is content. */
-  agentName?: string
-  mark?: Entry['mark']
-  /** Adds nothing to the station's count: a second view of something already counted. */
-  uncounted?: boolean
-  startedAt?: number
-  endedAt?: number
-  patch?: Partial<Pick<Board, 'model' | 'step' | 'switchedAt'>>
-}
+export type BeginOptions = BoardEntryStart
 
 const newId = (now: number): string => `${now.toString(36)}${Math.random().toString(36).slice(2, 7)}`
 
@@ -150,4 +136,43 @@ export function clearFaults(board: Board): Board {
 export function withContext(board: Board, promptTokens: number, limit: number): Board {
   const percent = Math.max(0, Math.min(100, (promptTokens / Math.max(1, limit)) * 100))
   return { ...board, context: percent }
+}
+
+/** Apply one caller-normalized event to the board. Hook parsing and caller state stay outside this reducer. */
+export function transitionBoard(board: Board, transition: BoardTransition, now: number): BoardTransitionResult {
+  switch (transition.type) {
+    case 'reset':
+      return { board: emptyBoard() }
+    case 'prompt':
+      return { board: begin(clearFaults(board), { station: 'you', label: transition.label, from: 'inbound', status: 'ok' }, now).board }
+    case 'entryStarted':
+      return begin(board, transition.start, now)
+    case 'entryFinished':
+      return { board: finish(board, transition.id, transition.status, now) }
+    case 'failure':
+      return {
+        board:
+          transition.id !== undefined
+            ? finish(board, transition.id, 'err', now)
+            : begin(board, { station: transition.station, label: transition.label, status: 'err', startedAt: now, endedAt: now }, now).board,
+      }
+    case 'agentFinished':
+      return { board: agentDone(board, transition.agentId, now) }
+    case 'turnFinished':
+      return {
+        board: begin(
+          sweepOpen(board, now),
+          { station: 'you', label: transition.label, status: transition.status, ...(transition.mark === undefined ? {} : { mark: transition.mark }) },
+          now,
+        ).board,
+      }
+    case 'modelStep': {
+      const started = begin(
+        board,
+        { station: 'model', label: transition.label, patch: { model: transition.model, step: transition.step } },
+        now,
+      )
+      return { board: finish(withContext(started.board, transition.promptTokens, transition.limit), started.id, 'ok', now) }
+    }
+  }
 }

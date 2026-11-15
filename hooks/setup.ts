@@ -37,9 +37,6 @@ export type Setup = {
   memorySubcommands: ReadonlySet<string>
   memoryPaths: readonly string[]
   memoryLabels: ReadonlyMap<string, string>
-  hookRecords: boolean
-  /** Whether the first line of a hook's refusal is shown. Off, the row names only the tool. */
-  hookReasons: boolean
   theme: 'auto' | 'dark' | 'light'
   /** Whether the map paints its own ground, or leaves the surface it lies on showing through. */
   background: 'solid' | 'transparent'
@@ -85,8 +82,6 @@ export function setupFrom(options: Readonly<Record<string, unknown>> = {}): Setu
     memorySubcommands: new Set(list(options.memorySubcommands)),
     memoryPaths: list(options.memoryPaths),
     memoryLabels,
-    hookRecords: options.hookRecords === true,
-    hookReasons: options.hookReasons === true,
     theme: options.theme === 'dark' || options.theme === 'light' ? options.theme : 'auto',
     background: options.background === 'transparent' ? 'transparent' : 'solid',
     colors: colorsFrom(options.colors),

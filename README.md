@@ -198,6 +198,7 @@ Control characters are taken out of every label before it is drawn.
 cd vscode-extension
 npm install
 npm run compile   # tsc + webview assets
+npm test          # compile + focused regression tests
 npm run package   # → agentic-orbit-x.y.z.vsix
 ```
 

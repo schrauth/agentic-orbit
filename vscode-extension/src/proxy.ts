@@ -55,6 +55,39 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
   const forward = isTls ? https.request : http.request
   const base = target.pathname.replace(/\/v1$/, '')
 
+  const requestOptions = (req: http.IncomingMessage, url: string) => {
+    const headers: IncomingHttpHeaders = { ...req.headers }
+    for (const name of Object.keys(headers)) {
+      if (HOP_HEADERS.has(name.toLowerCase())) delete headers[name]
+    }
+    return {
+      hostname: target.hostname,
+      port: target.port !== '' ? Number(target.port) : isTls ? 443 : 80,
+      path: `${base}${url}`,
+      method: req.method,
+      headers: { ...headers, host: target.host },
+    }
+  }
+  const responseHeaders = (answer: http.IncomingMessage): Record<string, string | string[]> => {
+    const headers: Record<string, string | string[]> = {}
+    for (const [name, value] of Object.entries(answer.headers)) {
+      if (value !== undefined && !HOP_HEADERS.has(name.toLowerCase())) headers[name] = value
+    }
+    return headers
+  }
+  const forwardRequest = (
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    payload: Buffer,
+    url: string,
+    onResponse: (answer: http.IncomingMessage) => void,
+    onError: () => void,
+  ): void => {
+    const upstream = forward(requestOptions(req, url), onResponse)
+    upstream.on('error', onError)
+    upstream.end(payload)
+  }
+
   const server = http.createServer((req, res) => {
     let body: Buffer[] = []
     let bodySize = 0
@@ -81,27 +114,14 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
         // A body the proxy cannot read is forwarded as it came, unmeasured.
       }
 
-      const headers: IncomingHttpHeaders = { ...req.headers }
-      for (const name of Object.keys(headers)) {
-        if (HOP_HEADERS.has(name.toLowerCase())) delete headers[name]
-      }
-      const upstream = forward(
-        {
-          hostname: target.hostname,
-          port: target.port !== '' ? Number(target.port) : isTls ? 443 : 80,
-          path: `${base}${req.url ?? '/'}`,
-          method: req.method,
-          headers: { ...headers, host: target.host },
-        },
+      forwardRequest(
+        req,
+        res,
+        payload,
+        req.url ?? '/',
         answer => {
           const status = answer.statusCode ?? 502
-          const head: Record<string, string | string[]> = {}
-          for (const [name, value] of Object.entries(answer.headers)) {
-            if (value === undefined) continue
-            if (HOP_HEADERS.has(name.toLowerCase())) continue
-            head[name] = value
-          }
-          res.writeHead(status, head)
+          res.writeHead(status, responseHeaders(answer))
           // The stream goes through chunk by chunk: the person reads it as it arrives.
           // From it, figures only: the last chunk many servers append holds `usage`; a non-streaming
           // answer holds it whole. Without `usage`, the request's own size gives a close estimate.
@@ -134,12 +154,11 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
           })
           answer.on('error', () => res.end())
         },
+        () => {
+          if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' })
+          res.end(JSON.stringify({ error: { message: 'agentic-orbit proxy: the on-prem LLM did not answer', type: 'proxy_target_unreachable' } }))
+        },
       )
-      upstream.on('error', () => {
-        if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' })
-        res.end(JSON.stringify({ error: { message: 'agentic-orbit proxy: the on-prem LLM did not answer', type: 'proxy_target_unreachable' } }))
-      })
-      upstream.end(payload)
     })
     req.on('error', () => {
       if (!res.headersSent) res.writeHead(400)
@@ -148,34 +167,20 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
   })
 
   function pipe(req: http.IncomingMessage, res: http.ServerResponse, payload: Buffer, url: string): void {
-    const headers: IncomingHttpHeaders = { ...req.headers }
-    for (const name of Object.keys(headers)) {
-      if (HOP_HEADERS.has(name.toLowerCase())) delete headers[name]
-    }
-    const upstream = forward(
-      {
-        hostname: target.hostname,
-        port: target.port !== '' ? Number(target.port) : isTls ? 443 : 80,
-        path: `${base}${url}`,
-        method: req.method,
-        headers: { ...headers, host: target.host },
-      },
+    forwardRequest(
+      req,
+      res,
+      payload,
+      url,
       answer => {
-        const head: Record<string, string | string[]> = {}
-        for (const [name, value] of Object.entries(answer.headers)) {
-          if (value === undefined) continue
-          if (HOP_HEADERS.has(name.toLowerCase())) continue
-          head[name] = value
-        }
-        res.writeHead(answer.statusCode ?? 502, head)
+        res.writeHead(answer.statusCode ?? 502, responseHeaders(answer))
         answer.pipe(res)
       },
+      () => {
+        if (!res.headersSent) res.writeHead(502)
+        res.end()
+      },
     )
-    upstream.on('error', () => {
-      if (!res.headersSent) res.writeHead(502)
-      res.end()
-    })
-    upstream.end(payload)
   }
 
   return new Promise((resolve, reject) => {

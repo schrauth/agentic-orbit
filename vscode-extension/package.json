@@ -134,11 +134,6 @@
           "default": "",
           "description": "Where the workspace hook appends its JSON event lines. Empty: agentic-orbit-<workspace hash>.jsonl in the OS temp directory. The extension watches this file."
         },
-        "agenticOrbit.showFeed": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show the rows of what happened under the map."
-        },
         "agenticOrbit.memoryServers": {
           "type": "array",
           "items": {
@@ -187,6 +182,7 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p . && node -e \"require('fs').cpSync('src/webview', 'out/vscode-extension/src/webview', {recursive: true, filter: s => !s.endsWith('.ts')})\"",
+    "test": "npm run compile && node --test test/*.test.cjs",
     "watch": "tsc -watch -p .",
     "package": "vsce package"
   },

@@ -93,9 +93,12 @@ const GIT_TAKES = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace'
 const DOCKER_TAKES = new Set(['-c', '--context', '-H', '--host', '--config', '-l', '--log-level', '-f', '--file', '-p', '--project-name', '--profile', '--env-file', '--project-directory'])
 
 /** The words after the flags: a flag in `takes` has a word of its own after it. */
-const pastFlags = (words: string[], takes: { has(flag: string): boolean }): string[] => {
+const pastFlags = (words: string[], takes: readonly string[] | ReadonlySet<string>): string[] => {
   let i = 0
-  while (i < words.length && (words[i] ?? '').startsWith('-')) i += takes.has(words[i] ?? '') ? 2 : 1
+  while (i < words.length && (words[i] ?? '').startsWith('-')) {
+    const flag = words[i] ?? ''
+    i += ('has' in takes ? takes.has(flag) : takes.includes(flag)) ? 2 : 1
+  }
   return words.slice(i)
 }
 const RUNNERS = new Set(['python', 'python3', 'bash', 'sh', 'zsh', 'node'])
@@ -148,76 +151,87 @@ function memoryLabel(words: string[], setup: Setup): string {
   return setup.memorySubcommands.has(sub) ? sub : head
 }
 
+const commandName = (word: string | undefined, powershell: boolean): string => {
+  const name = base(word)
+  return powershell ? name.toLowerCase() : name
+}
+
+/** PowerShell's call operator, dot sourcing, and assignment output are not command names. */
+const ownCommand = (words: string[], powershell: boolean): string[] => {
+  if (!powershell) return words
+  let i = 0
+  if (/^\$[\w:]+$/.test(words[0] ?? '') && words[1] === '=') i = 2
+  if (words[i] === '&' || words[i] === '.') i++
+  return words.slice(i)
+}
+
+/** `sudo curl` and the command after other wrappers are classified by the command that actually runs. */
+function unwrapCommand(words: string[], powershell: boolean): string[] {
+  let rest = words
+  for (let depth = 0; depth < 6; depth++) {
+    const wrapper = WRAPPERS[commandName(rest[0], powershell)]
+    if (wrapper === undefined) break
+    if (wrapper.asks?.some(flag => rest[1] === flag) === true) break
+    rest = pastFlags(rest.slice(1), wrapper.takes ?? [])
+    let i = 0
+    while (i < rest.length && ASSIGNMENT.test(rest[i] ?? '')) i++
+    rest = rest.slice(i + (wrapper.skip ?? 0))
+  }
+  return rest
+}
+
+/** The commands of one piece of a line, including each one passed to `find -exec`. */
+function commandsOf(words: string[], powershell: boolean): string[][] {
+  const outer = unwrapCommand(words, powershell)
+  const all = [outer]
+  if (commandName(outer[0], powershell) === 'find') {
+    outer.forEach((word, i) => {
+      if (!/^-(?:exec|execdir|ok|okdir)$/.test(word)) return
+      const tail = outer.slice(i + 1)
+      const end = tail.findIndex(w => w === ';' || w === '\\;' || w === '\\' || w === '+')
+      all.push(unwrapCommand(end < 0 ? tail : tail.slice(0, end), powershell))
+    })
+  }
+  return all.filter(command => command.length > 0)
+}
+
+/** Whether a command reaches the network: by its name, or by its name and subcommand. */
+function reachesNetwork(words: string[], powershell: boolean): boolean {
+  let head = commandName(words[0], powershell)
+  let rest = words.slice(1)
+  if (NET_WORDS.has(head) || (powershell && PS_NET_WORDS.has(head))) return true
+  if (/^(?:python[\d.]*|py)$/.test(head) && rest[0] === '-m' && PY_MODULES.has(rest[1] ?? '')) [head, rest] = [rest[1] ?? '', rest.slice(2)]
+  if (head === 'uv' && rest[0] === 'pip') [head, rest] = ['pip', rest.slice(1)]
+  if (head === 'git') rest = pastFlags(rest, GIT_TAKES)
+  if (head === 'docker') {
+    rest = pastFlags(rest, DOCKER_TAKES)
+    if (rest[0] === 'compose') [head, rest] = ['docker compose', pastFlags(rest.slice(1), DOCKER_TAKES)]
+  }
+  // npx runs what is installed already as readily as it downloads; only its own "yes, install" says which.
+  if (head === 'npx') return rest.some(w => w === '-y' || w === '--yes')
+  const subs = NET_SUBCOMMANDS[head]
+  return subs !== undefined && (subs.has(rest[0] ?? '') || subs.has(`${rest[0] ?? ''} ${rest[1] ?? ''}`))
+}
+
 /** The line of a shell tool. `powershell` adds PowerShell's own command names and reads every name in lower case. */
 export function classifyShell(command: string, description: string, setup: Setup, powershell = false): Classified {
-  const name = (word?: string): string => (powershell ? base(word).toLowerCase() : base(word))
-  // PowerShell runs a quoted path with `&` and keeps results in `$name = ...`: neither is the command.
-  const own = (words: string[]): string[] => {
-    if (!powershell) return words
-    let i = 0
-    if (/^\$[\w:]+$/.test(words[0] ?? '') && words[1] === '=') i = 2
-    if (words[i] === '&' || words[i] === '.') i++
-    return words.slice(i)
-  }
-  // `sudo curl` is curl, and so is the curl behind `env A=1`, `timeout 5` or `xargs`: the command run is the one that counts.
-  const unwrapped = (words: string[]): string[] => {
-    let rest = words
-    for (let depth = 0; depth < 6; depth++) {
-      const wrapper = WRAPPERS[name(rest[0])]
-      if (wrapper === undefined) break
-      if (wrapper.asks?.some(flag => rest[1] === flag) === true) break
-      rest = pastFlags(rest.slice(1), new Set(wrapper.takes ?? []))
-      let i = 0
-      while (i < rest.length && ASSIGNMENT.test(rest[i] ?? '')) i++
-      rest = rest.slice(i + (wrapper.skip ?? 0))
-    }
-    return rest
-  }
-  /** The commands of one piece of a line: its own, and each one that `find` is told to run with `-exec`. */
-  const commands = (words: string[]): string[][] => {
-    const outer = unwrapped(words)
-    const all = [outer]
-    if (name(outer[0]) === 'find') {
-      outer.forEach((word, i) => {
-        if (!/^-(?:exec|execdir|ok|okdir)$/.test(word)) return
-        const tail = outer.slice(i + 1)
-        const end = tail.findIndex(w => w === ';' || w === '\\;' || w === '\\' || w === '+')
-        all.push(unwrapped(end < 0 ? tail : tail.slice(0, end)))
-      })
-    }
-    return all.filter(c => c.length > 0)
-  }
-  /** Whether a command reaches the network: by its name, or by its name and subcommand. */
-  const isNet = (words: string[]): boolean => {
-    let head = name(words[0])
-    let rest = words.slice(1)
-    if (NET_WORDS.has(head) || (powershell && PS_NET_WORDS.has(head))) return true
-    if (/^(?:python[\d.]*|py)$/.test(head) && rest[0] === '-m' && PY_MODULES.has(rest[1] ?? '')) [head, rest] = [rest[1] ?? '', rest.slice(2)]
-    if (head === 'uv' && rest[0] === 'pip') [head, rest] = ['pip', rest.slice(1)]
-    if (head === 'git') rest = pastFlags(rest, GIT_TAKES)
-    if (head === 'docker') {
-      rest = pastFlags(rest, DOCKER_TAKES)
-      if (rest[0] === 'compose') [head, rest] = ['docker compose', pastFlags(rest.slice(1), DOCKER_TAKES)]
-    }
-    // npx runs what is installed already as readily as it downloads; only its own "yes, install" says which.
-    if (head === 'npx') return rest.some(w => w === '-y' || w === '--yes')
-    const subs = NET_SUBCOMMANDS[head]
-    return subs !== undefined && (subs.has(rest[0] ?? '') || subs.has(`${rest[0] ?? ''} ${rest[1] ?? ''}`))
-  }
-  const lines = segments(command).map(own).filter(words => words.length > 0)
+  const lines = segments(command).map(words => ownCommand(words, powershell)).filter(words => words.length > 0)
+  const commands = lines.flatMap(words => commandsOf(words, powershell))
   const label = description.trim() || base(lines[0]?.[0] ?? 'shell')
-  for (const words of lines.flatMap(commands)) {
-    const head = name(words[0])
+  for (const words of commands) {
+    const head = commandName(words[0], powershell)
     const script = RUNNERS.has(head) && words[1] ? base(words[1]) : ''
     if (setup.memoryCommands.some(c => named(head, c) || named(script, c))) {
       return { station: 'memory', label: memoryLabel(words, setup) }
     }
   }
-  if (segments(command, true).map(own).flatMap(commands).some(isNet)) return { station: 'web', label }
+  if (segments(command, true).map(words => ownCommand(words, powershell)).flatMap(words => commandsOf(words, powershell)).some(words => reachesNetwork(words, powershell))) {
+    return { station: 'web', label }
+  }
   const isNeutral = (head: string): boolean => NEUTRAL_WORDS.has(head) || (powershell && PS_NEUTRAL_WORDS.has(head))
   const isFile = (head: string): boolean => FILE_WORDS.has(head) || (powershell && PS_FILE_WORDS.has(head))
-  const real = lines.flatMap(commands).filter(words => !isNeutral(name(words[0])))
-  if (real.length > 0 && real.every(words => isFile(name(words[0])))) {
+  const real = commands.filter(words => !isNeutral(commandName(words[0], powershell)))
+  if (real.length > 0 && real.every(words => isFile(commandName(words[0], powershell)))) {
     return { station: isMemoryPath(command, setup) ? 'memory' : 'files', label }
   }
   return { station: 'shell', label }

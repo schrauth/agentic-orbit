@@ -80,6 +80,13 @@ function fadeAt(age: number, holdMs: number, fadeMs: number): { opacity: number;
   return { opacity: remain / fadeMs, begin: 0, dur: remain }
 }
 
+function agentFadeGroup(age: number): { open: string; close: string } {
+  if (age < 0) return { open: '', close: '' }
+  const fade = fadeAt(age, AGENT_HOLD_MS, AGENT_FADE_MS)
+  const animation = `<animate attributeName="opacity" values="${n1(fade.opacity)};0" begin="${clock(fade.begin)}" dur="${clock(fade.dur)}" fill="freeze"/>`
+  return { open: `<g opacity="${n1(fade.opacity)}">${animation}`, close: '</g>' }
+}
+
 /** Where a straight line from `from` to `to` meets the circle of radius `r` around `from`. */
 function edge(from: Point, to: Point, r: number): Point {
   const d = Math.hypot(to.x - from.x, to.y - from.y) || 1
@@ -501,25 +508,22 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     const spin = `${n1(agentsAt.x)} ${n1(agentsAt.y)}`
     // The fade is written into the drawing, so a planet goes out on time even when nothing redraws the map —
     // and mid-fade, the group already sits at the opacity the fade has really reached.
-    const fading = age >= 0 ? fadeAt(age, AGENT_HOLD_MS, AGENT_FADE_MS) : undefined
-    const out = fading === undefined ? '' : `<animate attributeName="opacity" values="${n1(fading.opacity)};0" begin="${clock(fading.begin)}" dur="${clock(fading.dur)}" fill="freeze"/>`
-    const hold = out === '' ? '' : `<g opacity="${n1(fading?.opacity ?? 1)}">${out}`
-    const shut = out === '' ? '' : '</g>'
+    const fade = agentFadeGroup(age)
     // An inner ring belongs to the one planet on it, so it fades together with that planet.
     // The outer ring belongs to everyone seated on it: it is drawn once and stays while any of them is there.
     if (ring < INNER_SEATS) {
-      body += `${hold}${orbitRing(ring, agentsAt, c)}`
+      body += `${fade.open}${orbitRing(ring, agentsAt, c)}`
     } else {
       if (!outerRingDrawn) {
         body += orbitRing(ring, agentsAt, c)
         outerRingDrawn = true
       }
-      body += hold
+      body += fade.open
     }
     // Standing still, each keeps its own place on its ring.
     if (isStill) {
       const still = orbitDot(ring, agentsAt, seatShare(seat) * 2 * Math.PI)
-      body += `${planet(still, c, hue, age < 0, true)}${shut}`
+      body += `${planet(still, c, hue, age < 0, true)}${fade.close}`
       return
     }
     const lap = orbitLap(ring)
@@ -530,7 +534,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     const seatPoint = orbitDot(ring, agentsAt, 0)
     body +=
       `<g transform="rotate(${n1(theta)} ${spin})"><animateTransform attributeName="transform" type="rotate" from="${n1(theta)} ${spin}" to="${n1(theta + (ring % 2 === 0 ? 360 : -360))} ${spin}" begin="0s" dur="${clock(lap)}" repeatCount="indefinite"/>` +
-      `${planet(seatPoint, c, hue, age < 0, false)}</g>${shut}`
+      `${planet(seatPoint, c, hue, age < 0, false)}</g>${fade.close}`
   })
 
   // The legend in the corner below: each hue with the name of the agent whose planet wears it,
@@ -544,14 +548,11 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
       if (seat === undefined) return
       const age = seatAgent.goneAt === undefined ? -1 : now - seatAgent.goneAt
       const hue = c[CREW_HUES[seat.hue] ?? 'crew0']
-      const fading = age >= 0 ? fadeAt(age, AGENT_HOLD_MS, AGENT_FADE_MS) : undefined
-      const out = fading === undefined ? '' : `<animate attributeName="opacity" values="${n1(fading.opacity)};0" begin="${clock(fading.begin)}" dur="${clock(fading.dur)}" fill="freeze"/>`
-      const hold = out === '' ? '' : `<g opacity="${n1(fading?.opacity ?? 1)}">${out}`
-      const shut = out === '' ? '' : '</g>'
+      const fade = agentFadeGroup(age)
       const y = legendBottom - (crew.length - 1 - crew.indexOf(seatAgent)) * 16
       const name = (seatAgent.name ?? setup.t.subagent).length > 28 ? `${(seatAgent.name ?? setup.t.subagent).slice(0, 27)}…` : seatAgent.name ?? setup.t.subagent
-      body += `${hold}<circle cx="${legendX}" cy="${n1(y - 4)}" r="5" fill="${hue}"/>` +
-        `<text x="${legendX + 13}" y="${n1(y)}" ${FONT} font-size="11" fill="${c.ash}">${escapeXml(name)}</text>${shut}`
+      body += `${fade.open}<circle cx="${legendX}" cy="${n1(y - 4)}" r="5" fill="${hue}"/>` +
+        `<text x="${legendX + 13}" y="${n1(y)}" ${FONT} font-size="11" fill="${c.ash}">${escapeXml(name)}</text>${fade.close}`
     })
   }
 

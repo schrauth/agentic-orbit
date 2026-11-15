@@ -12,7 +12,7 @@ The repository carries its own Copilot agents in [`.github/agents/`](.github/age
 
 ## Before you send a change
 
-- `cd vscode-extension && npm ci && npm run compile` passes with no errors.
+- `cd vscode-extension && npm ci && npm test` passes; this compiles the extension and runs its focused regression tests.
 - Nothing new reaches the network, reads files outside its own workspace hook file, or starts processes other than the hook it installs.
 - A label never holds content: a file keeps the last two parts of its path, a web address its host, a shell command its description or name.
 - The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the extension is not running.

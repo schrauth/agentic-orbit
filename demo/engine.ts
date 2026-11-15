@@ -3,10 +3,10 @@
 // Nothing here ships in the extension, and nothing here reads a file, starts a process or sends anything.
 // The events carry names and figures only, made up for the demo: no code, no prompts, no content.
 import type { Board } from '../types'
-import { MAP_ASPECT, MAP_WIDTH, STATIONS, describeNow, drawMap, foldRows, formatMs, nowParts, shortModel } from '../hooks/map'
+import { shortModel } from '../hooks/map'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
-import { agentDone, begin, clearFaults, emptyBoard, finish, sweepOpen, withContext } from '../vscode-extension/src/board'
+import { emptyBoard, transitionBoard } from '../vscode-extension/src/board'
 import { classifyCopilot } from '../vscode-extension/src/classifyCopilot'
 
 /** What the workspace hook writes in one line; the demo's events have the same shape, with made-up values. */
@@ -54,45 +54,54 @@ export class FakeSession {
     const now = this.base + at
     switch (e.event) {
       case 'sessionStart': {
-        this.board = emptyBoard()
+        this.board = transitionBoard(this.board, { type: 'reset' }, now).board
         if (e.model !== undefined) {
           const before = this.lastModel
           this.lastModel = e.model
           if (before !== undefined && before !== e.model) {
-            this.board = begin(this.board, { station: 'model', label: `${shortModel(before)} → ${shortModel(e.model)}`, status: 'ok', mark: 'switch', uncounted: true }, now).board
+            this.board = transitionBoard(
+              this.board,
+              { type: 'entryStarted', start: { station: 'model', label: `${shortModel(before)} → ${shortModel(e.model)}`, status: 'ok', mark: 'switch', uncounted: true } },
+              now,
+            ).board
           }
         }
         break
       }
       case 'userPromptSubmitted': {
-        this.board = clearFaults(this.board)
-        this.board = begin(this.board, { station: 'you', label: setup.t.newMessage, from: 'inbound', status: 'ok' }, now).board
+        this.board = transitionBoard(this.board, { type: 'prompt', label: setup.t.newMessage }, now).board
         break
       }
       case 'preToolUse': {
         const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
-        const started = begin(
+        const started = transitionBoard(
           this.board,
-          { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(station === 'agents' ? { agentName: label } : {}) } : {}) },
+          {
+            type: 'entryStarted',
+            start: { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(station === 'agents' ? { agentName: label } : {}) } : {}) },
+          },
           now,
         )
         this.board = started.board
-        if (e.callId !== undefined) this.open.set(e.callId, started.id)
+        if (e.callId !== undefined && started.id !== undefined) this.open.set(e.callId, started.id)
         break
       }
       case 'postToolUse': {
         const id = e.callId !== undefined ? this.open.get(e.callId) : undefined
         if (e.callId !== undefined) this.open.delete(e.callId)
-        this.board = finish(this.board, id, e.error === true ? 'err' : 'ok', now)
+        this.board = transitionBoard(this.board, { type: 'entryFinished', id, status: e.error === true ? 'err' : 'ok' }, now).board
         break
       }
       case 'agentStop': {
         if (e.agentId !== undefined) {
-          this.board = agentDone(this.board, e.agentId, now)
+          this.board = transitionBoard(this.board, { type: 'agentFinished', agentId: e.agentId }, now).board
         } else {
-          this.board = sweepOpen(this.board, now)
           const aborted = e.aborted === true
-          this.board = begin(this.board, { station: 'you', label: aborted ? setup.t.turnAborted : setup.t.answerReady, status: aborted ? 'err' : 'ok', ...(aborted ? {} : { mark: 'done' as const }) }, now).board
+          this.board = transitionBoard(
+            this.board,
+            { type: 'turnFinished', label: aborted ? setup.t.turnAborted : setup.t.answerReady, status: aborted ? 'err' : 'ok', ...(aborted ? {} : { mark: 'done' as const }) },
+            now,
+          ).board
         }
         break
       }
@@ -100,11 +109,7 @@ export class FakeSession {
         const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
         const id = e.callId !== undefined ? this.open.get(e.callId) : undefined
         if (e.callId !== undefined) this.open.delete(e.callId)
-        if (id !== undefined) {
-          this.board = finish(this.board, id, 'err', now)
-        } else {
-          this.board = begin(this.board, { station, label: e.tool ?? label, status: 'err', startedAt: now, endedAt: now }, now).board
-        }
+        this.board = transitionBoard(this.board, { type: 'failure', id, station, label: e.tool ?? label }, now).board
         break
       }
       default:
@@ -116,117 +121,19 @@ export class FakeSession {
   telemetry(model: string, promptTokens: number, at: number, setup: Setup): void {
     const now = this.base + at
     const step = (this.board.step ?? 0) + 1
-    const started = begin(this.board, { station: 'model', label: `${shortModel(model) || model || 'model'} · ${setup.t.step(step)}`, patch: { model, step } }, now)
-    this.board = finish(withContext(started.board, promptTokens, CONTEXT_LIMIT), started.id, 'ok', now)
+    this.board = transitionBoard(
+      this.board,
+      {
+        type: 'modelStep',
+        model,
+        step,
+        label: `${shortModel(model) || model || 'model'} · ${setup.t.step(step)}`,
+        promptTokens,
+        limit: CONTEXT_LIMIT,
+      },
+      now,
+    ).board
   }
-}
-
-// ---- the view the panel sends the webview -------------------------------------------------------------------
-
-export type RowView = {
-  id: string
-  mark: string
-  station: string
-  label: string
-  times: number
-  took: string
-  color: 'link' | 'fg' | 'err'
-  dim: boolean
-  isLong: boolean
-}
-
-export type View = {
-  type: 'view'
-  svg: string
-  alt: string
-  nowline: string
-  counts: string
-  rows: RowView[]
-  hidden: boolean
-  width?: number
-  mapWidth: number
-  aspect: number
-  labels: { zoomOut: string; zoomIn: string; hideMap: string; showMap: string }
-}
-
-/** The same view model `panel.ts` sends: the drawing, the line of what runs now, the counts and the rows. */
-export function buildView(board: Board, now: number, setup: Setup, width?: number, minimized = false): View {
-  const { t } = setup
-
-  const turnMs = new Map<string, number>()
-  let askedAt: number | undefined
-  for (const x of board.entries) {
-    if (x.station === 'you' && x.from === 'inbound' && x.mark === undefined) askedAt = x.startedAt
-    if (x.mark === 'done' && askedAt !== undefined) {
-      turnMs.set(x.id, x.startedAt - askedAt)
-      askedAt = undefined
-    }
-  }
-
-  const rows: RowView[] = foldRows(board.entries, 16)
-    .map(({ entry, times, tookMs }) => {
-      const isSwitch = entry.mark === 'switch'
-      const mark = isSwitch ? '◆' : entry.status === 'run' ? '●' : entry.status === 'ok' ? '·' : '✕'
-      const whole = turnMs.get(entry.id)
-      const took =
-        entry.endedAt === undefined
-          ? t.running
-          : whole !== undefined && whole > 0
-            ? formatMs(whole, t)
-            : tookMs > 0
-              ? formatMs(tookMs, t)
-              : '—'
-      return {
-        id: entry.id,
-        mark,
-        station: t.stations[entry.station],
-        label: entry.label,
-        times,
-        took: took === '—' ? '' : took,
-        color: isSwitch || entry.status === 'run' ? ('link' as const) : entry.status === 'ok' ? ('fg' as const) : ('err' as const),
-        dim: entry.status === 'ok' && !isSwitch,
-        isLong: entry.label.length > LONG_LABEL,
-      }
-    })
-    .reverse()
-
-  const now2 = nowParts(board, t)
-  const meter = [board.context === undefined ? '' : `${Math.round(board.context)}%`, board.model === undefined || now2.what.startsWith(t.stations.model) ? '' : shortOf(board.model)]
-    .filter(Boolean)
-    .join(' · ')
-  const counts = STATIONS.filter(s => (board.counts[s.id] ?? 0) > 0)
-    .map(s => `${t.stations[s.id]} ${board.counts[s.id]}`)
-    .join(' · ')
-
-  return {
-    type: 'view',
-    svg: minimized ? '' : drawMap(board, now, setup),
-    alt: `${t.title}. ${describeNow(board, t)}`,
-    nowline: `${now2.what}${meter === '' ? '' : `   ${meter}`}`,
-    counts,
-    rows,
-    hidden: minimized,
-    width,
-    aspect: MAP_ASPECT,
-    mapWidth: MAP_WIDTH,
-    labels: { zoomOut: t.zoomOut, zoomIn: t.zoomIn, hideMap: t.hideMap, showMap: t.showMap },
-  }
-}
-
-/** The rows under the map, as the webview renders them. */
-export function rowsHtml(view: View): string {
-  return view.rows
-    .map(row => {
-      const text = `${row.mark} ${row.station}  ${row.label}${row.times > 1 ? `  +${row.times - 1}` : ''}`
-      const time = row.took !== '' ? `<span class="time">${escapeHtml(row.took)}</span>` : ''
-      const cls = `row${row.dim ? ' dim' : ''}${row.color === 'err' ? ' err' : row.color === 'link' ? ' link' : ''}`
-      return `<div class="${cls}"${row.isLong ? ` data-id="${escapeHtml(row.id)}" role="button" tabindex="0"` : ''}><span class="label">${escapeHtml(text)}</span>${time}</div>`
-    })
-    .join('')
-}
-
-export function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch] ?? ch)
 }
 
 /** The options the demo's controls hold, made into the same `Setup` the extension makes of its own. */
@@ -240,11 +147,6 @@ export function demoSetup(options: { theme?: string; layout?: string; motion?: s
     coreName: 'COPILOT',
     background: 'solid',
   })
-}
-
-/** `gpt-4.1-mini` reads shorter here; the same shortener the panel uses for the line of what runs now. */
-function shortOf(model: string): string {
-  return model.length <= 14 ? model : `${model.slice(0, 13)}…`
 }
 
 // ---- the scenarios -------------------------------------------------------------------------------------------

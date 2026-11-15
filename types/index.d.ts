@@ -45,3 +45,56 @@ export type Board = {
   /** How wide the editor draws the map, in CSS pixels; absent, as wide as the pane. Kept between sessions as well. */
   zoom?: number
 }
+
+export type BoardEntryStart = {
+  station: StationId
+  label: string
+  from?: Entry['from']
+  status?: Status
+  agentId?: string
+  /** The short name the subagent was started with; its prompt is content. */
+  agentName?: string
+  mark?: Entry['mark']
+  uncounted?: boolean
+  startedAt?: number
+  endedAt?: number
+  patch?: Partial<Pick<Board, 'model' | 'step' | 'switchedAt'>>
+}
+
+export type BoardTransition =
+  | { type: 'reset' }
+  | { type: 'prompt'; label: string }
+  | { type: 'entryStarted'; start: BoardEntryStart }
+  | { type: 'entryFinished'; id?: string; status: Status }
+  | { type: 'failure'; id?: string; station: StationId; label: string }
+  | { type: 'agentFinished'; agentId: string }
+  | { type: 'turnFinished'; label: string; status: 'ok' | 'err'; mark?: 'done' }
+  | { type: 'modelStep'; model: string; step: number; label: string; promptTokens: number; limit: number }
+
+export type BoardTransitionResult = { board: Board; id?: string }
+
+export type ViewRow = {
+  id: string
+  mark: string
+  station: string
+  label: string
+  times: number
+  took: string
+  color: 'link' | 'fg' | 'err'
+  dim: boolean
+  isLong: boolean
+}
+
+export type ViewProjection = {
+  type: 'view'
+  svg: string
+  alt: string
+  nowline: string
+  counts: string
+  rows: ViewRow[]
+  hidden: boolean
+  width?: number
+  mapWidth: number
+  aspect: number
+  labels: { zoomOut: string; zoomIn: string; hideMap: string; showMap: string }
+}

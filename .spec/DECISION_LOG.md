@@ -45,3 +45,4 @@ Numbering: `D-001`, `D-002`, … newest last.
   tracked, not ignored, and stay change-protected by
   `.github/copilot-instructions.md`. Affects: `.gitignore`,
   `.github/agents/`, CONTRIBUTING. Recorded by: Builder (user approval given).
+- **D-005 (2026-11-15):** Shared state contracts are now centralized (`ViewProjection`/`ViewRow` and `BoardEntryStart`/`BoardTransition` in `types/index.d.ts`), with a pure projection in `hooks/view.ts` and a VS Code-free `transitionBoard` reducer in `vscode-extension/src/board.ts`; hook parsing, demo clock/scenario logic, and parked subagent-name correlation remain caller-owned responsibilities. Affects: `types/index.d.ts`, `hooks/view.ts`, `vscode-extension/src/board.ts`, caller integration points. Recorded by: Builder.

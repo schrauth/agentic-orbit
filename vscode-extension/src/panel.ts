@@ -2,27 +2,13 @@
 // every time the board changes and once a second while something runs, so the map's own animations carry on.
 import * as vscode from 'vscode'
 import type { Board } from '../../types'
-import { MAP_ASPECT, MAP_WIDTH, STATIONS, describeNow, drawMap, foldRows, formatMs, nowParts } from '../../hooks/map'
+import { projectView } from '../../hooks/view'
 import { setupFrom } from '../../hooks/setup'
 import type { Setup } from '../../hooks/setup'
 import { LANGUAGES } from '../../hooks/text'
 
 /** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
 const ZOOMS = [180, 220, 260, 310, 370, 440, 530, 570, 620, 660]
-const LONG_LABEL = 28
-/** A label longer than this may not fit the pane, so its row gets a control that opens it. */
-
-type RowView = {
-  id: string
-  mark: string
-  station: string
-  label: string
-  times: number
-  took: string
-  color: 'link' | 'fg' | 'err'
-  dim: boolean
-  isLong: boolean
-}
 
 export class LotMapPanel {
   private readonly panel: vscode.WebviewPanel
@@ -89,71 +75,7 @@ export class LotMapPanel {
 
   private send(): void {
     if (this.disposed) return
-    const now = Date.now()
-    const { t } = this.setup
-    const board = this.board
-
-    // How long each answer took, from the person's message to it.
-    const turnMs = new Map<string, number>()
-    let askedAt: number | undefined
-    for (const x of board.entries) {
-      if (x.station === 'you' && x.from === 'inbound' && x.mark === undefined) askedAt = x.startedAt
-      if (x.mark === 'done' && askedAt !== undefined) {
-        turnMs.set(x.id, x.startedAt - askedAt)
-        askedAt = undefined
-      }
-    }
-
-    const rows: RowView[] = foldRows(board.entries, 16)
-      .map(({ entry, times, tookMs }) => {
-        const isSwitch = entry.mark === 'switch'
-        const mark = isSwitch ? '◆' : entry.status === 'run' ? '●' : entry.status === 'ok' ? '·' : '✕'
-        const whole = turnMs.get(entry.id)
-        const took =
-          entry.endedAt === undefined
-            ? t.running
-            : whole !== undefined && whole > 0
-              ? formatMs(whole, t)
-              : tookMs > 0
-                ? formatMs(tookMs, t)
-                : '—'
-        return {
-          id: entry.id,
-          mark,
-          station: t.stations[entry.station],
-          label: entry.label,
-          times,
-          took: took === '—' ? '' : took,
-          color: isSwitch || entry.status === 'run' ? ('link' as const) : entry.status === 'ok' ? ('fg' as const) : ('err' as const),
-          dim: entry.status === 'ok' && !isSwitch,
-          isLong: entry.label.length > LONG_LABEL,
-        }
-      })
-      .reverse()
-
-    const now2 = nowParts(board, t)
-    const meter = [board.context === undefined ? '' : `${Math.round(board.context)}%`, board.model === undefined || now2.what.startsWith(t.stations.model) ? '' : shortOf(board.model)]
-      .filter(Boolean)
-      .join(' · ')
-    const counts = STATIONS.filter(s => (board.counts[s.id] ?? 0) > 0)
-      .map(s => `${t.stations[s.id]} ${board.counts[s.id]}`)
-      .join(' · ')
-
-    const svg = this.minimized ? '' : drawMap(board, now, this.setup)
-    const width = this.zoom
-    this.panel.webview.postMessage({
-      type: 'view',
-      svg,
-      alt: `${t.title}. ${describeNow(board, t)}`,
-      nowline: `${now2.what}${meter === '' ? '' : `   ${meter}`}`,
-      counts,
-      rows,
-      hidden: this.minimized,
-      width,
-      aspect: MAP_ASPECT,
-      mapWidth: MAP_WIDTH,
-      labels: { zoomOut: t.zoomOut, zoomIn: t.zoomIn, hideMap: t.hideMap, showMap: t.showMap },
-    })
+    this.panel.webview.postMessage(projectView(this.board, Date.now(), this.setup, { hidden: this.minimized, width: this.zoom }))
   }
 
   private html(webview: vscode.Webview, extensionUri: vscode.Uri, language: unknown): string {
@@ -177,9 +99,4 @@ export class LotMapPanel {
 </body>
 </html>`
   }
-}
-
-/** `gpt-4.1-mini` reads shorter here; the shared shortener knows the common patterns, this one the rest. */
-function shortOf(model: string): string {
-  return model.length <= 14 ? model : `${model.slice(0, 13)}…`
 }

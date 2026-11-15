@@ -51,6 +51,8 @@ const GLOW_MS = 3800
 const ALARM_MS = 6000
 const SWITCH_MS = 8000
 const DONE_MS = 1250
+/** How slowly the thinking ring breathes around the core: a rhythm of its own, far from any call's beat. */
+const THINK_MS = 5000
 const TRAIL_STOPS = 7
 /** A leg of the route stays for a while after it was drawn, then fades: the route shows where the work is going, and the spokes keep where it went. */
 export const TRAIL_HOLD_MS = 40_000
@@ -242,6 +244,21 @@ export function routeOf(entries: readonly Entry[], max = TRAIL_STOPS): { station
   return stops.slice(-max)
 }
 
+/** Whether the main loop is thinking, inferred from the gaps between the hook's events — the host fires
+ * none while it thinks. Reading the entries from the end: a call of the main loop still open ends the
+ * answer, and so does the row the bare `agentStop` leaves (the `done` mark, or an aborted turn's fault);
+ * the person's message is where it begins. A subagent's rows carry its id and are not the main loop's,
+ * and a background task runs on without its caller, so neither counts against it. */
+function isThinking(entries: readonly Entry[]): boolean {
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i]
+    if (e.station === 'you' && e.from === 'core' && (e.mark === 'done' || e.status === 'err')) return false
+    if (e.status === 'run' && e.agentId === undefined && e.task === undefined) return false
+    if (e.station === 'you' && e.from === 'inbound' && e.mark === undefined) return true
+  }
+  return false
+}
+
 function trail(entries: readonly Entry[], now: number, c: Palette, isStill: boolean, shift: number): string {
   const stops = routeOf(entries)
   let out = ''
@@ -373,10 +390,13 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   const rippleMs = isSlow ? 2 * RIPPLE_MS : RIPPLE_MS
   const glowMs = isSlow ? 2 * GLOW_MS : GLOW_MS
   const doneMs = isSlow ? 2 * DONE_MS : DONE_MS
+  const thinkMs = isSlow ? 2 * THINK_MS : THINK_MS
   const flights = isStill ? [] : recent.filter(e => now - e.startedAt < pulseMs + rippleMs).slice(-14)
   const returns = isStill ? [] : recent.filter(e => e.endedAt !== undefined && e.from !== 'inbound' && now - e.endedAt < pulseMs + rippleMs).slice(-14)
   const beams = recent.filter(e => now - e.startedAt < glowMs / 2).slice(-10)
   const anyRunning = recent.some(e => e.status === 'run')
+  // The main loop thinks while none of its calls is open and no answer has arrived since the message.
+  const thinking = isThinking(board.entries)
   const agentsAt = place(indexOf('agents'), shift)
   /** The subagents that get a planet of their own: those at work, and those whose stay is not yet up.
    * Each holds the seat it was given — an inner ring of its own, or a place on the outer one — and
@@ -544,13 +564,24 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   // The core breathes at rest and quickens while something runs.
   const period = anyRunning ? 1800 : 5400
   const breath = `begin="${clock(-(now % period))}" dur="${clock(period)}" repeatCount="indefinite"`
+  // While the main loop thinks, a ring of its own breathes around the core, at its own slow pace.
+  // Standing still, the ring rests at one size; the core's rim takes the accent, as it does for a call.
+  const ponder = `begin="${clock(-(now % thinkMs))}" dur="${clock(thinkMs)}" repeatCount="indefinite"`
+  const pondering = thinking
+    ? isStill
+      ? `<circle cx="${CX}" cy="${CY}" r="${CORE + 9.5}" fill="none" stroke="${c.accent}" stroke-width="1.5" opacity=".38"/>`
+      : `<circle cx="${CX}" cy="${CY}" r="${CORE + 9.5}" fill="none" stroke="${c.accent}" stroke-width="1.5" opacity="0">` +
+        `<animate attributeName="r" values="${CORE + 7};${CORE + 16};${CORE + 7}" ${ponder}/>` +
+        `<animate attributeName="opacity" values=".16;.5;.16" ${ponder}/></circle>`
+    : ''
   body +=
+    pondering +
     (isStill
       ? `<circle cx="${CX}" cy="${CY}" r="${CORE + 9}" fill="${c.accent}" opacity="${anyRunning ? '.16' : '.08'}"/>`
       : `<circle cx="${CX}" cy="${CY}" r="${CORE + 7}" fill="${c.accent}" opacity=".08">` +
         `<animate attributeName="r" values="${CORE + 3};${CORE + 14};${CORE + 3}" ${breath}/>` +
         `<animate attributeName="opacity" values=".05;${anyRunning ? '.24' : '.12'};.05" ${breath}/></circle>`) +
-    `<circle cx="${CX}" cy="${CY}" r="${CORE}" fill="${c.raised}" stroke="${anyRunning ? c.accent : c.line}" stroke-width="1.3"/>`
+    `<circle cx="${CX}" cy="${CY}" r="${CORE}" fill="${c.raised}" stroke="${anyRunning || thinking ? c.accent : c.line}" stroke-width="1.3"/>`
 
   // The context window as a ring around the core: it fills as the session goes and empties at a compaction.
   if (board.context !== undefined) {

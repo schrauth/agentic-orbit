@@ -1,7 +1,7 @@
 // Which station a GitHub Copilot tool call belongs to and what to call it: a name, never content.
 // Reuses the mod's own shell classifier, so the same command line reads the same on both maps.
 import type { StationId } from '../../types'
-import { classifyShell, hostOf } from '../../hooks/classify'
+import { classifyShell, hostOf, isMemoryPath } from '../../hooks/classify'
 import type { Setup } from '../../hooks/setup'
 
 export type Classified = { station: StationId; label: string }
@@ -65,7 +65,7 @@ export function classifyCopilot(tool: string, input: Record<string, unknown>, se
     case 'list_dir':
     case 'directory_tree': {
       const path = filePathsOf(input).find(p => p !== '')
-      return { station: 'files', label: path !== undefined ? lastTwo(path) : tool }
+      return { station: path !== undefined && isMemoryPath(path, setup) ? 'memory' : 'files', label: path !== undefined ? lastTwo(path) : tool }
     }
     case 'grep_search':
     case 'search_files':
@@ -138,7 +138,8 @@ export function classifyCopilot(tool: string, input: Record<string, unknown>, se
   // A tool whose arguments tell what it worked on: the file it names is Files, its command is the
   // shell classifier's to read, its address is Network. Only a tool with no such argument, and no
   // station the map knows, is the model working on its own.
-  if (str(input.file_path) !== '' || str(input.path) !== '') return { station: 'files', label: lastTwo(str(input.file_path) || str(input.path)) }
+  const filePath = str(input.file_path) || str(input.path)
+  if (filePath !== '') return { station: isMemoryPath(filePath, setup) ? 'memory' : 'files', label: lastTwo(filePath) }
   if (str(input.command) !== '') return shellLike()
   if (str(input.url) !== '' || str(input.uri) !== '') return { station: 'web', label: hostOf(str(input.url) || str(input.uri)) }
 

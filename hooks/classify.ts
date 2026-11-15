@@ -36,7 +36,7 @@ export function clean(label: string, max = 120): string {
 }
 
 /** Memory paths are the person's to name. */
-const isMemoryPath = (path: string, setup: Setup): boolean => {
+export const isMemoryPath = (path: string, setup: Setup): boolean => {
   const p = slashes(path)
   return setup.memoryPaths.some(part => p.includes(slashes(part)))
 }

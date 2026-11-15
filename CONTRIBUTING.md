@@ -6,6 +6,10 @@ Thank you for taking the time to help.
 
 A VS Code extension that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names.
 
+## The agent team
+
+The repository carries its own Copilot agents in [`.github/agents/`](.github/agents) — Architect, Builder, Memory & ADR, Reviewer and Version Control — each with its reach and limits written in its definition. They are part of the project: change them only with the user's explicit prior approval, as [`.github/copilot-instructions.md`](.github/copilot-instructions.md) requires.
+
 ## Before you send a change
 
 - `cd vscode-extension && npm ci && npm run compile` passes with no errors.

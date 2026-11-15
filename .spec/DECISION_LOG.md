@@ -40,3 +40,8 @@ Numbering: `D-001`, `D-002`, … newest last.
 - **D-003 (2026-11-14, seeded from project docs):** Model steps are
   excluded from the route legs, or every leg would pass through the
   **Model** station. Affects: `hooks/` route drawing. Recorded by: Architect.
+- **D-004 (2026-11-15, agreed with the user):** The agent definitions in
+  `.github/agents/` are generic and belong to the repository; they are
+  tracked, not ignored, and stay change-protected by
+  `.github/copilot-instructions.md`. Affects: `.gitignore`,
+  `.github/agents/`, CONTRIBUTING. Recorded by: Builder (user approval given).

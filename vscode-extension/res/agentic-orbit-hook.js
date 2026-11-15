@@ -54,7 +54,7 @@ function oneLine(input, argv) {
     workspace: undefined,
     session: short(str(input.session_id) || str(input.sessionId)),
     callId: short(str(input.tool_use_id) || str(input.callId) || str(input.call_id) || str(input.toolCallId) || str(input.id) || str(call.id), 64),
-    agentId: short(str(input.agent_id) || str(input.agentId) || str(input.subagent_id), 64),
+    agentId: short(str(input.agent_id) || str(input.agentId) || str(input.subagent_id) || str(call.agent_id) || str(call.agentId), 64),
     tool: short(tool, 64),
     model: short(str(input.model) || str(input.model_name), 64),
     status: undefined,
@@ -73,6 +73,8 @@ function oneLine(input, argv) {
   // The description of a tool call sits in its arguments, as the task tool carries it: the short
   // text a subagent was started with, which is the only name the map may show for it.
   if (!out.description) out.description = short(str(args.description), 120)
+  // An agent's own id can ride in the arguments of its calls too, where some hosts put it.
+  if (!out.agentId) out.agentId = short(str(args.agent_id) || str(args.agentId), 64)
   var command = str(input.command) || str(input.command_line) || str(input.commandLine) || str(args.command)
   if (command !== '') out.commandName = short(firstWord(command), 40)
   var path = str(input.file_path) || str(input.filePath) || str(input.path) || str(args.file_path) || str(args.filePath) || str(args.path)

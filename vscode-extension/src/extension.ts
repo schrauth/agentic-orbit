@@ -6,7 +6,7 @@ import * as vscode from 'vscode'
 import type { Board, StationId } from '../../types'
 import { setupFrom } from '../../hooks/setup'
 import { shortModel } from '../../hooks/classify'
-import { agentDone, begin, clearFaults, emptyBoard, finish, sweepOpen, withContext } from './board'
+import { agentDone, begin, clearFaults, emptyBoard, finish, seated, sweepOpen, withContext } from './board'
 import { classifyCopilot } from './classifyCopilot'
 import { eventsFileFor, watchEvents } from './hookWatcher'
 import type { HookEvent } from './hookWatcher'
@@ -20,6 +20,14 @@ let watcher: { close: () => void } | undefined
 let proxy: ProxyServer | undefined
 /** The rows opened by a call whose end has not been read yet, by the call's id. */
 const open = new Map<string, string>()
+/**
+ * The names launches gave their subagents, parked under the launch call's id until the child
+ * claims one. The id a subagent circles under is its own session's, which the host mints only
+ * when the child starts — no launch event can carry it — so the name waits here and the child's
+ * first own call takes the oldest one, in the order launches fired. A launch that fails hands
+ * its name back, and whatever no child ever claimed is dropped when the turn or session ends.
+ */
+const parkedNames = new Map<string, string>()
 let lastModel: string | undefined
 
 function config(): Record<string, unknown> {
@@ -56,12 +64,28 @@ function classifyEvent(e: HookEvent): { station: StationId; label: string } {
   return classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setupFrom(config()))
 }
 
+/** The oldest parked name goes to the subagent that shows up next, and leaves the shelf for good. */
+function takeParkedName(): string | undefined {
+  for (const [callId, name] of parkedNames) {
+    parkedNames.delete(callId)
+    return name
+  }
+  return undefined
+}
+
+/** A launch that failed never started a child: its name goes back to whoever launches next. */
+function unparkName(callId: string | undefined): void {
+  if (callId !== undefined) parkedNames.delete(callId)
+}
+
 /** How a hook event reads on the map. Only the six kinds the hook is told about; anything else is dropped. */
 function onHookEvent(e: HookEvent): void {
   const now = Date.now()
   switch (e.event) {
     case 'sessionStart': {
       board = emptyBoard()
+      // A new session launches no one: names parked for the old one belong to no child here.
+      parkedNames.clear()
       if (e.model !== undefined) {
         const before = lastModel
         lastModel = e.model
@@ -72,6 +96,9 @@ function onHookEvent(e: HookEvent): void {
       break
     }
     case 'userPromptSubmitted': {
+      // A subagent's own prompt carries its agent id and must leave the parked names alone;
+      // a message from the person themselves ends every launch of the turn before.
+      if (e.agentId === undefined) parkedNames.clear()
       board = clearFaults(board)
       board = begin(board, { station: 'you', label: t().newMessage, from: 'inbound', status: 'ok' }, now).board
       break
@@ -79,9 +106,17 @@ function onHookEvent(e: HookEvent): void {
     case 'preToolUse': {
       const { station, label } = classifyEvent(e)
       // A call that launches a subagent also names it: the short description only, its prompt is content.
+      // The id the child circles under is its own session's, minted only when the child starts, so
+      // the launch cannot carry it. The name waits under the launch call's id until the child's first
+      // own call claims the oldest one. The claim runs before this event's own launch is parked, so
+      // a child whose first call starts a grandchild takes its own name, not the grandchild's.
+      const agentName = e.agentId !== undefined && !seated(board, e.agentId) ? takeParkedName() : undefined
+      if (station === 'agents' && e.callId !== undefined && e.description !== undefined) {
+        parkedNames.set(e.callId, label)
+      }
       const started = begin(
         board,
-        { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(station === 'agents' ? { agentName: label } : {}) } : {}) },
+        { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(agentName !== undefined ? { agentName } : {}) } : {}) },
         now,
       )
       board = started.board
@@ -91,6 +126,9 @@ function onHookEvent(e: HookEvent): void {
     case 'postToolUse': {
       const id = e.callId !== undefined ? open.get(e.callId) : undefined
       if (e.callId !== undefined) open.delete(e.callId)
+      // A launch that failed never started a child: its parked name goes back. A call that
+      // ended well leaves the name where it is — the child may not have spoken yet.
+      if (e.error === true) unparkName(e.callId)
       board = finish(board, id, e.error === true ? 'err' : 'ok', now)
       break
     }
@@ -98,6 +136,8 @@ function onHookEvent(e: HookEvent): void {
       if (e.agentId !== undefined) {
         board = agentDone(board, e.agentId, now)
       } else {
+        // The turn is over: whatever name no child ever claimed belongs to no one now.
+        parkedNames.clear()
         board = sweepOpen(board, now)
         const aborted = e.aborted === true
         board = begin(
@@ -112,6 +152,8 @@ function onHookEvent(e: HookEvent): void {
       const { station, label } = classifyEvent(e)
       const id = e.callId !== undefined ? open.get(e.callId) : undefined
       if (e.callId !== undefined) open.delete(e.callId)
+      // The call failed, so the child it meant to start never came: its parked name goes back.
+      unparkName(e.callId)
       if (id !== undefined) {
         board = finish(board, id, 'err', now)
       } else {

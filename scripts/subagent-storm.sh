@@ -7,6 +7,10 @@
 #   - Open the map first (Agentic Orbit: Open); each pulse appears as it fires.
 #   - The six orbit rings are the map's limit: the storm never keeps more than
 #     six subagents alive, so every planet stays visible.
+#   - The events carry the shape the host really sends: a launch names the subagent
+#     but carries no id of it — the child's own calls bring that — so a planet shows
+#     only once the child itself works, under the name its launch gave it. One launch
+#     fails and is retried, as a failed start must hand its parked name back.
 #
 # Usage:  scripts/subagent-storm.sh         (from anywhere; the script finds the repo itself)
 
@@ -20,6 +24,11 @@ if [ ! -f "$HOOK" ]; then
 fi
 
 events_file() {
+  # The hook honours the same variable, so both agree on where the lines go.
+  if [ -n "${AGENTIC_ORBIT_EVENTS_FILE:-}" ]; then
+    printf '%s' "$AGENTIC_ORBIT_EVENTS_FILE"
+    return
+  fi
   local key dir
   key=$(printf '%s' "$PWD" | shasum -a 1 | cut -c1-12)
   dir="${TMPDIR:-/tmp}"; dir="${dir%/}"
@@ -27,7 +36,9 @@ events_file() {
 }
 
 FILE=$(events_file)
-BEFORE=$(wc -l < "$FILE" 2>/dev/null || echo 0)
+# A file that is not there yet is the normal first run: zero lines, and no error about it.
+BEFORE=0
+if [ -f "$FILE" ]; then BEFORE=$(wc -l < "$FILE"); fi
 
 # fire <event> <json> — one line into the event file, then a beat to watch the pulse.
 # stdout is dropped: the allow JSON answers Copilot, not the terminal.
@@ -58,98 +69,97 @@ line "— Deine Nachricht" "You"
 fire userPromptSubmitted '{}'
 
 echo
-echo "Welle 1 — drei Planeten heben ab"
-line "1. Quellen sichten" "Agents: Planet s1"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s1t","agent_id":"s1","description":"quellen sichten","tool_input":{"description":"quellen sichten"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s1t","agent_id":"s1"}'
-line "2. Tabellen bauen" "Agents: Planet s2"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s2t","agent_id":"s2","description":"tabellen bauen","tool_input":{"description":"tabellen bauen"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s2t","agent_id":"s2"}'
-line "   s1 liest eine Datei" "Files: Puls von Planet s1"
+echo "Welle 1 — drei Starts, drei Namen geparkt"
+line "1. »Quellen sichten« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s1t","description":"quellen sichten","tool_input":{"description":"quellen sichten"}}'
+line "2. »Tabellen bauen« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s2t","description":"tabellen bauen","tool_input":{"description":"tabellen bauen"}}'
+line "3. »Tests lesen« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s3t","description":"tests lesen","tool_input":{"description":"tests lesen"}}'
+line "   quellen sichten liest eine Datei" "Agents: Planet »quellen sichten«, Files: Puls"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s1a","agent_id":"s1","tool_input":{"file_path":"/tmp/storm/quellen.md"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s1a","agent_id":"s1"}'
-line "3. Tests lesen" "Agents: Planet s3"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s3t","agent_id":"s3","description":"tests lesen","tool_input":{"description":"tests lesen"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s3t","agent_id":"s3"}'
-line "   s2 startet einen Befehl" "Shell: Puls von Planet s2"
+line "   tabellen bauen startet einen Befehl" "Agents: Planet »tabellen bauen«, Shell: Puls"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"s2a","agent_id":"s2","tool_input":{"command":"date"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s2a","agent_id":"s2"}'
+line "   tests lesen liest eine Datei" "Agents: Planet »tests lesen«, Files: Puls"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3","tool_input":{"file_path":"/tmp/storm/tests.spec.md"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3"}'
 
 echo
 echo "Welle 2 — drei weitere, alle sechs Orbits besetzt"
-line "4. Bilder sichten" "Agents: Planet s4"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s4t","agent_id":"s4","description":"bilder sichten","tool_input":{"description":"bilder sichten"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s4t","agent_id":"s4"}'
-line "5. Texte bewerten" "Agents: Planet s5"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s5t","agent_id":"s5","description":"texte bewerten","tool_input":{"description":"texte bewerten"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s5t","agent_id":"s5"}'
-line "   s3 liest eine Datei" "Files: Puls von Planet s3"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3","tool_input":{"file_path":"/tmp/storm/tests.spec.md"}}'
-fire postToolUse '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3"}'
-line "6. Zahlen vergleichen" "Agents: Planet s6 — sechs gleichzeitig"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s6t","agent_id":"s6","description":"zahlen vergleichen","tool_input":{"description":"zahlen vergleichen"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s6t","agent_id":"s6"}'
-line "   s4 holt eine Seite" "Network: Puls von Planet s4"
+line "4. »Bilder sichten« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s4t","description":"bilder sichten","tool_input":{"description":"bilder sichten"}}'
+line "5. »Texte bewerten« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s5t","description":"texte bewerten","tool_input":{"description":"texte bewerten"}}'
+line "6. »Zahlen vergleichen« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s6t","description":"zahlen vergleichen","tool_input":{"description":"zahlen vergleichen"}}'
+line "   bilder sichten holt eine Seite" "Agents: Planet »bilder sichten«, Network: Puls"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4","tool_input":{"command":"curl -I https://example.com"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4"}'
-line "   s4 sichtet ein Bild" "Files: Puls von Planet s4"
+line "   texte bewerten liest eine Datei" "Agents: Planet »texte bewerten«, Files: Puls"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5"}'
+line "   zahlen vergleichen, der Befehl scheitert" "Agents: Planet »zahlen vergleichen«, Shell: rot"
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"s6a","agent_id":"s6","tool_input":{"command":"date"}}'
+fire postToolUse '{"tool_name":"bash","tool_use_id":"s6a","agent_id":"s6","error":true}'
+line "   bilder sichten sieht ein Bild" "Files: Puls von »bilder sichten«"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4","tool_input":{"file_path":"/tmp/storm/bild.svg"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4"}'
 
 echo
 echo "Welle 3 — Planeten gehen, neue kommen"
-line "— s1 ist fertig" "Planet s1 verschwindet"
+line "— quellen sichten ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s1"}'
-line "   s5 liest eine Datei" "Files: Puls von Planet s5"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
-fire postToolUse '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5"}'
-line "— s2 ist fertig" "Planet s2 verschwindet"
+line "   texte bewerten liest noch einmal" "Files: Puls von »texte bewerten«"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5"}'
+line "— tabellen bauen ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s2"}'
-line "7. Notizen ordnen" "Agents: Planet s7"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s7t","agent_id":"s7","description":"notizen ordnen","tool_input":{"description":"notizen ordnen"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s7t","agent_id":"s7"}'
-line "   s6 startet einen Befehl, er scheitert" "Shell, rot: Puls von Planet s6"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s6a","agent_id":"s6","tool_input":{"command":"date"}}'
-fire postToolUse '{"tool_name":"bash","tool_use_id":"s6a","agent_id":"s6","error":true}'
-line "— s3 ist fertig" "Planet s3 verschwindet"
+line "7. »Notizen ordnen« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s7t","description":"notizen ordnen","tool_input":{"description":"notizen ordnen"}}'
+line "   zahlen vergleichen, ein Befehl misslingt" "Shell, rot: Puls von »zahlen vergleichen«"
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"s6b","agent_id":"s6","tool_input":{"command":"date"}}'
+fire postToolUse '{"tool_name":"bash","tool_use_id":"s6b","agent_id":"s6","error":true}'
+line "— tests lesen ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s3"}'
-line "   s7 liest eine Datei" "Files: Puls von Planet s7"
+line "   notizen ordnen liest eine Datei" "Agents: Planet »notizen ordnen«, Files: Puls"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s7a","agent_id":"s7","tool_input":{"file_path":"/tmp/storm/notizen.md"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s7a","agent_id":"s7"}'
-line "— s4 ist fertig" "Planet s4 verschwindet"
+line "— bilder sichten ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s4"}'
-line "8. Feinschliff" "Agents: Planet s8"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s8t","agent_id":"s8","description":"feinschliff","tool_input":{"description":"feinschliff"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s8t","agent_id":"s8"}'
-line "— s5 ist fertig" "Planet s5 verschwindet"
+line "8. »Feinschliff« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s8t","description":"feinschliff","tool_input":{"description":"feinschliff"}}'
+line "— texte bewerten ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s5"}'
-line "   s8 liest per Shell eine Datei" "Files: Puls von Planet s8"
+line "   feinschliff liest per Shell eine Datei" "Agents: Planet »feinschliff«, Files: Puls"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"s8a","agent_id":"s8","tool_input":{"command":"cat /tmp/storm/bericht.md"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s8a","agent_id":"s8"}'
-line "— s6 ist fertig" "Planet s6 verschwindet"
+line "— zahlen vergleichen ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s6"}'
-line "9. Berichte sammeln" "Agents: Planet s9"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s9t","agent_id":"s9","description":"berichte sammeln","tool_input":{"description":"berichte sammeln"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s9t","agent_id":"s9"}'
-line "— s7 ist fertig" "Planet s7 verschwindet"
+line "9. »Berichte sammeln« — der Start misslingt" "Agents: Neutronenstern, der geparkte Name wird frei"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s9t","description":"berichte sammeln","tool_input":{"description":"berichte sammeln"}}'
+fire errorOccurred '{"tool_name":"task","tool_use_id":"s9t"}'
+line "   der Start wird wiederholt" "Agents: Startpuls, der Name neu geparkt"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s9t2","description":"berichte sammeln","tool_input":{"description":"berichte sammeln"}}'
+line "— notizen ordnen ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s7"}'
-line "   s9 liest eine Datei" "Files: Puls von Planet s9"
+line "   berichte sammeln liest eine Datei" "Agents: Planet »berichte sammeln«, Files: Puls"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s9a","agent_id":"s9","tool_input":{"file_path":"/tmp/storm/bericht.md"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s9a","agent_id":"s9"}'
-line "— s8 ist fertig" "Planet s8 verschwindet"
+line "— feinschliff ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s8"}'
-line "10. Letzte Runde" "Agents: Planet s10"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s10t","agent_id":"s10","description":"letzte runde","tool_input":{"description":"letzte runde"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"s10t","agent_id":"s10"}'
-line "— s9 ist fertig" "Planet s9 verschwindet"
+line "10. »Letzte Runde« startet" "Agents: Startpuls, noch kein Planet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s10t","description":"letzte runde","tool_input":{"description":"letzte runde"}}'
+line "— berichte sammeln ist fertig" "sein Planet verschwindet"
 fire agentStop '{"agent_id":"s9"}'
-line "   s10 startet einen Befehl" "Shell: Puls von Planet s10"
+line "   letzte runde startet einen Befehl" "Agents: Planet »letzte runde«, Shell: Puls"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"s10a","agent_id":"s10","tool_input":{"command":"date"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s10a","agent_id":"s10"}'
-line "   s10 liest eine Datei" "Files: Puls von Planet s10"
+line "   letzte runde liest eine Datei" "Files: Puls von »letzte runde«"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s10b","agent_id":"s10","tool_input":{"file_path":"/tmp/storm/runde.md"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s10b","agent_id":"s10"}'
-line "— s10 ist fertig" "der letzte Planet verschwindet"
+line "— letzte runde ist fertig" "der letzte Planet verschwindet"
 fire agentStop '{"agent_id":"s10"}'
 
 echo
@@ -158,9 +168,9 @@ fire agentStop '{}'
 
 AFTER=$(wc -l < "$FILE")
 echo
-echo "Zeilen nachher: ${AFTER} (erwartet: $((BEFORE + 57)))"
-if [ "$AFTER" -ge "$((BEFORE + 57))" ]; then
-  echo "✓ Alle 57 Events geschrieben — der Sturm ist durchgelaufen."
+echo "Zeilen nachher: ${AFTER} (erwartet: $((BEFORE + 53)))"
+if [ "$AFTER" -ge "$((BEFORE + 53))" ]; then
+  echo "✓ Alle 53 Events geschrieben — der Sturm ist durchgelaufen."
 else
   echo "✕ Es fehlen Zeilen — der Hook hat nicht jedes Event geschrieben."
   exit 1

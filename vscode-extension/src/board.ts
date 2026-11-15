@@ -30,6 +30,11 @@ const newId = (now: number): string => `${now.toString(36)}${Math.random().toStr
 const seatOver = (seat: { goneAt?: number }, now: number): boolean =>
   seat.goneAt === undefined ? false : now - seat.goneAt >= AGENT_HOLD_MS + AGENT_FADE_MS
 
+/** Whether a subagent already has a seat under this id: one still held or one still fading counts alike. */
+export function seated(board: Board, agentId: string): boolean {
+  return (board.agents ?? []).some(seat => seat.id === agentId)
+}
+
 /** The newest rows, and beside them every background task still going, however long ago it started. */
 const kept = (entries: Entry[]): Entry[] => {
   const from = entries.length - KEEP
@@ -69,7 +74,7 @@ export function begin(board: Board, start: BeginOptions, now: number): { board: 
     // for the board has no clock of its own.
     ...(entry.agentId !== undefined
       ? {
-          agents: (board.agents ?? []).some(seat => seat.id === entry.agentId)
+          agents: seated(board, entry.agentId)
             ? (board.agents ?? []).map(seat =>
                 seat.id === entry.agentId && seat.goneAt !== undefined
                   ? { id: seat.id, ...(start.agentName !== undefined ? { name: start.agentName } : seat.name !== undefined ? { name: seat.name } : {}) }

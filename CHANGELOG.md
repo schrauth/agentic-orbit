@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The repository sheds its ballast: stale build artifacts and tool state (`.DS_Store`, an old packaged `.vsix`, the `.kiro/` directory) are gone from the working tree, and `.kiro/` is ignored so it never comes back.
+
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 
 - The project's own agents are now part of the repository: the five generic definitions under `.github/agents/` — Architect, Builder, Memory & ADR, Reviewer and Version Control — are tracked instead of ignored, so a fresh clone carries the team that works on it.

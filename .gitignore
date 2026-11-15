@@ -1,4 +1,5 @@
 .DS_Store
+.kiro/
 *.log
 vscode-extension/node_modules/
 vscode-extension/out/

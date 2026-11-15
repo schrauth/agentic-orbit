@@ -4,6 +4,7 @@
 
 - The repository sheds its ballast: stale build artifacts and tool state (`.DS_Store`, an old packaged `.vsix`, the `.kiro/` directory) are gone from the working tree, and `.kiro/` is ignored so it never comes back.
 - The map's options no longer carry the retired terminal renderer's settings: `textSize`, `terminalView` and `cellShape` are gone from the shared `Setup`, which now holds only what the map reads.
+- The shared helpers shed four exports nothing called anymore: `firstLine` and `memoryIds` from `classify`, `taskOf` and `taskNotice` from `feed`, along with their detour through the `map` re-export hub.
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

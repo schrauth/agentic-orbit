@@ -255,14 +255,3 @@ export function modelFamily(model: string): string {
 export function formatMs(ms: number, t: Strings): string {
   return ms < 1000 ? t.ms(Math.max(1, Math.round(ms))) : ms < 60000 ? t.seconds((ms / 1000).toFixed(1)) : t.minutes(Math.floor(ms / 60000), Math.round((ms % 60000) / 1000))
 }
-
-/** The first line of a hook's refusal, cut short: the lines after it may repeat the whole command. */
-export function firstLine(text: string, max = 72): string {
-  const line = (text.split('\n').find(l => l.trim() !== '') ?? '').trim()
-  return line.length > max ? `${line.slice(0, max - 1)}…` : line
-}
-
-/** The record numbers a memory hook put in front of the model: `[#123`, `[now #123`, `[todo #123`. */
-export function memoryIds(text: string): string[] {
-  return [...new Set([...text.matchAll(/\[(?:[a-z]+ )?#(\d+)/g)].map(m => m[1] ?? ''))]
-}

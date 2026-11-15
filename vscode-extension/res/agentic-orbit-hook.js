@@ -41,14 +41,19 @@ function oneLine(input, argv) {
     input.hook_event_name ||
     input.hookEventName ||
     (input.tool_name && input.tool_name === 'session' ? 'sessionStart' : '')
-  var tool = str(input.tool_name) || str(input.toolName) || str(input.tool) || str(input.name)
+  // Some hosts wrap the one call of the event in an array; the first entry is read the same way.
+  var call = {}
+  if (Array.isArray(input.toolCalls) && input.toolCalls.length > 0 && typeof input.toolCalls[0] === 'object') {
+    call = input.toolCalls[0]
+  }
+  var tool = str(input.tool_name) || str(input.toolName) || str(input.tool) || str(input.name) || str(call.name)
   var out = {
     v: 1,
     event: event,
     ts: Date.now(),
     workspace: undefined,
     session: short(str(input.session_id) || str(input.sessionId)),
-    callId: short(str(input.tool_use_id) || str(input.callId) || str(input.call_id) || str(input.id), 64),
+    callId: short(str(input.tool_use_id) || str(input.callId) || str(input.call_id) || str(input.toolCallId) || str(input.id) || str(call.id), 64),
     agentId: short(str(input.agent_id) || str(input.agentId) || str(input.subagent_id), 64),
     tool: short(tool, 64),
     model: short(str(input.model) || str(input.model_name), 64),
@@ -62,9 +67,12 @@ function oneLine(input, argv) {
     promptTokens: num(input.prompt_tokens) || num(input.promptTokens),
   }
     // The name of a shell command only: never its arguments, never its line.
-  // Tool arguments usually sit in a nested object; both places are read.
-  var args = input.tool_input || input.toolInput || input.toolArgs || input.input || input.arguments
+    // Tool arguments usually sit in a nested object; both places are read.
+  var args = input.tool_input || input.toolInput || input.toolArgs || input.input || input.arguments || call.args
   if (args === null || typeof args !== 'object') args = {}
+  // The description of a tool call sits in its arguments, as the task tool carries it: the short
+  // text a subagent was started with, which is the only name the map may show for it.
+  if (!out.description) out.description = short(str(args.description), 120)
   var command = str(input.command) || str(input.command_line) || str(input.commandLine) || str(args.command)
   if (command !== '') out.commandName = short(firstWord(command), 40)
   var path = str(input.file_path) || str(input.filePath) || str(input.path) || str(args.file_path) || str(args.filePath) || str(args.path)

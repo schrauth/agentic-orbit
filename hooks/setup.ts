@@ -48,20 +48,6 @@ export type Setup = {
   motion: 'full' | 'reduced'
   /** How fast the exchanges move: at `slow` every flight and fade takes twice as long. */
   pace: 'normal' | 'slow'
-  /** The size of the words under the map, a step on the surface's own scale. A terminal has one size. */
-  textSize: 'caption' | 'footnote' | 'body'
-  /** How the map looks in a terminal: the rows alone, as always, or the map's picture above them. */
-  terminalView: 'text' | 'picture'
-  /** How many times taller a terminal cell is than it is wide: what sizes the picture's box of cells. The engine does not say. */
-  cellShape: number
-}
-
-/** Cell height over width as iTerm2 draws Monaco 12: the default. */
-const CELL_SHAPE = 2.4
-
-function cellShapeFrom(value: unknown): number {
-  const n = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : Number.NaN
-  return Number.isFinite(n) && n >= 1.2 && n <= 4 ? n : CELL_SHAPE
 }
 
 const list = (v: unknown): string[] =>
@@ -88,9 +74,6 @@ export function setupFrom(options: Readonly<Record<string, unknown>> = {}): Setu
     layout: options.layout === 'you-bottom' ? 'you-bottom' : 'you-top',
     motion: options.motion === 'reduced' ? 'reduced' : 'full',
     pace: options.pace === 'slow' ? 'slow' : 'normal',
-    textSize: options.textSize === 'caption' || options.textSize === 'body' ? options.textSize : 'footnote',
-    terminalView: options.terminalView === 'picture' ? 'picture' : 'text',
-    cellShape: cellShapeFrom(options.cellShape),
   }
 }
 

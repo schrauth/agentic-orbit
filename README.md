@@ -216,7 +216,7 @@ npm run watch     # builds and serves http://localhost:8000
 
 What it offers:
 
-- four made-up scenarios — a calm turn, a ten-planet subagent storm, errors and refusals, a filling context window;
+- five made-up scenarios — a calm turn, a ten-planet subagent storm, a long subagent project, errors and refusals, and a filling context window;
 - a clock you can pause, reset and run at 0.25× to 8×, so a minute-long stay of a planet can be watched in seconds;
 - the same settings the extension has — theme, layout, motion, pace, language — switched while it runs, plus zoom and the pane's buttons;
 - a copy of the board's state as JSON, for a look at what the drawing was fed.

@@ -1,0 +1,15 @@
+{
+  "name": "agentic-orbit-standalone",
+  "private": true,
+  "description": "The map in a plain browser window: a small Node host that reads the same hook events the extension reads and serves the live page on loopback. Nothing here ships in the extension.",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "build": "esbuild server.ts --bundle --platform=node --format=cjs --outfile=out/server.js && esbuild main.ts --bundle --outfile=out/web/bundle.js --format=iife && node -e \"const fs = require('fs'); fs.mkdirSync('out/web', {recursive: true}); for (const f of ['index.html', 'main.css']) fs.copyFileSync(f, 'out/web/' + f)\"",
+    "start": "npm run build && node out/server.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.4.5"
+  }
+}

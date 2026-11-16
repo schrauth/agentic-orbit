@@ -66,6 +66,10 @@ const clockOf = (at: number): string => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
 }
 
+/** A call's length: milliseconds while it is short, seconds once it takes a thousand. */
+const tookOf = (ms: number): string =>
+  ms < 1000 ? `${ms}ms` : ms < 10000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms / 1000)}s`
+
 /** Keeps the log at its chosen size: the oldest lines leave at the top. */
 function trimLog(log: HTMLElement): void {
   while (log.children.length > logState.max) {
@@ -98,7 +102,7 @@ function renderLog(): void {
       grew = true
     }
     const running = entry.status === 'run'
-    const took = entry.endedAt === undefined ? '…' : `${Math.max(0, entry.endedAt - entry.startedAt)}ms`
+    const took = entry.endedAt === undefined ? '…' : tookOf(Math.max(0, entry.endedAt - entry.startedAt))
     const mark = entry.mark === 'switch' ? '◆' : entry.mark === 'done' ? '●' : running ? '●' : entry.status === 'ok' ? '·' : '✕'
     line.className = `logline${entry.status === 'err' || entry.status === 'block' ? ' err' : entry.mark !== undefined || running ? ' link' : ''}`
     line.innerHTML = `<span class="stamp">${escapeHtml(clockOf(entry.startedAt))}</span><span class="mark">${mark}</span><span class="where">${escapeHtml(t.stations[entry.station])}</span><span class="what">${escapeHtml(entry.label)}</span><span class="howlong">${escapeHtml(took)}</span>`

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- The map can be watched in a plain browser window, with no VS Code involved: a standalone host under `standalone/` serves the page on a loopback server and watches the same events file the extension's hook writes, so a second monitor shows the real traffic of a real session. It reads nothing else, writes nothing, and binds `127.0.0.1` only.
+- The page ships as three files — an HTML shell, the drawing bundle and its styles — served by a small HTTP face that opens every connection with the setup words and the current board, then streams every new board over server-sent events; while a tool runs, a quiet one-second heartbeat keeps the connection honest.
+- The host is started with one command — `--workspace` (or `--events-file`) and the page is live on port 8318 — with `--config` for the settings the extension reads, `--install-hooks` for a workspace that has none yet, and the known `--proxy`/`--proxy-port` pair for the context window.
+- The page survives bad traffic: a malformed frame is skipped, a lost or broken setup frame falls back to the default words and colors, and the page reconnects on its own when the host comes back.
+- The standalone host is pinned by four test groups — the events-file name, the core's boards, the stream's opening frames and the CLI's refusals — and CI typechecks it beside the extension and the demo.
+- The root documents follow: the README tells how to start the host, the contribution guide names the third gate CI runs, and the privacy and security pages stay truthful without a new caveat — no new data is read, kept, or sent.
+
 ## 0.3.0
 
 - The repository sheds its ballast: stale build artifacts and tool state (`.DS_Store`, an old packaged `.vsix`, the `.kiro/` directory) are gone from the working tree, and `.kiro/` is ignored so it never comes back.

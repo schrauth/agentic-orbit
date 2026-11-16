@@ -218,6 +218,27 @@ What it offers:
 
 The drawing is the real one from `hooks/`; the fake backend is `demo/engine.ts`, which walks the scenarios of `demo/scenarios.ts` through the same shared event translation the extension host performs, on a made-up clock with made-up names. The extension's own `npm run compile` does not build or see the demo.
 
+### The map in a plain browser window
+
+The demo shows made-up traffic. The standalone host under `standalone/` shows the **real** one: it serves the same page on a loopback server and watches the same events file the extension's hook writes — so the map runs in a browser window of its own, with no VS Code involved.
+
+```bash
+cd standalone
+npm install
+npm run build
+npm start -- --workspace <path-to-the-project-being-watched>
+```
+
+Then open <http://127.0.0.1:8318>. The flags:
+
+- `--workspace <path>` — whose events to watch; the events file's name follows from it. Or `--events-file <path>` to point at the file itself — exactly one of the two.
+- `--port <n>` — where the page is served (default 8318; loopback only).
+- `--config <file>` — a JSON with the setup keys, the same settings the extension reads: `language`, `coreName`, `layout`, `motion`, `pace`, `theme`, `background`, `colors`, `memoryServers`, `memoryCommands`, `memorySubcommands`, `memoryPaths`, `memoryLabels`, `contextWindowLimit`.
+- `--install-hooks <dir>` — write `.github/hooks/` into that workspace and exit, for a project where the extension has not done it.
+- `--proxy <baseUrl>` / `--proxy-port <n>` — also start the loopback proxy for the context window (default port 8317), as the extension's command does.
+
+The page reconnects on its own if the host is restarted; it stays on the last board while it waits. Nothing is written anywhere and nothing leaves the machine: the host only reads the events file and binds `127.0.0.1`.
+
 Words live in `hooks/text.ts`; a new language is one more table there. Before you send a change, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License

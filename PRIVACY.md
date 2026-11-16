@@ -19,7 +19,7 @@ Control characters are taken out of every label before it is drawn.
 
 ## What it keeps, and where
 
-- The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The extension reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`.
+- The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The extension reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The standalone host under `standalone/` reads that same names-only file the same way, binds `127.0.0.1` only, and writes nothing.
 - The extension keeps one piece of state between sessions, in VS Code's own store for the extension: whether the pane is folded. The model's name is read from the current session's events and kept nowhere.
 - Nothing else is written anywhere, and nothing is ever sent anywhere: the extension makes no network requests and talks to no one.
 

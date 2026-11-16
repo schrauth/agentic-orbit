@@ -126,20 +126,6 @@ Under the map are a line that says what runs now, and the last rows:
 
 Finished calls that follow one another at one station fold into one row, marked `+2` for the two it stands for besides the one named. Buttons at the end of the line zoom the map, fold the pane to that one line and bring the map back.
 
-### Screenshots
-
-| At work | Subagents | A hook refuses |
-| --- | --- | --- |
-| ![At work](docs/map-working.png) | ![Subagents](docs/map-agents.png) | ![A hook refuses](docs/map-blocked.png) |
-
-| A change of model | After the answer | Light colours |
-| --- | --- | --- |
-| ![A change of model](docs/map-switch.png) | ![After the answer](docs/map-after.png) | ![Light colours](docs/map-light.png) |
-
-| The layout turned (`you-bottom`) | Russian labels | Colours of your own |
-| --- | --- | --- |
-| ![The map turned, with the person at the bottom](docs/map-turned.png) | ![The map with Russian labels](docs/map-russian.png) | ![The map in colours of your own](docs/map-colors.png) |
-
 ## How it sees Copilot work
 
 Two decoupled sources, both optional:

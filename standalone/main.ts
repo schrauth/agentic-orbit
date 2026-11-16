@@ -23,10 +23,21 @@ function markConnection(live: boolean): void {
   el.className = live ? 'live' : 'waiting'
 }
 
-/** The one setup frame, before the first board: the words and colors the person set on the host. */
+/** One parsed frame, or nothing: a malformed frame is skipped and the map keeps drawing. */
+function parseFrame(data: string): unknown {
+  try {
+    return JSON.parse(data)
+  } catch {
+    return undefined
+  }
+}
+
+/** The one setup frame, before the first board: the words and colors the person set on the host.
+ *  A malformed one is skipped and the defaults take its place — the map draws either way. */
 function takeSetup(raw: unknown): void {
-  if (typeof raw !== 'object' || raw === null) return
-  state.setup = setupFrom(raw as Record<string, unknown>)
+  state.setup = setupFrom(
+    raw !== undefined && typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {},
+  )
   const theme = state.setup.theme
   document.documentElement.dataset.theme = theme
   render(true)
@@ -62,11 +73,14 @@ function render(force: boolean): void {
 
 const stream = new EventSource('/events')
 stream.addEventListener('setup', e => {
-  takeSetup(JSON.parse(e.data))
+  takeSetup(parseFrame(e.data))
   markConnection(true)
 })
 stream.addEventListener('board', e => {
-  state.board = JSON.parse(e.data)
+  const board = parseFrame(e.data)
+  if (board === undefined) return
+  state.board = board as Parameters<typeof projectView>[0]
+  if (state.setup === undefined) takeSetup(undefined) // the setup frame was lost: the defaults draw
   lastDrawn = -1 // a board landed: the map is drawn now, whatever the beat says
   markConnection(true)
 })

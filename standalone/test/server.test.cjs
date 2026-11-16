@@ -79,12 +79,24 @@ test('the core tails the events file and publishes the boards the events make', 
     assert.ok(boards.length > before, 'the appended events published')
     assert.equal((latest.agents ?? []).find(a => a.id === 'a1')?.name, 'first plan')
     assert.equal(latest.entries.some(e => e.station === 'files' && e.status === 'run'), true)
-    // Proxy telemetry becomes a model step on the same board.
+    // Proxy telemetry becomes a model step on the same board — through the file, like every other event.
     const stepBefore = latest.step ?? 0
     core.telemetry({ model: 'gpt-5.2', promptTokens: 12000 })
-    const stepped = boards[boards.length - 1]
+    const stepped = await withTimeout(
+      (async () => {
+        for (let i = 0; i < 100; i++) {
+          const b = boards[boards.length - 1]
+          if (b !== undefined && (b.step ?? 0) === stepBefore + 1 && b.context !== undefined && b.context > 0) return b
+          await new Promise(r => setTimeout(r, 20))
+        }
+        throw new Error('the modelStep line never became a board')
+      })(),
+      2000,
+      'the telemetry round-trip through the events file',
+    )
     assert.equal(stepped.step, stepBefore + 1)
     assert.ok(stepped.context !== undefined && stepped.context > 0)
+    assert.ok(fs.readFileSync(file, 'utf8').includes('"event":"modelStep"'), 'the telemetry landed as a line in the file')
   } finally {
     // A failed assertion must not leave the watcher holding the suite open.
     core.close()

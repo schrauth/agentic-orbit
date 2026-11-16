@@ -6,10 +6,9 @@ import { watchEvents } from '../vscode-extension/src/hookWatcher'
 import type { HookEvent } from '../vscode-extension/src/hookWatcher'
 import { applyHookEvent, emptyState } from '../vscode-extension/src/eventApplier'
 import type { ApplierState } from '../vscode-extension/src/eventApplier'
-import { transitionBoard } from '../vscode-extension/src/board'
+import { modelStepEvent, appendEvent } from '../vscode-extension/src/eventWriter'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
-import { shortModel } from '../hooks/classify'
 import type { Board } from '../types'
 
 /** The setup the person set for the host: the same raw shape `setupFrom` takes from VS Code's settings. */
@@ -24,7 +23,7 @@ export type Host = {
   /** The raw options the person set — the shape `setupFrom` takes, for the page's one setup frame. */
   rawSetup: () => HostSetup
   onBoard: (listener: (board: Board) => void) => void
-  /** What the loopback proxy measured: a model step and how full the context window is. */
+  /** The proxy's measurement, appended to the events file as a `modelStep` line; the core's watcher applies it like any other event. */
   telemetry: (tel: { model: string; promptTokens: number }) => void
   close: () => void
 }
@@ -44,26 +43,6 @@ export function serveCore(options: CoreOptions): Host {
     for (const listener of listeners) listener(state.board)
   }
 
-  /** What the loopback proxy measured: a model step and how full the context window is. */
-  const onTelemetry = (tel: { model: string; promptTokens: number }): void => {
-    const limit = typeof options.setup.contextWindowLimit === 'number' ? options.setup.contextWindowLimit : 128000
-    const step = (state.board.step ?? 0) + 1
-    const s = setup()
-    state.board = transitionBoard(
-      state.board,
-      {
-        type: 'modelStep',
-        model: tel.model,
-        step,
-        label: `${shortModel(tel.model) || tel.model || 'model'} · ${s.t.step(step)}`,
-        promptTokens: tel.promptTokens,
-        limit,
-      },
-      Date.now(),
-    ).board
-    publish()
-  }
-
   const watcher = watchEvents(options.eventsFile, (e: HookEvent) => {
     applyHookEvent(state, e, setup(), Date.now())
     publish()
@@ -77,22 +56,7 @@ export function serveCore(options: CoreOptions): Host {
       listeners.add(listener)
     },
     telemetry: tel => {
-      const limit = typeof options.setup.contextWindowLimit === 'number' ? options.setup.contextWindowLimit : 128000
-      const step = (state.board.step ?? 0) + 1
-      const s = setup()
-      state.board = transitionBoard(
-        state.board,
-        {
-          type: 'modelStep',
-          model: tel.model,
-          step,
-          label: `${shortModel(tel.model) || tel.model || 'model'} · ${s.t.step(step)}`,
-          promptTokens: tel.promptTokens,
-          limit,
-        },
-        Date.now(),
-      ).board
-      publish()
+      appendEvent(options.eventsFile, modelStepEvent(tel))
     },
     close: () => {
       watcher.close()

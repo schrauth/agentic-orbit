@@ -36,6 +36,9 @@
 
 - The shipped README now documents all eighteen settings, word for word as the root README has them, the root README's install line says `agentic-orbit-<version>.vsix` instead of pinning one release, and the demo paragraph names what the engine really is: the shared event translation, a made-up clock, made-up names, and the scenarios that moved to their own module.
 
+- The webview's script ships as one self-contained bundle built by esbuild, so the panel cannot come up blank for want of a module the sandboxed webview cannot load; a guard test holds the shipped `main.js` to that: no `require`, no `import`, the message listener wired.
+- The root documents catch up with the code: the privacy page no longer claims the model's name and the last opened row are kept between sessions — only the folded pane is — and the contribution guide names both gates CI enforces, the extension's tests and the demo typecheck.
+
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 
 - The project's own agents are now part of the repository: the five generic definitions under `.github/agents/` — Architect, Builder, Memory & ADR, Reviewer and Version Control — are tracked instead of ignored, so a fresh clone carries the team that works on it.

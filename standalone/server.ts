@@ -21,6 +21,8 @@ export type CoreOptions = { eventsFile: string; setup: HostSetup }
 export type Host = {
   board: () => Board
   setup: () => Setup
+  /** The raw options the person set — the shape `setupFrom` takes, for the page's one setup frame. */
+  rawSetup: () => HostSetup
   onBoard: (listener: (board: Board) => void) => void
   /** What the loopback proxy measured: a model step and how full the context window is. */
   telemetry: (tel: { model: string; promptTokens: number }) => void
@@ -70,6 +72,7 @@ export function serveCore(options: CoreOptions): Host {
   return {
     board: () => state.board,
     setup,
+    rawSetup: () => options.setup,
     onBoard: listener => {
       listeners.add(listener)
     },

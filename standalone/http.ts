@@ -63,7 +63,8 @@ export function serveHttp(host: Host, port: number, onPageDir?: string): { close
       }
       clients.add(client)
       res.on('close', () => clients.delete(client))
-      // The snapshot first: whatever a browser missed while it was away, it has now.
+      // The setup first, then the snapshot: the page needs the words and colors once, whatever it missed while away.
+      res.write(`event: setup\ndata: ${JSON.stringify(host.rawSetup())}\n\n`)
       res.write(frame(host.board()))
       return
     }

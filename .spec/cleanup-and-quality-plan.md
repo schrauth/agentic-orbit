@@ -112,7 +112,7 @@ Sequencing inside the phases is noted per task; phases land strictly in order.
 Low-risk deletions and text fixes. Every task ends with the full gate:
 `cd vscode-extension && npm test` and `cd demo && npm run typecheck`.
 
-### - [ ] Task 1.1: Purge repository cruft and close the `.kiro/` ignore gap
+### - [x] Task 1.1: Purge repository cruft and close the `.kiro/` ignore gap
 
 **Problem:** The working tree carries stale, regenerable or foreign artifacts: a root `.DS_Store`,
 a stale packaged `vscode-extension/agentic-orbit-0.1.0.vsix` (current version is 0.2.0), build
@@ -141,7 +141,7 @@ not belong in version control if tracked.
 `cd vscode-extension && npm test` still passes (it recompiles `out/`); `demo` page still loads
 (rebuild `demo/bundle.js` via its build script if it was deleted).
 
-### - [ ] Task 1.2: Delete the dead terminal-era options from `hooks/setup.ts`
+### - [x] Task 1.2: Delete the dead terminal-era options from `hooks/setup.ts`
 
 **Problem:** `Setup` still carries three options from the retired terminal renderer with zero
 consumers anywhere in the repo (verified by grep): `textSize`, `terminalView`, `cellShape`, plus
@@ -159,7 +159,7 @@ map actually consumes. Do not renumber other fields. No other file references th
 **Verification:** `grep -rn "textSize\|terminalView\|cellShape\|CELL_SHAPE" .` returns nothing;
 `cd vscode-extension && npm test` and `cd demo && npm run typecheck` pass.
 
-### - [ ] Task 1.3: Remove dead exports in `hooks/classify.ts` and `hooks/feed.ts`
+### - [x] Task 1.3: Remove dead exports in `hooks/classify.ts` and `hooks/feed.ts`
 
 **Problem:** Two exports in each file have no callers anywhere (verified by grep over all
 consumers, including tests and demo): `firstLine` and `memoryIds` in `classify.ts`, and `taskOf`
@@ -177,7 +177,7 @@ removes the file wholesale; if Tasks 1.3 and 1.5 land together, skip the interme
 **Verification:** `cd vscode-extension && npm test`, `cd demo && npm run typecheck` pass;
 `grep -rn "firstLine\|memoryIds\|taskOf\|taskNotice"` returns nothing.
 
-### - [ ] Task 1.4: Remove the parked background-task cluster from `board.ts` and the contract
+### - [x] Task 1.4: Remove the parked background-task cluster from `board.ts` and the contract
 
 **Problem:** `board.ts` contains a parked "background task" feature: `background()` and `settle()`
 are never called by anything, and `Entry.task` is therefore never written at runtime — but it is
@@ -201,7 +201,7 @@ stale reads (mind `taskOf` false positives if Task 1.3 has not landed); `cd vsco
 npm test` (the board-transition test covers `kept()`/`agentDone()` behavior) and
 `cd demo && npm run typecheck` pass.
 
-### - [ ] Task 1.5: Retire the `hooks/map.ts` re-export hub
+### - [x] Task 1.5: Retire the `hooks/map.ts` re-export hub
 
 **Problem:** `hooks/map.ts` (17 lines) is a leftover indirection layer from the terminal project:
 it only re-exports names from `classify.ts`/`feed.ts`. Its sole consumer is the demo engine, which
@@ -221,7 +221,7 @@ next build (build output is regenerated).
 **Verification:** `cd vscode-extension && npm test` and `cd demo && npm run typecheck` pass;
 `grep -rn "hooks/map"` returns nothing.
 
-### - [ ] Task 1.6: Delete the 12 dead i18n keys from all seven languages
+### - [x] Task 1.6: Delete the 12 dead i18n keys from all seven languages
 
 **Problem:** `Strings` carries twelve keys with zero readers (verified — earlier `t.command` grep
 hits were `input.command` false positives): `command`, `opened`, `cannotOpen`, `compacting`,
@@ -246,7 +246,7 @@ still-read key fails immediately.
 switch the demo to each language — no new blank labels (a missing key would render as the raw
 placeholder).
 
-### - [ ] Task 1.7: Remove the dead `Board` contract fields `pushed`, `open`, `minimized`, `zoom`
+### - [x] Task 1.7: Remove the dead `Board` contract fields `pushed`, `open`, `minimized`, `zoom`
 
 **Problem:** Four `Board` fields are never written by any code (verified by grep over
 `board.*` writes — the panel keeps its *own* `minimized`/`zoom` instance fields plus globalState,
@@ -266,7 +266,7 @@ Record the contract change with a one-line decision-log entry via the Memory & A
 catches signature drift) and `cd demo && npm run typecheck` pass; the legend count on the demo map
 still shows the permission-asked number.
 
-### - [ ] Task 1.8: Remove the never-written `HookEvent` fields `command` and `promptTokens`
+### - [x] Task 1.8: Remove the never-written `HookEvent` fields `command` and `promptTokens`
 
 **Problem:** The `HookEvent` type declares fields the hook never writes and no reader reads
 (verified against the hook's `out` object). The hook *does* write `v`, `ts`, `session` and
@@ -284,7 +284,7 @@ a different, live field.
 
 **Verification:** `cd vscode-extension && npm test` passes; `grep -n "promptTokens" vscode-extension/src/hookWatcher.ts` returns nothing (the demo's fake telemetry `promptTokens` is unrelated and stays).
 
-### - [ ] Task 1.9: Fix naming and wording relics; repair the issue-template security URL
+### - [x] Task 1.9: Fix naming and wording relics; repair the issue-template security URL
 
 **Problem:** The class is still called `LotMapPanel` (the project's terminal predecessor was
 "lot-map"); several comments and one privacy doc say "mod" where they mean "extension"; and
@@ -312,7 +312,7 @@ a different, live field.
 **Verification:** `grep -rn "LotMapPanel\|\bmod\b"` over `src/ hooks/ PRIVACY.md` returns nothing
 new; `cd vscode-extension && npm test` passes; the GitHub issue-template link resolves.
 
-### - [ ] Task 1.10: Make the helper scripts English and consistent
+### - [x] Task 1.10: Make the helper scripts English and consistent
 
 **Problem:** Project rule: all writing is English, including UI text. Both helper scripts print
 German user-facing output. Additionally, `smoke-test.sh` resolves the events file itself instead
@@ -330,7 +330,7 @@ logic). In `smoke-test.sh`, resolve the events file exactly like the hook does: 
 **Verification:** `bash -n scripts/*.sh` passes; run `AGENTIC_ORBIT_EVENTS_FILE=$(mktemp -u).jsonl
 bash scripts/smoke-test.sh` and confirm it reads/writes that file (with the hook installed).
 
-### - [ ] Task 1.11: Normalize the tsconfig include lists
+### - [x] Task 1.11: Normalize the tsconfig include lists
 
 **Problem:** Both tsconfigs enumerate files by hand. The `vscode-extension` list omits
 `hooks/view.ts` (it compiles only because a `src/` file imports it — an implicit dependency that
@@ -351,7 +351,7 @@ Keep `rootDir`/`outDir` as-is. Land after Task 1.5 (so `map.ts` is already gone)
 `ls vscode-extension/out/hooks/*.js` shows the same set of modules as before (now including
 `view.js` explicitly rather than implicitly).
 
-### - [ ] Task 1.12: Micro-hygiene sweep
+### - [x] Task 1.12: Micro-hygiene sweep
 
 **Problem:** Three tiny inconsistencies: a stray space inside a string comparison
 (`proxy.ts:139`, `if (msg.model === '' )` — harmless but sloppy in a security-relevant file);
@@ -375,7 +375,7 @@ checks the webview); open the panel — counts row still renders.
 
 ## 4. Phase 2 — Consolidation & Deduplication
 
-### - [ ] Task 2.1: Single source the zoom ladder (`ZOOMS`)
+### - [x] Task 2.1: Single source the zoom ladder (`ZOOMS`)
 
 **Problem:** The pixel-width ladder `[180, 220, 260, 310, 370, 440, 530, 570, 620, 660]` is
 duplicated verbatim in the panel and the demo engine. A future zoom change would have to be made
@@ -397,7 +397,7 @@ state index semantics unchanged).
 compilation) and `cd demo && npm run typecheck` pass; the demo zoom buttons step through the same
 ten widths as before.
 
-### - [ ] Task 2.2: Single source the language list in the demo
+### - [x] Task 2.2: Single source the language list in the demo
 
 **Problem:** `demo/main.ts:113` hardcodes `['en','de','es','fr','it','pt','ru']` while the panel
 uses `LANGUAGES` from `hooks/text.ts:425`. Adding a language would update one list and miss the
@@ -413,7 +413,7 @@ already does) and builds its selector from it. No change to `text.ts`.
 **Verification:** `cd demo && npm run typecheck` passes; the demo language selector still lists
 all seven languages in the same order.
 
-### - [ ] Task 2.3: Fix the `Setup` lifecycle (open panels must react to settings changes)
+### - [x] Task 2.3: Fix the `Setup` lifecycle (open panels must react to settings changes)
 
 **Problem:** Behavior bug. The panel computes `Setup` **once** in its constructor
 (`panel.ts:15`, `:29`) — changing `agenticOrbit.language`, `theme`, `layout`, `pace`, `coreName`,
@@ -443,7 +443,7 @@ feature, three lifecycles.
 reopening the panel; change `memoryPaths` → memory row disappears. `cd vscode-extension && npm
 test` passes.
 
-### - [ ] Task 2.4: Unify the now-line meter construction
+### - [x] Task 2.4: Unify the now-line meter construction
 
 **Problem:** `hooks/view.ts:55–61` rebuilds the exact meter string that `hooks/feed.ts`'s
 `nowParts` (`:56–66`) already produces — but with a *divergent* model-shortening rule
@@ -465,7 +465,7 @@ model-shortening helper.
 content) and `cd demo && npm run typecheck` pass; visual check on the demo — nowline identical
 before/after.
 
-### - [ ] Task 2.5: Move the hooks manifest out of `extension.ts` into named, testable data
+### - [x] Task 2.5: Move the hooks manifest out of `extension.ts` into named, testable data
 
 **Problem:** `installHooks` builds the entire `.github/hooks/hooks.json` object as an inline JSON
 literal inside `extension.ts:213–235`. The event matcher list — the most contract-like data in the
@@ -499,7 +499,7 @@ against the previous generated file — identical.
 Behavior- and pixel-preserving splits inside the existing module boundaries (ADR-003: `hooks/`
 stays engine- and VS Code-free; the webview stays sandboxed and message-only).
 
-### - [ ] Task 3.1: Extract the shared event applier (extension host and demo converge)
+### - [x] Task 3.1: Extract the shared event applier (extension host and demo converge)
 
 **Problem:** `extension.ts:82–174` (`onHookEvent` plus the `parkedNames` helpers at `:66–80`) and
 `demo/engine.ts:53–138` (`FakeSession.apply`) implement the *same* event → board translation twice —
@@ -540,7 +540,7 @@ fallbacks — verify that *added* names are correct parked names, not changed ex
 `cd vscode-extension && npm test`, `cd demo && npm run typecheck`, and `bash scripts/subagent-storm.sh`
 all pass. This task unblocks Task 3.3, 3.4 and the parked-names tests in 4.3.
 
-### - [ ] Task 3.2: Split `hooks/draw.ts` into a module behind an unchanged facade
+### - [x] Task 3.2: Split `hooks/draw.ts` into a module behind an unchanged facade
 
 **Problem:** `hooks/draw.ts` is a 634-line god-file mixing five responsibilities: geometry
 primitives, fade/pulse/ripple/beam effects, mutable crew-seat state, trail routing, and scene
@@ -575,7 +575,7 @@ catches surface drift) and `cd demo && npm run typecheck` pass; pixel check — 
 scenarios before and after and compare the SVG markup (the demo's board-copy button plus fixed
 timestamps make this a diffable string comparison); identical output.
 
-### - [ ] Task 3.3: Split the demo scenarios out of `demo/engine.ts`
+### - [x] Task 3.3: Split the demo scenarios out of `demo/engine.ts`
 
 **Problem:** `demo/engine.ts` is 450 lines, of which ~290 (`:158–444`) are five hand-written
 scenarios (`calmTurn`:158, `subagentStorm`:183, `subagentProject`:253, `errorsAndRefusals`:391,
@@ -597,7 +597,7 @@ but the engine's apply path changes there.
 **Verification:** `cd demo && npm run typecheck` passes; all five scenarios still run and look
 identical in the browser.
 
-### - [ ] Task 3.4: Slim `extension.ts` to activation wiring
+### - [x] Task 3.4: Slim `extension.ts` to activation wiring
 
 **Problem:** After Tasks 2.3, 2.5 and 3.1, `extension.ts` still mixes four concerns in one file:
 config reading (`:33–54`), hook installation (`:204–240`), the proxy command (`:242–259`), and
@@ -624,7 +624,7 @@ map — everything still works.
 
 ## 6. Phase 4 — Securing & Tests
 
-### - [ ] Task 4.1: Fix the proxy's silent body truncation over 8 MB
+### - [x] Task 4.1: Fix the proxy's silent body truncation over 8 MB
 
 **Problem:** Correctness bug in a security- and integrity-relevant component. `proxy.ts:93–96`
 counts `bodySize` but guards `body.push` with `bodySize <= 8 * 1024 * 1024`: for a request larger
@@ -647,7 +647,7 @@ allow-list) untouched. Add a brief comment stating bodies are buffered whole, de
 `npm test` passes; manual: proxy enabled, submit an oversized prompt to a local model, no
 corruption.
 
-### - [ ] Task 4.2: Make CI run the tests and the demo typecheck
+### - [x] Task 4.2: Make CI run the tests and the demo typecheck
 
 **Problem:** `.github/workflows/check.yml` runs `npm ci` + `npm run compile` only
 (Build step, `:26–29`, node 22). The four regression tests and the demo typecheck — the two
@@ -665,7 +665,7 @@ existing trigger/filter configuration.
 **Verification:** The workflow goes green on the next PR; the run log shows `node --test`
 executing 4+ cases and the demo typecheck completing.
 
-### - [ ] Task 4.3: Close the test gaps on the critical paths
+### - [x] Task 4.3: Close the test gaps on the critical paths
 
 **Problem:** The suite covers shell classification, board transitions, the view projection and
 the webview bundle guard — but not the paths this plan moved or fixed: the Copilot tool mapping,
@@ -697,7 +697,7 @@ Write behavior assertions, not implementation restatements; keep each case small
 **Verification:** `cd vscode-extension && npm test` passes with all new cases; each new case fails
 if the mapped behavior is reverted (spot-check one by one).
 
-### - [ ] Task 4.4: Documentation accuracy pass
+### - [x] Task 4.4: Documentation accuracy pass
 
 **Problem:** The shipped extension README documents 11 of the 18 settings (missing `coreName`,
 `background`, `colors`, `memoryCommands`, `memorySubcommands`, `memoryPaths`, `memoryLabels` — the

@@ -39,6 +39,7 @@
 - The webview's script ships as one self-contained bundle built by esbuild, so the panel cannot come up blank for want of a module the sandboxed webview cannot load; a guard test holds the shipped `main.js` to that: no `require`, no `import`, the message listener wired.
 - The root documents catch up with the code: the privacy page no longer claims the model's name and the last opened row are kept between sessions — only the folded pane is — and the contribution guide names both gates CI enforces, the extension's tests and the demo typecheck.
 - The license names a second author: the many features and fixes grown here on top of the ported engine put Manuel Schrauth beside Aleksei Volodin in the copyright lines.
+- The README says at the top what this repository is: a fork and further development of an idea from another repository, the ported engine's home [lot-map](https://github.com/alexeyw/lot-map).
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

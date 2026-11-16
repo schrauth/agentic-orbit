@@ -2,6 +2,8 @@
 
 A live map of Copilot's work, in a pane beside your editor.
 
+A fork and further development of an idea from another repository: the drawing, classification and text engine was ported from [lot-map](https://github.com/alexeyw/lot-map) by Aleksei Volodin.
+
 While GitHub Copilot works, every tool call, model step and skill sends a pulse from the centre to its station — so you see memory, files, shell, web and agents at work instead of reading a list of commands.
 
 ![The map during a work session](docs/demo.gif)

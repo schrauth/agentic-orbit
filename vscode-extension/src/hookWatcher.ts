@@ -53,7 +53,7 @@ export function parseEvents(buffer: string): HookEvent[] {
  */
 export function watchEvents(file: string, onEvent: (e: HookEvent) => void): { close: () => void } {
   let offset = fs.existsSync(file) ? fs.statSync(file).size : 0
-  let read = (): void => {
+  const read = (): void => {
     try {
       const size = fs.statSync(file).size
       if (size <= offset) {

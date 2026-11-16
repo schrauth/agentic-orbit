@@ -136,7 +136,7 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
           }
           answer.on('data', (chunk: Buffer) => {
             res.write(chunk)
-            if (counted || model === '' ) return
+            if (counted || model === '') return
             const type = (answer.headers['content-type'] ?? '').toString()
             if (type.includes('application/json') && !type.includes('event-stream')) {
               // A whole JSON answer: its `usage` is counted once it has arrived.

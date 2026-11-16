@@ -12,6 +12,7 @@
 - The panel class carries the project's own name now: `LotMapPanel` is `AgenticOrbitPanel`, the last "mod" wordings say "extension", and the issue template's security link finally points at this repository instead of its terminal ancestor.
 - The smoke test and the subagent storm speak English end to end, and both scripts now honor `AGENTIC_ORBIT_EVENTS_FILE` so a run never scribbles into the live event log.
 - Both `tsconfig.json` files include whole directories instead of every file by name, so a new hook or source file joins the build without a config edit.
+- Micro-hygiene: a stray space leaves a proxy string comparison, the file watcher's reader is a `const`, and the counts row lookup is null-checked like its siblings instead of asserted.
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

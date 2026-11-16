@@ -14,7 +14,8 @@ export function renderView(view: ViewProjection, actions: RenderActions): void {
   const feed = document.getElementById('feed')
   const nowline = document.getElementById('nowline')
   const buttons = document.getElementById('buttons')
-  if (map === null || feed === null || nowline === null || buttons === null) return
+  const counts = document.getElementById('counts')
+  if (map === null || feed === null || nowline === null || buttons === null || counts === null) return
 
   if (view.hidden) {
     map.innerHTML = ''
@@ -34,7 +35,7 @@ export function renderView(view: ViewProjection, actions: RenderActions): void {
     svg.style.maxWidth = view.width === undefined ? `${view.mapWidth}px` : '100%'
     svg.style.height = 'auto'
   }
-  document.getElementById('counts')!.textContent = view.counts
+  counts.textContent = view.counts
   feed.innerHTML = view.rows
     .map(row => {
       const text = `${row.mark} ${row.station}  ${row.label}${row.times > 1 ? `  +${row.times - 1}` : ''}`

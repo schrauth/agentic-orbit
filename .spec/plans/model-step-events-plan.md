@@ -200,7 +200,7 @@ its own, and is verified on its own.
 
 ## Phase 2 — One stream for every consumer
 
-### - [ ] Task 2.1: The event writer
+### - [x] Task 2.1: The event writer
 
 - **Problem:** Nothing appends events from the host side; the hook script's
   `appendFileSync` lives inside `.github/hooks/` (change-protected) and inside the
@@ -237,7 +237,7 @@ its own, and is verified on its own.
   assert that `appendEvent` into a non-existent directory does not throw. `cd
   vscode-extension && npm test`.
 
-### - [ ] Task 2.2: The extension host appends, its watcher applies
+### - [x] Task 2.2: The extension host appends, its watcher applies
 
 - **Problem:** `onProxyTelemetry` in [extension.ts](../../vscode-extension/src/extension.ts)
   (line 43) builds and applies the transition itself — the map's one private path — and
@@ -263,7 +263,7 @@ its own, and is verified on its own.
   the model pulse appear within the same beat as the tool pulses, and
   `~/.config`-free inspection of the events file shows the `modelStep` line.
 
-### - [ ] Task 2.3: The standalone host appends, its watcher applies
+### - [x] Task 2.3: The standalone host appends, its watcher applies
 
 - **Problem:** [server.ts](../../standalone/server.ts) duplicates the model-step builder
   twice (the local `onTelemetry` at ~48 and the returned `Host.telemetry` at ~79), and
@@ -296,7 +296,7 @@ its own, and is verified on its own.
   in the file: after the stepped board arrives, read the events file and assert it
   contains `"event":"modelStep"`).
 
-### - [ ] Task 2.4: The demo replays the real shape
+### - [x] Task 2.4: The demo replays the real shape
 
 - **Problem:** The demo's `FakeSession.telemetry`
   ([demo/engine.ts](../../demo/engine.ts), line 61) is a third copy of the model-step

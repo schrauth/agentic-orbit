@@ -140,7 +140,7 @@ The hook is fail-safe by design: it always exits `0` within milliseconds and ans
 
 ### 2. The loopback proxy (optional, for the context-window ring)
 
-Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [settings](#settings)). The proxy forwards every request to your on-prem LLM unchanged — streamed, unbuffered — while reading only the token usage from the stream.
+Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [settings](#settings)). The proxy forwards every request to your on-prem LLM unchanged — streamed, unbuffered — while reading only the token usage from the stream, which it appends to the workspace's events file as one `modelStep` line, so the extension's map and the standalone map show the same model steps.
 
 ## Settings
 

@@ -20,12 +20,12 @@ Control characters are taken out of every label before it is drawn.
 ## What it keeps, and where
 
 - The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The extension reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The standalone host under `standalone/` reads that same names-only file the same way, binds `127.0.0.1` only, and writes nothing.
-- The extension keeps one piece of state between sessions, in VS Code's own store for the extension: whether the pane is folded. The model's name is read from the current session's events and kept nowhere.
+- The extension keeps one piece of state between sessions, in VS Code's own store for the extension: whether the pane is folded. The model's name is read from the current session's events — and, when the proxy is on, written there as one more line — and kept nowhere else.
 - Nothing else is written anywhere, and nothing is ever sent anywhere: the extension makes no network requests and talks to no one.
 
 ## The proxy
 
-The loopback proxy is off by default. When you turn it on, it listens on `127.0.0.1` only, forwards each request to the base URL you set and reads the token usage from the stream. It writes nothing.
+The loopback proxy is off by default. When you turn it on, it listens on `127.0.0.1` only, forwards each request to the base URL you set and reads the token usage from the stream. Per model request it appends one compact line — the model's name and the prompt token count, the same figures the map shows — to the same machine-local temporary file the workspace hook writes. It writes nothing anywhere else, keeps nothing between requests, and reads no text of the stream into memory beyond the token figures it extracts.
 
 ## Faults
 

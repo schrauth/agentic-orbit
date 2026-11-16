@@ -326,7 +326,7 @@ its own, and is verified on its own.
 
 ## Phase 3 — The written record
 
-### - [ ] Task 3.1: PRIVACY.md and CHANGELOG.md tell the new truth
+### - [x] Task 3.1: PRIVACY.md and CHANGELOG.md tell the new truth
 
 - **Problem:** [PRIVACY.md](../../PRIVACY.md) says of the proxy "It writes nothing"
   (line 28) — after this change it appends one figures-only line to the machine-local

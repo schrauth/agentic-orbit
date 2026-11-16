@@ -239,6 +239,8 @@ Then open <http://127.0.0.1:8318>. The flags:
 
 The page reconnects on its own if the host is restarted; it stays on the last board while it waits. Nothing is written anywhere and nothing leaves the machine: the host only reads the events file and binds `127.0.0.1`.
 
+On a wide window the feed sits beside the map; on a narrow one it moves under it, narrower than the window. A thin line of options above the map — palette, layout, motion, pace, language — tunes the looks right on the page: the host's setup is the starting point, the page's choice wins until you make another.
+
 Words live in `hooks/text.ts`; a new language is one more table there. Before you send a change, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License

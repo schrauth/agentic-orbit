@@ -63,6 +63,59 @@ body {
 #connection.waiting {
   opacity: 0.6;
 }
+/* The thin line of looks-options: no box of its own, just a quiet row above the map. */
+#header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 0 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  opacity: 0.8;
+}
+#header select {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 18px;
+  font-family: var(--font);
+  cursor: pointer;
+}
+#header select:hover {
+  background: rgba(128, 128, 128, 0.15);
+}
+/* Wide window: the feed sits beside the map and scrolls on its own. Narrow one: it goes back
+   under the map, and stays narrower than the window so it never fills the whole width. */
+#main {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+#stage {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+#feedwrap {
+  flex: 0 0 360px;
+  overflow-y: auto;
+  max-height: calc(100vh - 90px);
+}
+@media (max-width: 920px) {
+  #main {
+    flex-direction: column;
+  }
+  #feedwrap {
+    flex-basis: auto;
+    max-height: none;
+    overflow-y: visible;
+    width: auto;
+    max-width: 640px;
+  }
+}
 #map {
   display: flex;
   justify-content: center;

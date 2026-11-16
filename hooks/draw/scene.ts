@@ -290,7 +290,9 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   const coreName = board.model === undefined ? setup.core : modelFamily(board.model)
   const coreSize = Math.min(21, 77 / (0.75 * coreName.length))
 
-  // The core breathes at rest and quickens while something runs.
+  // The core breathes only while work is on — a call running or the loop thinking — and rests
+  // still when the turn is over, so a quiet map is quiet to the eye as well.
+  const active = anyRunning || thinking
   const period = anyRunning ? 1800 : 5400
   const breath = `begin="${clock(-(now % period))}" dur="${clock(period)}" repeatCount="indefinite"`
   // While the main loop thinks, a ring of its own breathes around the core, at its own slow pace.
@@ -305,11 +307,13 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     : ''
   body +=
     pondering +
-    (isStill
-      ? `<circle cx="${CX}" cy="${CY}" r="${CORE + 9}" fill="${c.accent}" opacity="${anyRunning ? '.16' : '.08'}"/>`
-      : `<circle cx="${CX}" cy="${CY}" r="${CORE + 7}" fill="${c.accent}" opacity=".08">` +
-        `<animate attributeName="r" values="${CORE + 3};${CORE + 14};${CORE + 3}" ${breath}/>` +
-        `<animate attributeName="opacity" values=".05;${anyRunning ? '.24' : '.12'};.05" ${breath}/></circle>`) +
+    (active
+      ? (isStill
+          ? `<circle cx="${CX}" cy="${CY}" r="${CORE + 9}" fill="${c.accent}" opacity="${anyRunning ? '.16' : '.08'}"/>`
+          : `<circle cx="${CX}" cy="${CY}" r="${CORE + 7}" fill="${c.accent}" opacity=".08">` +
+            `<animate attributeName="r" values="${CORE + 3};${CORE + 14};${CORE + 3}" ${breath}/>` +
+            `<animate attributeName="opacity" values=".05;${anyRunning ? '.24' : '.12'};.05" ${breath}/></circle>`)
+      : `<circle cx="${CX}" cy="${CY}" r="${CORE + 9}" fill="${c.accent}" opacity=".05"/>`) +
     `<circle cx="${CX}" cy="${CY}" r="${CORE}" fill="${c.raised}" stroke="${anyRunning || thinking ? c.accent : c.line}" stroke-width="1.3"/>`
 
   // The context window as a ring around the core: it fills as the session goes and empties at a compaction.

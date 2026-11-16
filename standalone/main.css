@@ -254,6 +254,27 @@ body.menu-open #drawer {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* The scrollbar is part of the design, not a bright stripe on it: slim, in the theme's
+     own colours, and it takes its own place beside the lines — it never covers the times. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  padding-right: 6px;
+}
+#log::-webkit-scrollbar {
+  width: 8px;
+}
+#log::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+#log::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--border) 60%, var(--fg));
+  background-clip: padding-box;
+}
+#log::-webkit-scrollbar-track {
+  background: transparent;
 }
 .logline {
   display: flex;

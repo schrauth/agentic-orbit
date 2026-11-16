@@ -230,8 +230,8 @@ body.menu-open #drawer {
   display: none;
 }
 #log {
-  flex: 1 1 auto;
-  min-height: 0;
+  height: 480px;
+  flex: 0 0 auto;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

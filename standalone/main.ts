@@ -41,8 +41,20 @@ function parseFrame(data: string): unknown {
 /* The rolling log: unlike the panel's folded feed, every call gets its own line, console style.
  *  A running call shows a live line the moment it starts; when it ends, the same line gets its
  *  verdict and duration instead of a second one. Lines are never replaced or folded — the only
- *  thing that leaves the log is age: the oldest lines drop off past a thousand. */
-const MAX_LOG_LINES = 1000
+ *  thing that leaves the log is age: past the chosen size, the oldest lines drop off the top.
+ *  Like a shell, the view stays pinned to the newest line unless the person scrolled up. */
+const logState = { max: 100 }
+
+const storedMax = ((): number | undefined => {
+  try {
+    const v = window.localStorage.getItem('agentic-orbit-log-size')
+    return v !== null && /^\d+$/.test(v) ? Math.max(20, Math.min(1000, Number(v))) : undefined
+  } catch {
+    return undefined
+  }
+})()
+if (storedMax !== undefined) logState.max = storedMax
+
 const logged = new Map<string, HTMLDivElement>()
 
 function escapeHtml(text: string): string {
@@ -54,28 +66,36 @@ const clockOf = (at: number): string => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
 }
 
+/** Keeps the log at its chosen size: the oldest lines leave at the top. */
+function trimLog(log: HTMLElement): void {
+  while (log.children.length > logState.max) {
+    const oldest = log.firstElementChild
+    if (oldest === null) break
+    for (const [id, el] of logged) {
+      if (el === oldest) {
+        logged.delete(id)
+        break
+      }
+    }
+    log.removeChild(oldest)
+  }
+}
+
 function renderLog(): void {
   const log = document.getElementById('log')
   if (log === null || state.board === undefined) return
   const t = state.setup?.t
   if (t === undefined) return
+  // Shell rule: follow the newest line only while the person sits at the bottom.
+  const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 48
+  let grew = false
   for (const entry of state.board.entries) {
     let line = logged.get(entry.id)
     if (line === undefined) {
       line = document.createElement('div')
       logged.set(entry.id, line)
       log.appendChild(line)
-      while (log.children.length > MAX_LOG_LINES) {
-        const oldest = log.firstElementChild
-        if (oldest === null) break
-        for (const [id, el] of logged) {
-          if (el === oldest) {
-            logged.delete(id)
-            break
-          }
-        }
-        log.removeChild(oldest)
-      }
+      grew = true
     }
     const running = entry.status === 'run'
     const took = entry.endedAt === undefined ? '…' : `${Math.max(0, entry.endedAt - entry.startedAt)}ms`
@@ -83,6 +103,24 @@ function renderLog(): void {
     line.className = `logline${entry.status === 'err' || entry.status === 'block' ? ' err' : entry.mark !== undefined || running ? ' link' : ''}`
     line.innerHTML = `<span class="stamp">${escapeHtml(clockOf(entry.startedAt))}</span><span class="mark">${mark}</span><span class="where">${escapeHtml(t.stations[entry.station])}</span><span class="what">${escapeHtml(entry.label)}</span><span class="howlong">${escapeHtml(took)}</span>`
   }
+  if (grew) {
+    trimLog(log)
+    if (atBottom) log.scrollTop = log.scrollHeight // the new line lands in view, the rest moves up
+  }
+}
+
+/** The log's size, chosen in the menu and kept for the next visit. */
+function takeLogSize(raw: string): void {
+  const n = Math.max(20, Math.min(1000, Number(raw)))
+  if (!Number.isFinite(n)) return
+  logState.max = Math.round(n)
+  try {
+    window.localStorage.setItem('agentic-orbit-log-size', String(logState.max))
+  } catch {
+    /* nothing kept, nothing lost: the size holds for this page's life */
+  }
+  const log = document.getElementById('log')
+  if (log !== null) trimLog(log)
 }
 
 /** Builds the setup from the host's words and the header's, and makes the page follow its theme. */
@@ -185,6 +223,11 @@ stream.onerror = () => markConnection(false)
         applySetup()
       }
     }
+  }
+  const logsize = document.getElementById('logsize')
+  if (logsize instanceof HTMLSelectElement) {
+    logsize.value = String(logState.max >= 500 ? 500 : logState.max >= 200 ? 200 : logState.max >= 100 ? 100 : 50)
+    logsize.onchange = () => takeLogSize(logsize.value)
   }
 }
 

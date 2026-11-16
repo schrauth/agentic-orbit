@@ -109,7 +109,7 @@ The centre and the **Model** station ring for a few seconds, and the feed gets a
 
 ### Subagents
 
-Each subagent still at work circles the **Agents** station — which sits far out beyond the ring of stations — as a small planet on an orbit of its own, and its calls start from there. The first five hold the five inner rings, one planet each; every subagent after that takes a place on one wide outer ring they all share. A planet keeps its seat — its ring, its place on it and its colour — for as long as it is on the map, whatever the rest of the crew does, and a seat opens again only once its planet has fully faded. Every planet wears a hue of its own; when more than six agents crowd the map, the hues start again from the first. The legend in the corner below names each colour with the short description its subagent was started with. A subagent that is done keeps circling for a minute before it fades.
+Each subagent still at work circles the **Agents** station — which sits far out beyond the ring of stations — as a small planet on an orbit of its own, and its calls start from there. The first four hold the four inner rings, one planet each; every subagent after that takes a place on one wide outer ring they all share. A planet keeps its seat — its ring, its place on it and its colour — for as long as it is on the map, whatever the rest of the crew does, and a seat opens again only once its planet has fully faded. Every planet wears a hue of its own; when more than six agents crowd the map, the hues start again from the first. The legend in the corner below names each colour with the short description its subagent was started with. A subagent that is done keeps circling for a minute before it fades.
 
 ### The answer
 

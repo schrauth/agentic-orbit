@@ -221,7 +221,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   }
 
   // Each subagent circles the agents station as a planet of its own, on the ring its seat holds:
-  // the first five a ring each close to the station, the rest a place on the outer ring. A seat is
+  // the first four a ring each close to the station, the rest a place on the outer ring. A seat is
   // held until its planet is gone from the map, so a subagent never slides to another place when
   // the crew changes. One whose loop is over keeps its place for a while yet, then fades out on
   // its own, even when nothing redraws the map. The orbits lie under the station's words, whose rim

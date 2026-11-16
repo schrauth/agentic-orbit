@@ -12,7 +12,7 @@ const seats = new Map<string, Seat>()
 /** How many hues have been handed out past the last free one, for a crew too large for all-distinct hues. */
 let hueHandouts = 0
 /** Give each subagent on the map its seat, and take back the seats of those that have fully faded out:
- * the first five the inner rings, one each, the rest a place on the outer ring. A seat becomes free only
+ * the first four the inner rings, one each, the rest a place on the outer ring. A seat becomes free only
  * once its holder is gone from the map, and a holder of the outer ring never moves inward. */
 export function seatCrew(crew: readonly { id: string }[]): void {
   const onMap = new Set(crew.map(s => s.id))
@@ -30,7 +30,7 @@ export function seatCrew(crew: readonly { id: string }[]): void {
 export function seatOf(id: string | undefined): Seat | undefined {
   return id === undefined ? undefined : seats.get(id)
 }
-/** A seat's fixed share of its ring: the inner rings spread their five places evenly, the outer ring its seven.
+/** A seat's fixed share of its ring: the inner rings spread their four places evenly, the outer ring its eight.
  * The share is the seat's own, not the crew's: a planet keeps it whatever else joins or leaves. */
 export const seatShare = (seat: Seat): number => (seat.ring < INNER_SEATS ? (seat.ring + 0.5) / INNER_SEATS : (seat.slot + 0.5) / OUTER_SLOTS)
 /** The angle a seat's planet is at on its ring at a given moment, as the drawing's own clock sees it:

@@ -24,15 +24,17 @@ export const NODE = 27
 export const CORE = 50
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */
 export const PLANET = 10.5
-/** A subagent's orbit around the agents station: the innermost ring's reach, and the step between the rings. */
-const ORBIT_FIRST = 55
+/** A subagent's orbit around the agents station: the innermost ring's reach, and the step between the rings.
+ *  The innermost ring sits where the second-innermost used to — the closest ring was given up, so the
+ *  first planet now keeps a clear gap from the host circle. */
+const ORBIT_FIRST = 69
 const ORBIT_STEP = 14
 /** How many rings close to the station seat one subagent each; every subagent beyond them shares the outer ring. */
-export const INNER_SEATS = 5
+export const INNER_SEATS = 4
 /** The outer ring's reach: one step past the last inner ring, still clear of the map's rim in both layouts. */
 const ORBIT_OUTER = 125
-/** The places the outer ring hands out: with the five inner rings, a seat for every subagent the board keeps. */
-export const OUTER_SLOTS = 7
+/** The places the outer ring hands out: with the four inner rings, a seat for every subagent the board keeps. */
+export const OUTER_SLOTS = 8
 /** Where spokes and pulses meet the core: outside the context ring. */
 export const HUB = CORE + 8
 /** One lap of a planet around the agents station: the innermost ring is the slowest, each one a little faster;

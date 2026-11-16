@@ -102,7 +102,9 @@ function renderLog(): void {
       grew = true
     }
     const running = entry.status === 'run'
-    const took = entry.endedAt === undefined ? '…' : tookOf(Math.max(0, entry.endedAt - entry.startedAt))
+    const ms = entry.endedAt === undefined ? undefined : Math.max(0, entry.endedAt - entry.startedAt)
+    // A call that took no measurable time shows no time at all — the word, not a zero, says nothing happened.
+    const took = ms === undefined ? '…' : ms === 0 ? '' : tookOf(ms)
     const mark = entry.mark === 'switch' ? '◆' : entry.mark === 'done' ? '●' : running ? '●' : entry.status === 'ok' ? '·' : '✕'
     line.className = `logline${entry.status === 'err' || entry.status === 'block' ? ' err' : entry.mark !== undefined || running ? ' link' : ''}`
     line.innerHTML = `<span class="stamp">${escapeHtml(clockOf(entry.startedAt))}</span><span class="mark">${mark}</span><span class="where">${escapeHtml(t.stations[entry.station])}</span><span class="what">${escapeHtml(entry.label)}</span><span class="howlong">${escapeHtml(took)}</span>`

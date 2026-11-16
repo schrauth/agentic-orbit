@@ -4,25 +4,9 @@ import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 import * as crypto from 'crypto'
+import type { HookEvent } from '../../types'
 
-/** One compact metadata line, as the hook writes it. Unknown events are ignored by the caller. */
-export type HookEvent = {
-  v?: number
-  event?: string
-  ts?: number
-  session?: string
-  callId?: string
-  agentId?: string
-  tool?: string
-  model?: string
-  status?: string
-  error?: boolean
-  aborted?: boolean
-  description?: string
-  commandName?: string
-  filePath?: string
-  url?: string
-}
+export type { HookEvent } from '../../types'
 
 export function eventsFileFor(workspace: string, override?: string): string {
   if (override !== undefined && override !== '') return override

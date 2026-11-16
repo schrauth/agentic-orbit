@@ -4,6 +4,25 @@ export type StationId =
 
 export type Status = 'run' | 'ok' | 'err' | 'block'
 
+/** One compact metadata line, as the workspace hook writes it. Unknown events are ignored by the reader. */
+export type HookEvent = {
+  v?: number
+  event?: string
+  ts?: number
+  session?: string
+  callId?: string
+  agentId?: string
+  tool?: string
+  model?: string
+  status?: string
+  error?: boolean
+  aborted?: boolean
+  description?: string
+  commandName?: string
+  filePath?: string
+  url?: string
+}
+
 /** One action on the map. Labels carry names and record numbers, never the text of a memory. */
 export type Entry = {
   id: string

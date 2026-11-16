@@ -3,34 +3,27 @@
 // Nothing it shows is content: names, stations, timings and figures only.
 import * as path from 'path'
 import * as vscode from 'vscode'
-import type { Board, StationId } from '../../types'
 import { setupFrom } from '../../hooks/setup'
 import type { Setup } from '../../hooks/setup'
 import { shortModel } from '../../hooks/classify'
-import { emptyBoard, seated, transitionBoard } from './board'
-import { classifyCopilot } from './classifyCopilot'
+import { transitionBoard } from './board'
 import { eventsFileFor, watchEvents } from './hookWatcher'
 import type { HookEvent } from './hookWatcher'
 import { hookJson } from './hookManifest'
 import { startProxy } from './proxy'
 import type { ProxyServer } from './proxy'
 import { AgenticOrbitPanel } from './panel'
+import { applyHookEvent, emptyState } from './eventApplier'
+import type { ApplierState } from './eventApplier'
 
 let panel: AgenticOrbitPanel | undefined
-let board: Board = emptyBoard()
 let watcher: { close: () => void } | undefined
 let proxy: ProxyServer | undefined
-/** The rows opened by a call whose end has not been read yet, by the call's id. */
-const open = new Map<string, string>()
 /**
- * The names launches gave their subagents, parked under the launch call's id until the child
- * claims one. The id a subagent circles under is its own session's, which the host mints only
- * when the child starts — no launch event can carry it — so the name waits here and the child's
- * first own call takes the oldest one, in the order launches fired. A launch that fails hands
- * its name back, and whatever no child ever claimed is dropped when the turn or session ends.
+ * The board and everything the event translation carries between events: the calls still open,
+ * the names parked for subagents not yet started, and the model the session last showed.
  */
-const parkedNames = new Map<string, string>()
-let lastModel: string | undefined
+let state: ApplierState = emptyState()
 
 function config(): Record<string, unknown> {
   const c = vscode.workspace.getConfiguration('agenticOrbit')
@@ -58,130 +51,21 @@ const t = (setup: Setup) => setup.t
 
 /** The board changed: the map is redrawn, whether the panel is open or not; the state lives here. */
 function publish(): void {
-  if (panel !== undefined) panel.update(board)
+  if (panel !== undefined) panel.update(state.board)
 }
 
-/** What a tool call reads as on the map: its station and its label, from the event's metadata only. */
-function classifyEvent(e: HookEvent, setup: Setup): { station: StationId; label: string } {
-  return classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
-}
-
-/** The oldest parked name goes to the subagent that shows up next, and leaves the shelf for good. */
-function takeParkedName(): string | undefined {
-  for (const [callId, name] of parkedNames) {
-    parkedNames.delete(callId)
-    return name
-  }
-  return undefined
-}
-
-/** A launch that failed never started a child: its name goes back to whoever launches next. */
-function unparkName(callId: string | undefined): void {
-  if (callId !== undefined) parkedNames.delete(callId)
-}
-
-/** How a hook event reads on the map. Only the six kinds the hook is told about; anything else is dropped. */
+/** How a hook event reads on the map: the shared translation applies it, the panel is told. */
 function onHookEvent(e: HookEvent): void {
-  const now = Date.now()
-  const setup = setupFrom(config())
-  switch (e.event) {
-    case 'sessionStart': {
-      board = transitionBoard(board, { type: 'reset' }, now).board
-      // A new session launches no one: names parked for the old one belong to no child here.
-      parkedNames.clear()
-      if (e.model !== undefined) {
-        const before = lastModel
-        lastModel = e.model
-        if (before !== undefined && before !== e.model) {
-          board = transitionBoard(
-            board,
-            { type: 'entryStarted', start: { station: 'model', label: `${shortModel(before)} → ${shortModel(e.model)}`, status: 'ok', mark: 'switch', uncounted: true } },
-            now,
-          ).board
-        }
-      }
-      break
-    }
-    case 'userPromptSubmitted': {
-      // A subagent's own prompt carries its agent id and must leave the parked names alone;
-      // a message from the person themselves ends every launch of the turn before.
-      if (e.agentId === undefined) parkedNames.clear()
-      board = transitionBoard(board, { type: 'prompt', label: t(setup).newMessage }, now).board
-      break
-    }
-    case 'preToolUse': {
-      const { station, label } = classifyEvent(e, setup)
-      // A call that launches a subagent also names it: the short description only, its prompt is content.
-      // The id the child circles under is its own session's, minted only when the child starts, so
-      // the launch cannot carry it. The name waits under the launch call's id until the child's first
-      // own call claims the oldest one. The claim runs before this event's own launch is parked, so
-      // a child whose first call starts a grandchild takes its own name, not the grandchild's.
-      const agentName = e.agentId !== undefined && !seated(board, e.agentId) ? takeParkedName() : undefined
-      if (station === 'agents' && e.callId !== undefined && e.description !== undefined) {
-        parkedNames.set(e.callId, label)
-      }
-      const started = transitionBoard(
-        board,
-        {
-          type: 'entryStarted',
-          start: { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(agentName !== undefined ? { agentName } : {}) } : {}) },
-        },
-        now,
-      )
-      board = started.board
-      if (e.callId !== undefined && started.id !== undefined) open.set(e.callId, started.id)
-      break
-    }
-    case 'postToolUse': {
-      const id = e.callId !== undefined ? open.get(e.callId) : undefined
-      if (e.callId !== undefined) open.delete(e.callId)
-      // A launch that failed never started a child: its parked name goes back. A call that
-      // ended well leaves the name where it is — the child may not have spoken yet.
-      if (e.error === true) unparkName(e.callId)
-      board = transitionBoard(board, { type: 'entryFinished', id, status: e.error === true ? 'err' : 'ok' }, now).board
-      break
-    }
-    case 'agentStop': {
-      if (e.agentId !== undefined) {
-        board = transitionBoard(board, { type: 'agentFinished', agentId: e.agentId }, now).board
-      } else {
-        // The turn is over: whatever name no child ever claimed belongs to no one now.
-        parkedNames.clear()
-        const aborted = e.aborted === true
-        board = transitionBoard(
-          board,
-          {
-            type: 'turnFinished',
-            label: aborted ? t(setup).turnAborted : t(setup).answerReady,
-            status: aborted ? 'err' : 'ok',
-            ...(aborted ? {} : { mark: 'done' as const }),
-          },
-          now,
-        ).board
-      }
-      break
-    }
-    case 'errorOccurred': {
-      const { station, label } = classifyEvent(e, setup)
-      const id = e.callId !== undefined ? open.get(e.callId) : undefined
-      if (e.callId !== undefined) open.delete(e.callId)
-      // The call failed, so the child it meant to start never came: its parked name goes back.
-      unparkName(e.callId)
-      board = transitionBoard(board, { type: 'failure', id, station, label: e.tool ?? label }, now).board
-      break
-    }
-    default:
-      return // An event the map does not know: dropped, never an error.
-  }
+  applyHookEvent(state, e, setupFrom(config()), Date.now())
   publish()
 }
 
 function onProxyTelemetry(tel: { model: string; promptTokens: number }): void {
   const limit = vscode.workspace.getConfiguration('agenticOrbit').get('contextWindowLimit', 128000)
   const now = Date.now()
-  const step = (board.step ?? 0) + 1
-  board = transitionBoard(
-    board,
+  const step = (state.board.step ?? 0) + 1
+  state.board = transitionBoard(
+    state.board,
     {
       type: 'modelStep',
       model: tel.model,
@@ -252,7 +136,7 @@ export function activate(context: vscode.ExtensionContext): void {
       panel.reveal()
       return
     }
-    panel = new AgenticOrbitPanel(context.extensionUri, board, config, message => {
+    panel = new AgenticOrbitPanel(context.extensionUri, state.board, config, message => {
       if (message.type === 'minimize') {
         panel?.setMinimized(message.value === true)
         void context.globalState.update('agenticOrbit.minimized', message.value === true)

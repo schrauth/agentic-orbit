@@ -7,7 +7,8 @@ import { shortModel } from '../hooks/classify'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
 import { emptyBoard, transitionBoard } from '../vscode-extension/src/board'
-import { classifyCopilot } from '../vscode-extension/src/classifyCopilot'
+import { applyHookEvent, emptyState } from '../vscode-extension/src/eventApplier'
+import type { ApplierState } from '../vscode-extension/src/eventApplier'
 
 /** What the workspace hook writes in one line; the demo's events have the same shape, with made-up values. */
 export type FakeEvent = {
@@ -35,92 +36,33 @@ const LONG_LABEL = 28
 
 /** A turn of the demo clock. `at` is ms from the scenario's start; the absolute stamp is `base + at`. */
 export class FakeSession {
-  board: Board = emptyBoard()
-  private readonly open = new Map<string, string>()
-  private lastModel: string | undefined
+  private readonly state: ApplierState = emptyState()
 
   constructor(private readonly base: number) {}
 
-  reset(): void {
-    this.board = emptyBoard()
-    this.open.clear()
-    this.lastModel = undefined
+  /** The board the shared translation last produced — the same state the extension host keeps. */
+  get board(): Board {
+    return this.state.board
   }
 
-  /** One hook event, applied exactly as the extension host applies it: the same switch, the same calls. */
+  reset(): void {
+    this.state.board = emptyBoard()
+    this.state.open.clear()
+    this.state.parked.clear()
+    this.state.lastModel = undefined
+  }
+
+  /** One hook event, applied exactly as the extension host applies it: the same shared translation. */
   apply(e: FakeEvent, at: number, setup: Setup): void {
-    const now = this.base + at
-    switch (e.event) {
-      case 'sessionStart': {
-        this.board = transitionBoard(this.board, { type: 'reset' }, now).board
-        if (e.model !== undefined) {
-          const before = this.lastModel
-          this.lastModel = e.model
-          if (before !== undefined && before !== e.model) {
-            this.board = transitionBoard(
-              this.board,
-              { type: 'entryStarted', start: { station: 'model', label: `${shortModel(before)} → ${shortModel(e.model)}`, status: 'ok', mark: 'switch', uncounted: true } },
-              now,
-            ).board
-          }
-        }
-        break
-      }
-      case 'userPromptSubmitted': {
-        this.board = transitionBoard(this.board, { type: 'prompt', label: setup.t.newMessage }, now).board
-        break
-      }
-      case 'preToolUse': {
-        const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
-        const started = transitionBoard(
-          this.board,
-          {
-            type: 'entryStarted',
-            start: { station, label, ...(e.agentId !== undefined ? { from: 'agents' as const, agentId: e.agentId, ...(station === 'agents' ? { agentName: label } : {}) } : {}) },
-          },
-          now,
-        )
-        this.board = started.board
-        if (e.callId !== undefined && started.id !== undefined) this.open.set(e.callId, started.id)
-        break
-      }
-      case 'postToolUse': {
-        const id = e.callId !== undefined ? this.open.get(e.callId) : undefined
-        if (e.callId !== undefined) this.open.delete(e.callId)
-        this.board = transitionBoard(this.board, { type: 'entryFinished', id, status: e.error === true ? 'err' : 'ok' }, now).board
-        break
-      }
-      case 'agentStop': {
-        if (e.agentId !== undefined) {
-          this.board = transitionBoard(this.board, { type: 'agentFinished', agentId: e.agentId }, now).board
-        } else {
-          const aborted = e.aborted === true
-          this.board = transitionBoard(
-            this.board,
-            { type: 'turnFinished', label: aborted ? setup.t.turnAborted : setup.t.answerReady, status: aborted ? 'err' : 'ok', ...(aborted ? {} : { mark: 'done' as const }) },
-            now,
-          ).board
-        }
-        break
-      }
-      case 'errorOccurred': {
-        const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
-        const id = e.callId !== undefined ? this.open.get(e.callId) : undefined
-        if (e.callId !== undefined) this.open.delete(e.callId)
-        this.board = transitionBoard(this.board, { type: 'failure', id, station, label: e.tool ?? label }, now).board
-        break
-      }
-      default:
-        return // An event the map does not know: dropped, never an error.
-    }
+    applyHookEvent(this.state, e, setup, this.base + at)
   }
 
   /** What the loopback proxy would have measured: a model step and the context it saw. */
   telemetry(model: string, promptTokens: number, at: number, setup: Setup): void {
     const now = this.base + at
-    const step = (this.board.step ?? 0) + 1
-    this.board = transitionBoard(
-      this.board,
+    const step = (this.state.board.step ?? 0) + 1
+    this.state.board = transitionBoard(
+      this.state.board,
       {
         type: 'modelStep',
         model,

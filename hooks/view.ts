@@ -7,6 +7,9 @@ import { STATIONS } from './setup'
 
 export type ViewOptions = { width?: number; hidden?: boolean }
 
+/** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
+export const ZOOMS: readonly number[] = [180, 220, 260, 310, 370, 440, 530, 570, 620, 660]
+
 const LONG_LABEL = 28
 
 const shortMeterModel = (model: string): string => (model.length <= 14 ? model : `${model.slice(0, 13)}…`)

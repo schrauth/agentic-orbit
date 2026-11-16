@@ -2,13 +2,10 @@
 // every time the board changes and once a second while something runs, so the map's own animations carry on.
 import * as vscode from 'vscode'
 import type { Board } from '../../types'
-import { projectView } from '../../hooks/view'
+import { ZOOMS, projectView } from '../../hooks/view'
 import { setupFrom } from '../../hooks/setup'
 import type { Setup } from '../../hooks/setup'
 import { LANGUAGES } from '../../hooks/text'
-
-/** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
-const ZOOMS = [180, 220, 260, 310, 370, 440, 530, 570, 620, 660]
 
 export class AgenticOrbitPanel {
   private readonly panel: vscode.WebviewPanel

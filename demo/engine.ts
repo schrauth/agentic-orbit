@@ -31,8 +31,6 @@ export type Scenario = { name: string; steps: Step[] }
 /** The context window the demo assumes, like the extension's own default. */
 const CONTEXT_LIMIT = 128000
 
-/** The widths, in CSS pixels, the map may be drawn at; the same ladder the panel uses. */
-export const ZOOMS = [180, 220, 260, 310, 370, 440, 530, 570, 620, 660]
 const LONG_LABEL = 28
 
 /** A turn of the demo clock. `at` is ms from the scenario's start; the absolute stamp is `base + at`. */

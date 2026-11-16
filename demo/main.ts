@@ -1,8 +1,8 @@
 // The demo page: a fake clock walks the chosen scenario's steps through the fake session, and the map is
 // drawn from the same board and the same drawing the extension uses, on the same 1-second cadence the panel keeps.
 // The words on the controls live here: the demo is a workshop, not a shipped surface.
-import { FakeSession, SCENARIOS, ZOOMS, demoSetup, scenarioEnd } from './engine'
-import { projectView } from '../hooks/view'
+import { FakeSession, SCENARIOS, demoSetup, scenarioEnd } from './engine'
+import { ZOOMS, projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
 import { renderView } from '../vscode-extension/src/webview/render'
 

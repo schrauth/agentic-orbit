@@ -5,6 +5,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 import type { Board, StationId } from '../../types'
 import { setupFrom } from '../../hooks/setup'
+import type { Setup } from '../../hooks/setup'
 import { shortModel } from '../../hooks/classify'
 import { emptyBoard, seated, transitionBoard } from './board'
 import { classifyCopilot } from './classifyCopilot'
@@ -52,7 +53,7 @@ function config(): Record<string, unknown> {
   }
 }
 
-const t = () => setupFrom(config()).t
+const t = (setup: Setup) => setup.t
 
 /** The board changed: the map is redrawn, whether the panel is open or not; the state lives here. */
 function publish(): void {
@@ -60,8 +61,8 @@ function publish(): void {
 }
 
 /** What a tool call reads as on the map: its station and its label, from the event's metadata only. */
-function classifyEvent(e: HookEvent): { station: StationId; label: string } {
-  return classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setupFrom(config()))
+function classifyEvent(e: HookEvent, setup: Setup): { station: StationId; label: string } {
+  return classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
 }
 
 /** The oldest parked name goes to the subagent that shows up next, and leaves the shelf for good. */
@@ -81,6 +82,7 @@ function unparkName(callId: string | undefined): void {
 /** How a hook event reads on the map. Only the six kinds the hook is told about; anything else is dropped. */
 function onHookEvent(e: HookEvent): void {
   const now = Date.now()
+  const setup = setupFrom(config())
   switch (e.event) {
     case 'sessionStart': {
       board = transitionBoard(board, { type: 'reset' }, now).board
@@ -103,11 +105,11 @@ function onHookEvent(e: HookEvent): void {
       // A subagent's own prompt carries its agent id and must leave the parked names alone;
       // a message from the person themselves ends every launch of the turn before.
       if (e.agentId === undefined) parkedNames.clear()
-      board = transitionBoard(board, { type: 'prompt', label: t().newMessage }, now).board
+      board = transitionBoard(board, { type: 'prompt', label: t(setup).newMessage }, now).board
       break
     }
     case 'preToolUse': {
-      const { station, label } = classifyEvent(e)
+      const { station, label } = classifyEvent(e, setup)
       // A call that launches a subagent also names it: the short description only, its prompt is content.
       // The id the child circles under is its own session's, minted only when the child starts, so
       // the launch cannot carry it. The name waits under the launch call's id until the child's first
@@ -149,7 +151,7 @@ function onHookEvent(e: HookEvent): void {
           board,
           {
             type: 'turnFinished',
-            label: aborted ? t().turnAborted : t().answerReady,
+            label: aborted ? t(setup).turnAborted : t(setup).answerReady,
             status: aborted ? 'err' : 'ok',
             ...(aborted ? {} : { mark: 'done' as const }),
           },
@@ -159,7 +161,7 @@ function onHookEvent(e: HookEvent): void {
       break
     }
     case 'errorOccurred': {
-      const { station, label } = classifyEvent(e)
+      const { station, label } = classifyEvent(e, setup)
       const id = e.callId !== undefined ? open.get(e.callId) : undefined
       if (e.callId !== undefined) open.delete(e.callId)
       // The call failed, so the child it meant to start never came: its parked name goes back.
@@ -183,7 +185,7 @@ function onProxyTelemetry(tel: { model: string; promptTokens: number }): void {
       type: 'modelStep',
       model: tel.model,
       step,
-      label: `${shortModel(tel.model) || tel.model || 'model'} · ${t().step(step)}`,
+      label: `${shortModel(tel.model) || tel.model || 'model'} · ${t(setupFrom(config())).step(step)}`,
       promptTokens: tel.promptTokens,
       limit,
     },
@@ -283,7 +285,11 @@ export function activate(context: vscode.ExtensionContext): void {
   startHookWatcher()
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration('agenticOrbit')) startHookWatcher()
+      if (e.affectsConfiguration('agenticOrbit')) {
+        startHookWatcher()
+        // An open map reads the new settings on its next send: labels and theme switch live.
+        panel?.refresh()
+      }
     }),
   )
   if (vscode.workspace.getConfiguration('agenticOrbit').get<boolean>('proxy.enabled', false) === true) void startProxyCommand()

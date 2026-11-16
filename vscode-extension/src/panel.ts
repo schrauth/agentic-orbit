@@ -4,12 +4,11 @@ import * as vscode from 'vscode'
 import type { Board } from '../../types'
 import { ZOOMS, projectView } from '../../hooks/view'
 import { setupFrom } from '../../hooks/setup'
-import type { Setup } from '../../hooks/setup'
 import { LANGUAGES } from '../../hooks/text'
 
 export class AgenticOrbitPanel {
   private readonly panel: vscode.WebviewPanel
-  private readonly setup: Setup
+  private readonly options: () => Record<string, unknown>
   private board: Board
   private minimized = false
   private zoom: number | undefined
@@ -23,7 +22,7 @@ export class AgenticOrbitPanel {
     onMessage?: (m: { type: string; by?: number; value?: boolean }) => void,
   ) {
     this.board = board
-    this.setup = setupFrom(options())
+    this.options = options
     this.panel = vscode.window.createWebviewPanel('agenticOrbit', 'Agentic Orbit', vscode.ViewColumn.Beside, {
       enableScripts: true,
       retainContextWhenHidden: true,
@@ -70,9 +69,14 @@ export class AgenticOrbitPanel {
     this.send()
   }
 
+  /** The settings changed: the next projection reads them, so labels and theme switch without reopening. */
+  refresh(): void {
+    this.send()
+  }
+
   private send(): void {
     if (this.disposed) return
-    this.panel.webview.postMessage(projectView(this.board, Date.now(), this.setup, { hidden: this.minimized, width: this.zoom }))
+    this.panel.webview.postMessage(projectView(this.board, Date.now(), setupFrom(this.options()), { hidden: this.minimized, width: this.zoom }))
   }
 
   private html(webview: vscode.Webview, extensionUri: vscode.Uri, language: unknown): string {

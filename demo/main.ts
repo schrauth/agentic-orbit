@@ -2,7 +2,8 @@
 // drawn from the same board and the same drawing the extension uses, on the same 1-second cadence the panel keeps.
 // The words on the controls live here: the demo is a workshop, not a shipped surface.
 import { LANGUAGES } from '../hooks/text'
-import { FakeSession, SCENARIOS, demoSetup, scenarioEnd } from './engine'
+import { FakeSession, demoSetup } from './engine'
+import { SCENARIOS, scenarioEnd } from './scenarios'
 import { ZOOMS, projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
 import { renderView } from '../vscode-extension/src/webview/render'

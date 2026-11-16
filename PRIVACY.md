@@ -4,7 +4,7 @@ The extension draws a live map of the work: which stations are used, when, for h
 
 ## What it observes
 
-To draw the map, the extension's workspace hook is handed every tool call's whole input, including command lines and the text written to files, and the loopback proxy, when you turn it on, sees the model's request and response streams pass through unchanged. That is how a mod that follows tool calls works; it is also the whole of what the extension can see.
+To draw the map, the extension's workspace hook is handed every tool call's whole input, including command lines and the text written to files, and the loopback proxy, when you turn it on, sees the model's request and response streams pass through unchanged. That is how an extension that follows tool calls works; it is also the whole of what the extension can see.
 
 ## What it takes from that
 

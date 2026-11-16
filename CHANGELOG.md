@@ -9,6 +9,7 @@
 - The background-task experiment that never ran is gone: `background()`, `settle()` and every read of an `Entry.task` that no code could ever write, including the shared contract's field.
 - The `map` hub that only handed its neighbors' exports on is deleted; the demo's engine now reads `shortModel` straight from `classify`.
 - The `HookEvent` type no longer claims fields the hook never writes: `command` and `promptTokens` are gone; the wire format's real fields stay.
+- The panel class carries the project's own name now: `LotMapPanel` is `AgenticOrbitPanel`, the last "mod" wordings say "extension", and the issue template's security link finally points at this repository instead of its terminal ancestor.
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

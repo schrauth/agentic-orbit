@@ -12,9 +12,9 @@ import { eventsFileFor, watchEvents } from './hookWatcher'
 import type { HookEvent } from './hookWatcher'
 import { startProxy } from './proxy'
 import type { ProxyServer } from './proxy'
-import { LotMapPanel } from './panel'
+import { AgenticOrbitPanel } from './panel'
 
-let panel: LotMapPanel | undefined
+let panel: AgenticOrbitPanel | undefined
 let board: Board = emptyBoard()
 let watcher: { close: () => void } | undefined
 let proxy: ProxyServer | undefined
@@ -264,7 +264,7 @@ export function activate(context: vscode.ExtensionContext): void {
       panel.reveal()
       return
     }
-    panel = new LotMapPanel(context.extensionUri, board, config, message => {
+    panel = new AgenticOrbitPanel(context.extensionUri, board, config, message => {
       if (message.type === 'minimize') {
         panel?.setMinimized(message.value === true)
         void context.globalState.update('agenticOrbit.minimized', message.value === true)

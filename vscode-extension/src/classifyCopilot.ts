@@ -1,5 +1,5 @@
 // Which station a GitHub Copilot tool call belongs to and what to call it: a name, never content.
-// Reuses the mod's own shell classifier, so the same command line reads the same on both maps.
+// Reuses the extension's own shell classifier, so the same command line reads the same on both maps.
 import type { StationId } from '../../types'
 import { classifyShell, hostOf, isMemoryPath } from '../../hooks/classify'
 import type { Setup } from '../../hooks/setup'
@@ -40,7 +40,7 @@ function filePathsOf(input: Record<string, unknown>): string[] {
 export function classifyCopilot(tool: string, input: Record<string, unknown>, setup: Setup): Classified {
   const { t } = setup
 
-  // Everything the shell runs goes through the mod's own classifier: it knows the commands
+  // Everything the shell runs goes through the extension's own classifier: it knows the commands
   // that only work on files, the ones that reach the network, and the memory commands the person named.
   const shellLike = (): Classified => classifyShell(str(input.command), str(input.description) || str(input.explanation), setup)
 

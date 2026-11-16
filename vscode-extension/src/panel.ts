@@ -1,4 +1,4 @@
-// The panel beside the editor: it owns the webview and sends it the map, drawn by the mod's own drawing,
+// The panel beside the editor: it owns the webview and sends it the map, drawn by the extension's own drawing,
 // every time the board changes and once a second while something runs, so the map's own animations carry on.
 import * as vscode from 'vscode'
 import type { Board } from '../../types'
@@ -10,7 +10,7 @@ import { LANGUAGES } from '../../hooks/text'
 /** The widths, in CSS pixels, the map may be drawn at; past the last it is as wide as the pane. */
 const ZOOMS = [180, 220, 260, 310, 370, 440, 530, 570, 620, 660]
 
-export class LotMapPanel {
+export class AgenticOrbitPanel {
   private readonly panel: vscode.WebviewPanel
   private readonly setup: Setup
   private board: Board

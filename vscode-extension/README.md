@@ -35,17 +35,24 @@ from the stream (fallback: a character-based estimate). The ring turns amber at 
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
+| `agenticOrbit.coreName` | `COPILOT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
 | `agenticOrbit.proxy.enabled` | `false` | Start the proxy on activation |
 | `agenticOrbit.proxy.port` | `8317` | Loopback port |
 | `agenticOrbit.proxy.targetBaseUrl` | — | Your on-prem LLM base URL, e.g. `https://llm.internal/v1` |
 | `agenticOrbit.contextWindowLimit` | `128000` | Tokens the ring is full at |
-| `agenticOrbit.hookEventsFile` | — | Override where hook events are read from |
+| `agenticOrbit.hookEventsFile` | — | Override where hook events are read from; empty means `agentic-orbit-<workspace hash>.jsonl` in the OS temp folder |
 | `agenticOrbit.layout` | `you-top` | `you-top` / `you-bottom` |
-| `agenticOrbit.language` | `en` | Map texts |
+| `agenticOrbit.language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |
 | `agenticOrbit.theme` | `auto` | `auto` / `dark` / `light` |
-| `agenticOrbit.motion` | `full` | Animation level |
-| `agenticOrbit.pace` | `normal` | `normal` / `slow`: the speed of the data exchanges |
+| `agenticOrbit.background` | `solid` | `solid`, or `transparent`, which lets the panel behind the map show through |
+| `agenticOrbit.colors` | — | Colours that replace the map's own, each written as `name=#rrggbb`, comma-separated. Names: `background`, `node`, `line`, `spoke`, `text`, `label`, `faint`, `accent`, `active`, `error`, `memory`, `memoryActive`, `route` |
+| `agenticOrbit.motion` | `full` | `full` / `reduced` |
+| `agenticOrbit.pace` | `normal` | `normal` / `slow`, which draws every data exchange at half speed |
 | `agenticOrbit.memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
+| `agenticOrbit.memoryCommands` | `[]` | Shell command names that read as Memory |
+| `agenticOrbit.memorySubcommands` | `[]` | Shell subcommands that read as Memory |
+| `agenticOrbit.memoryPaths` | `[]` | Path fragments: a file path holding one reads as Memory |
+| `agenticOrbit.memoryLabels` | `[]` | Tool relabelings as `tool=name`, e.g. `mcp__wiki__search=wiki` |
 
 ## Build
 

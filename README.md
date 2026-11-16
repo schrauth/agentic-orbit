@@ -17,7 +17,7 @@ cd vscode-extension
 npm install
 npm run compile
 npm run package
-code --install-extension agentic-orbit-0.2.0.vsix --force
+code --install-extension agentic-orbit-<version>.vsix --force
 ```
 
 Then, in the folder you want to watch:
@@ -228,7 +228,7 @@ What it offers:
 - the same settings the extension has — theme, layout, motion, pace, language — switched while it runs, plus zoom and the pane's buttons;
 - a copy of the board's state as JSON, for a look at what the drawing was fed.
 
-The drawing is the real one from `hooks/`; the fake backend is `demo/engine.ts`, which replays the same event handling the extension host performs. The extension's own `npm run compile` does not build or see the demo.
+The drawing is the real one from `hooks/`; the fake backend is `demo/engine.ts`, which walks the scenarios of `demo/scenarios.ts` through the same shared event translation the extension host performs, on a made-up clock with made-up names. The extension's own `npm run compile` does not build or see the demo.
 
 Words live in `hooks/text.ts`; a new language is one more table there. Before you send a change, read [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -5,11 +5,9 @@
 // concern lives in its own module — config, installHooks, proxyCommand, and the shared applier.
 import * as vscode from 'vscode'
 import { setupFrom } from '../../hooks/setup'
-import type { Setup } from '../../hooks/setup'
-import { shortModel } from '../../hooks/classify'
-import { transitionBoard } from './board'
 import { eventsFileFor, watchEvents } from './hookWatcher'
 import type { HookEvent } from './hookWatcher'
+import { modelStepEvent, appendEvent } from './eventWriter'
 import { AgenticOrbitPanel } from './panel'
 import { applyHookEvent, emptyState } from './eventApplier'
 import type { ApplierState } from './eventApplier'
@@ -21,13 +19,13 @@ import type { ProxyServer } from './proxy'
 let panel: AgenticOrbitPanel | undefined
 let watcher: { close: () => void } | undefined
 let proxy: ProxyServer | undefined
+/** The file the hook and the proxy both write to, and the watcher reads from. */
+let eventsFile: string | undefined
 /**
  * The board and everything the event translation carries between events: the calls still open,
  * the names parked for subagents not yet started, and the model the session last showed.
  */
 let state: ApplierState = emptyState()
-
-const t = (setup: Setup) => setup.t
 
 /** The board changed: the map is redrawn, whether the panel is open or not; the state lives here. */
 function publish(): void {
@@ -40,23 +38,9 @@ function onHookEvent(e: HookEvent): void {
   publish()
 }
 
+/** What the proxy measured: one more line in the shared events file — the watcher applies it like any other event. */
 function onProxyTelemetry(tel: { model: string; promptTokens: number }): void {
-  const limit = vscode.workspace.getConfiguration('agenticOrbit').get('contextWindowLimit', 128000)
-  const now = Date.now()
-  const step = (state.board.step ?? 0) + 1
-  state.board = transitionBoard(
-    state.board,
-    {
-      type: 'modelStep',
-      model: tel.model,
-      step,
-      label: `${shortModel(tel.model) || tel.model || 'model'} · ${t(setupFrom(config())).step(step)}`,
-      promptTokens: tel.promptTokens,
-      limit,
-    },
-    now,
-  ).board
-  publish()
+  if (eventsFile !== undefined) appendEvent(eventsFile, modelStepEvent(tel))
 }
 
 /** Bring up the proxy the command starts, closing any earlier one first. */
@@ -70,6 +54,7 @@ function startHookWatcher(): void {
   if (workspace === undefined) return
   const override = vscode.workspace.getConfiguration('agenticOrbit').get('hookEventsFile', '')
   const file = eventsFileFor(workspace, typeof override === 'string' ? override : undefined)
+  eventsFile = file
   watcher?.close()
   watcher = watchEvents(file, onHookEvent)
 }

@@ -62,7 +62,7 @@ shared modules; every task lands on its own and is verified on its own.
 
 ## Phase 1 — Groundwork: the package and the record of the decision
 
-### - [ ] Task 1.1: Record ADR-006 — the standalone host mirrors the extension host
+### - [x] Task 1.1: Record ADR-006 — the standalone host mirrors the extension host
 
 - **Problem:** The standalone browser window is a durable architecture addition: a second host for
   the same shared translation, with a server-owned board and an SSE publish channel. It deserves
@@ -78,7 +78,7 @@ shared modules; every task lands on its own and is verified on its own.
 - **Verifikation:** The entry exists and names the reusable-module list; no other ADR contradicts
   it. (Through the Memory & ADR agent, per the project rule.)
 
-### - [ ] Task 1.2: Scaffold the `standalone/` package
+### - [x] Task 1.2: Scaffold the `standalone/` package
 
 - **Problem:** There is no package yet, and its build must see the shared sources the same way the
   demo's does — via path includes, not copies.
@@ -96,7 +96,7 @@ shared modules; every task lands on its own and is verified on its own.
 
 ## Phase 2 — The host process
 
-### - [ ] Task 2.1: The event→board core of the host
+### - [x] Task 2.1: The event→board core of the host
 
 - **Problem:** Something outside VS Code must do what [extension.ts](../vscode-extension/src/extension.ts)
   does inside it: resolve the events file, tail it, apply each event, own the state.
@@ -114,7 +114,7 @@ shared modules; every task lands on its own and is verified on its own.
 - **Verifikation:** A unit test (Phase 4) can drive `serve`'s core with a temp JSONL and see boards;
   until then, `npm run typecheck` and a manual run against a temp file prove the wiring.
 
-### - [ ] Task 2.2: The HTTP face: the page, the stream, the loopback bind
+### - [x] Task 2.2: The HTTP face: the page, the stream, the loopback bind
 
 - **Problem:** The browser needs a URL to load and a channel that pushes each new board without a
   polling protocol.
@@ -134,7 +134,7 @@ shared modules; every task lands on its own and is verified on its own.
   publish and per heartbeat; `GET /` returns the page; a non-loopback bind is not offered (no
   `--host` flag exists).
 
-### - [ ] Task 2.3: The CLI door: flags, config file, proxy
+### - [x] Task 2.3: The CLI door: flags, config file, proxy
 
 - **Problem:** A person must be able to point the host at a workspace, tune the `Setup`, and get
   the context window too — without VS Code's settings surface.
@@ -164,7 +164,7 @@ shared modules; every task lands on its own and is verified on its own.
 
 ## Phase 3 — The live page
 
-### - [ ] Task 3.1: The page shell
+### - [x] Task 3.1: The page shell
 
 - **Problem:** The demo's shell fits, but it must lose the scenario/clock workshop controls and
   gain a live-connection state.
@@ -176,7 +176,7 @@ shared modules; every task lands on its own and is verified on its own.
 - **Verifikation:** The page loads from the server with no console errors; the workshop controls do
   not appear.
 
-### - [ ] Task 3.2: The live renderer
+### - [x] Task 3.2: The live renderer
 
 - **Problem:** Nothing yet turns the SSE boards into a drawing outside VS Code.
 - **Betroffene Dateien:** new `standalone/main.ts`, modeled on [demo/main.ts](../demo/main.ts)
@@ -197,7 +197,7 @@ shared modules; every task lands on its own and is verified on its own.
 
 ## Phase 4 — Absicherung, tests, documentation
 
-### - [ ] Task 4.1: Host tests on the critical paths
+### - [x] Task 4.1: Host tests on the critical paths
 
 - **Problem:** The extension's tests pin its paths; the new host's paths are unpinned.
 - **Betroffene Dateien:** new `standalone/test/server.test.cjs` (against `out/` compile, like
@@ -214,7 +214,7 @@ shared modules; every task lands on its own and is verified on its own.
 - **Verifikation:** `cd standalone && npm test` green; each of the four groups proven by a
   spot-revert to red once during development (not committed).
 
-### - [ ] Task 4.2: CI gate for the standalone package
+### - [x] Task 4.2: CI gate for the standalone package
 
 - **Problem:** CI runs the extension's tests and the demo's typecheck; a third package drifting
   silently would reopen the hole Task 4.2 of the cleanup plan closed.
@@ -225,7 +225,7 @@ shared modules; every task lands on its own and is verified on its own.
 - **Verifikation:** The two existing jobs unchanged; YAML lints; the job's commands match
   CONTRIBUTING's list.
 
-### - [ ] Task 4.3: Documentation brought along
+### - [x] Task 4.3: Documentation brought along
 
 - **Problem:** README, CONTRIBUTING, PRIVACY and SECURITY must say the new door exists — and that
   it opens nothing new.

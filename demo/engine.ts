@@ -3,7 +3,7 @@
 // Nothing here ships in the extension, and nothing here reads a file, starts a process or sends anything.
 // The events carry names and figures only, made up for the demo: no code, no prompts, no content.
 import type { Board } from '../types'
-import { shortModel } from '../hooks/map'
+import { shortModel } from '../hooks/classify'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
 import { emptyBoard, transitionBoard } from '../vscode-extension/src/board'

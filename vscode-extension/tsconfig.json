@@ -21,7 +21,6 @@
     "src/proxy.ts",
     "src/panel.ts",
     "src/webview/main.ts",
-    "../hooks/map.ts",
     "../hooks/setup.ts",
     "../hooks/palette.ts",
     "../hooks/classify.ts",

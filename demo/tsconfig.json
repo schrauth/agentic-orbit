@@ -13,7 +13,6 @@
     "engine.ts",
     "main.ts",
     "../types/index.d.ts",
-    "../hooks/map.ts",
     "../hooks/setup.ts",
     "../hooks/palette.ts",
     "../hooks/classify.ts",

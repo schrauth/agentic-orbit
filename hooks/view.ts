@@ -12,8 +12,6 @@ export const ZOOMS: readonly number[] = [180, 220, 260, 310, 370, 440, 530, 570,
 
 const LONG_LABEL = 28
 
-const shortMeterModel = (model: string): string => (model.length <= 14 ? model : `${model.slice(0, 13)}…`)
-
 /** Project board state into the message consumed by the extension panel and browser demo. */
 export function projectView(board: Board, now: number, setup: Setup, options: ViewOptions = {}): ViewProjection {
   const { t } = setup
@@ -55,18 +53,12 @@ export function projectView(board: Board, now: number, setup: Setup, options: Vi
     .reverse()
 
   const nowPartsValue = nowParts(board, t)
-  const meter = [
-    board.context === undefined ? '' : `${Math.round(board.context)}%`,
-    board.model === undefined || nowPartsValue.what.startsWith(t.stations.model) ? '' : shortMeterModel(board.model),
-  ]
-    .filter(Boolean)
-    .join(' · ')
 
   return {
     type: 'view',
     svg: options.hidden === true ? '' : drawMap(board, now, setup),
     alt: `${t.title}. ${describeNow(board, t)}`,
-    nowline: `${nowPartsValue.what}${meter === '' ? '' : `   ${meter}`}`,
+    nowline: `${nowPartsValue.what}${nowPartsValue.meter === '' ? '' : `   ${nowPartsValue.meter}`}`,
     counts: STATIONS.filter(station => (board.counts[station.id] ?? 0) > 0)
       .map(station => `${t.stations[station.id]} ${board.counts[station.id]}`)
       .join(' · '),

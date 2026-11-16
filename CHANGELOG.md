@@ -17,6 +17,7 @@
 - The zoom ladder lives in one place now: `hooks/view.ts` exports the ten widths, and the panel and the demo both read them there.
 - The demo's language selector reads `LANGUAGES` from the shared text module, so adding a language means adding a table — the selector follows on its own.
 - Settings now reach an open map: the panel builds its setup per send instead of freezing the first one, the extension builds one per hook event, and a settings change pokes the open panel so labels and theme switch live.
+- The now-line meter is built once: `hooks/view.ts` renders what `nowParts` already computes instead of rebuilding the same string with a second, subtly different model-shortening rule.
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

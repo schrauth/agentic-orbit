@@ -4,7 +4,9 @@ import type { StationId } from '../../types'
 import { STATIONS } from '../setup'
 
 export const W = 900
-export const H = 845
+/** The drawing's height leaves just enough room under the agents station's lowest planet for
+ *  the legend to sit under it; the old, taller box kept a strip of unused ground. */
+export const H = 770
 /** The width the map is drawn at, in CSS pixels, for the pane to scale it to. */
 export const MAP_WIDTH = W
 /** Height over width of the drawing, for a surface that sizes it itself. */

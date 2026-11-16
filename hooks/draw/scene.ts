@@ -269,7 +269,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   // Only the short description a subagent was started with; never anything of its prompt.
   if (crew.length > 0) {
     const legendX = 24
-    const legendBottom = H - 18
+    const legendBottom = H - 18 // high enough for the widest crew, clear of the lowest planet
     crew.forEach(seatAgent => {
       const seat = seatOf(seatAgent.id)
       if (seat === undefined) return

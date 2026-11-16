@@ -2,7 +2,7 @@
   "name": "agentic-orbit",
   "displayName": "Agentic Orbit for GitHub Copilot",
   "description": "A live map beside the chat: tool calls, agents, skills and hooks light up as they are used.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "schrauth",
   "license": "MIT",
   "private": true,

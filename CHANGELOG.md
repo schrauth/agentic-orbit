@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - The repository sheds its ballast: stale build artifacts and tool state (`.DS_Store`, an old packaged `.vsix`, the `.kiro/` directory) are gone from the working tree, and `.kiro/` is ignored so it never comes back.
 - The map's options no longer carry the retired terminal renderer's settings: `textSize`, `terminalView` and `cellShape` are gone from the shared `Setup`, which now holds only what the map reads.

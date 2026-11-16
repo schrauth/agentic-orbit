@@ -49,7 +49,7 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   padding: 14px 16px;
-  margin: -14px -16px 4px;
+  margin: -14px -16px 2px;
   background: color-mix(in srgb, var(--bg) 78%, transparent);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -201,11 +201,16 @@ body.menu-open #drawer {
   border-color: var(--link);
 }
 /* Wide window: the feed sits beside the map and scrolls on its own. Narrow one: it goes back
-   under the map, and stays narrower than the window so it never fills the whole width. */
+   under the map, and stays narrower than the window so it never fills the whole width.
+   The content holds a working width on a huge screen — the map and the log stay side by side
+   in the middle — and the log panel stretches to the map's height, its foot on the same line. */
 #main {
   display: flex;
   gap: 28px;
-  align-items: flex-start;
+  align-items: stretch;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 #stage {
   flex: 1 1 auto;
@@ -216,7 +221,6 @@ body.menu-open #drawer {
   margin-top: 14px;
   margin-right: 18px;
   padding: 10px 12px;
-  max-height: calc(100vh - 110px);
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
@@ -230,8 +234,9 @@ body.menu-open #drawer {
   display: none;
 }
 #log {
-  height: 480px;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 240px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -294,6 +299,9 @@ body.menu-open #drawer {
     max-width: 640px;
   }
   #log {
+    /* Under the map there is no height to match: the log keeps its own. */
+    flex: 0 0 auto;
+    height: 480px;
     overflow-y: visible;
   }
 }

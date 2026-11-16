@@ -223,11 +223,65 @@ body.menu-open #drawer {
   border-radius: 10px;
   background: color-mix(in srgb, var(--fg) 2.5%, transparent);
 }
-/* The log scrolls on its own while the state lines stay put at the panel's foot. */
+/* The log scrolls on its own while the state lines stay put at the panel's foot.
+ *  The hidden #feed keeps what the shared renderer writes there; the visible log
+ *  is the page's own — every call a line, console style, never folded. */
 #feed {
+  display: none;
+}
+#log {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.logline {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  line-height: 19px;
+}
+.logline .stamp {
+  flex: 0 0 auto;
+  opacity: 0.5;
+  font-variant-numeric: tabular-nums;
+}
+.logline .mark {
+  flex: 0 0 auto;
+  width: 1.2em;
+  text-align: center;
+  opacity: 0.8;
+}
+.logline .where {
+  flex: 0 0 auto;
+  opacity: 0.7;
+  min-width: 7ch;
+}
+.logline .what {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.logline .howlong {
+  flex: 0 0 auto;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 5ch;
+}
+.logline.link {
+  color: var(--link);
+}
+.logline.err {
+  color: var(--err);
+}
+.logline.link .howlong,
+.logline.err .howlong {
+  opacity: 0.75;
 }
 @media (max-width: 920px) {
   #main {
@@ -239,7 +293,7 @@ body.menu-open #drawer {
     width: auto;
     max-width: 640px;
   }
-  #feed {
+  #log {
     overflow-y: visible;
   }
 }

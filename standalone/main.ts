@@ -30,12 +30,59 @@ function markConnection(live: boolean): void {
   el.className = live ? 'live' : 'waiting'
 }
 
-/** One parsed frame, or nothing: a malformed frame is skipped and the map keeps drawing. */
+/** The one parsed frame, or nothing: a malformed frame is skipped and the map keeps drawing. */
 function parseFrame(data: string): unknown {
   try {
     return JSON.parse(data)
   } catch {
     return undefined
+  }
+}
+
+/* The rolling log: unlike the panel's folded feed, every call gets its own line, console style.
+ *  A running call shows a live line the moment it starts; when it ends, the same line gets its
+ *  verdict and duration instead of a second one. Lines are never replaced or folded — the only
+ *  thing that leaves the log is age: the oldest lines drop off past a thousand. */
+const MAX_LOG_LINES = 1000
+const logged = new Map<string, HTMLDivElement>()
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch] ?? ch)
+}
+
+const clockOf = (at: number): string => {
+  const d = new Date(at)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+}
+
+function renderLog(): void {
+  const log = document.getElementById('log')
+  if (log === null || state.board === undefined) return
+  const t = state.setup?.t
+  if (t === undefined) return
+  for (const entry of state.board.entries) {
+    let line = logged.get(entry.id)
+    if (line === undefined) {
+      line = document.createElement('div')
+      logged.set(entry.id, line)
+      log.appendChild(line)
+      while (log.children.length > MAX_LOG_LINES) {
+        const oldest = log.firstElementChild
+        if (oldest === null) break
+        for (const [id, el] of logged) {
+          if (el === oldest) {
+            logged.delete(id)
+            break
+          }
+        }
+        log.removeChild(oldest)
+      }
+    }
+    const running = entry.status === 'run'
+    const took = entry.endedAt === undefined ? '…' : `${Math.max(0, entry.endedAt - entry.startedAt)}ms`
+    const mark = entry.mark === 'switch' ? '◆' : entry.mark === 'done' ? '●' : running ? '●' : entry.status === 'ok' ? '·' : '✕'
+    line.className = `logline${entry.status === 'err' || entry.status === 'block' ? ' err' : entry.mark !== undefined || running ? ' link' : ''}`
+    line.innerHTML = `<span class="stamp">${escapeHtml(clockOf(entry.startedAt))}</span><span class="mark">${mark}</span><span class="where">${escapeHtml(t.stations[entry.station])}</span><span class="what">${escapeHtml(entry.label)}</span><span class="howlong">${escapeHtml(took)}</span>`
   }
 }
 
@@ -107,6 +154,7 @@ stream.addEventListener('board', e => {
   if (board === undefined) return
   state.board = board as Parameters<typeof projectView>[0]
   if (state.setup === undefined) takeSetup(undefined) // the setup frame was lost: the defaults draw
+  renderLog() // every call keeps its own line: the log only ever grows
   lastDrawn = -1 // a board landed: the map is drawn now, whatever the beat says
   markConnection(true)
 })

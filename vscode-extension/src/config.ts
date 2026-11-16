@@ -22,5 +22,6 @@ export function config(): Record<string, unknown> {
     memorySubcommands: c.get('memorySubcommands', []),
     memoryPaths: c.get('memoryPaths', []),
     memoryLabels: c.get('memoryLabels', []),
+    contextWindowLimit: c.get('contextWindowLimit', 128000),
   }
 }

@@ -86,6 +86,7 @@ export function demoSetup(options: { theme?: string; layout?: string; motion?: s
     pace: options.pace ?? 'normal',
     coreName: 'COPILOT',
     background: 'solid',
+    contextWindowLimit: CONTEXT_LIMIT,
   })
 }
 

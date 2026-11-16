@@ -48,6 +48,8 @@ export type Setup = {
   motion: 'full' | 'reduced'
   /** How fast the exchanges move: at `slow` every flight and fade takes twice as long. */
   pace: 'normal' | 'slow'
+  /** How many prompt tokens the context window holds; the ring around the centre is drawn against it. */
+  contextWindowLimit: number
 }
 
 const list = (v: unknown): string[] =>
@@ -74,6 +76,7 @@ export function setupFrom(options: Readonly<Record<string, unknown>> = {}): Setu
     layout: options.layout === 'you-bottom' ? 'you-bottom' : 'you-top',
     motion: options.motion === 'reduced' ? 'reduced' : 'full',
     pace: options.pace === 'slow' ? 'slow' : 'normal',
+    contextWindowLimit: typeof options.contextWindowLimit === 'number' && options.contextWindowLimit > 0 ? options.contextWindowLimit : 128000,
   }
 }
 

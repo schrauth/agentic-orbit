@@ -17,6 +17,22 @@ test('shell classification keeps wrappers, nested network calls, and PowerShell 
   assert.equal(classifyShell('Get-Content .\\README.md', '', setup, true).station, 'files')
 })
 
+test('Fraunhofer light theme selects its palette and keeps custom color overrides', () => {
+  const setup = setupFrom({ theme: 'fraunhofer' })
+  const svg = projectView(emptyBoard(), 1400, setup).svg
+
+  assert.equal(setup.theme, 'fraunhofer')
+  assert.match(svg, /rx="12" fill="#f5f2ea"/)
+  assert.match(svg, /fill="#005b7f"/)
+  assert.doesNotMatch(svg, /@media \(prefers-color-scheme: light\)/)
+
+  const overridden = setupFrom({ theme: 'fraunhofer', colors: 'background=#123456' })
+  assert.match(projectView(emptyBoard(), 1400, overridden).svg, /fill="#123456"/)
+  assert.equal(setupFrom({ theme: 'dark' }).theme, 'dark')
+  assert.equal(setupFrom({ theme: 'light' }).theme, 'light')
+  assert.equal(setupFrom({ theme: 'not-a-theme' }).theme, 'auto')
+})
+
 test('board transitions preserve call counts, errors, and turn completion', () => {
   let board = transitionBoard(emptyBoard(), { type: 'prompt', label: 'new message' }, 1000).board
   const started = transitionBoard(board, { type: 'entryStarted', start: { station: 'files', label: 'README.md' } }, 1100)

@@ -69,6 +69,28 @@ export const LIGHT: Palette = {
   trail: '#9c978b',
 }
 
+// Fraunhofer brand colors use section 1.2.6 Screen swatches; light surfaces reuse the shared light palette.
+export const FRAUNHOFER: Palette = {
+  ...LIGHT,
+  line: '#a6bbc8',
+  spoke: '#d3c7ae',
+  bone: '#1c3f52',
+  ash: '#005b7f',
+  dim: '#005b7f',
+  accent: '#179c7d',
+  hot: '#005b7f',
+  red: '#bb0056',
+  mem: '#008598',
+  memHot: '#39c1cd',
+  crew0: '#005b7f',
+  crew1: '#008598',
+  crew2: '#179c7d',
+  crew3: '#f58220',
+  crew4: '#bb0056',
+  crew5: '#7c154d',
+  trail: '#008598',
+}
+
 /**
  * For `auto`: the drawing is made in the dark palette, and these rules repaint it where the surface around it is light.
  * Every color on the map is one of the palette's, written as a plain attribute, so a rule per color reaches all of it;

@@ -17,6 +17,13 @@
   --err: #c5402b;
   --border: #cfc9bc;
 }
+:root[data-theme='fraunhofer'] {
+  --fg: #1c3f52;
+  --bg: #f5f2ea;
+  --link: #005b7f;
+  --err: #bb0056;
+  --border: #a6bbc8;
+}
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] {
     --fg: #1f2228;

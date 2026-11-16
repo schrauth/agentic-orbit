@@ -12,7 +12,7 @@ const BASE = 1_770_000_000_000
 /** How often the map is redrawn while it runs: the panel keeps the same beat. */
 const REDRAW_MS = 1000
 
-type Options = { scenario: number; speed: number; playing: boolean; theme: 'dark' | 'light' | 'auto'; layout: 'you-top' | 'you-bottom'; motion: 'full' | 'reduced'; pace: 'normal' | 'slow'; language: string }
+type Options = { scenario: number; speed: number; playing: boolean; theme: 'dark' | 'light' | 'auto' | 'fraunhofer'; layout: 'you-top' | 'you-bottom'; motion: 'full' | 'reduced'; pace: 'normal' | 'slow'; language: string }
 
 const state: Options & { clock: number; applied: number; zoom: number; minimized: boolean } = {
   scenario: 0,

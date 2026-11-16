@@ -37,7 +37,7 @@ export type Setup = {
   memorySubcommands: ReadonlySet<string>
   memoryPaths: readonly string[]
   memoryLabels: ReadonlyMap<string, string>
-  theme: 'auto' | 'dark' | 'light'
+  theme: 'auto' | 'dark' | 'light' | 'fraunhofer'
   /** Whether the map paints its own ground, or leaves the surface it lies on showing through. */
   background: 'solid' | 'transparent'
   /** Colors the person set, by their place in the palette. They hold on any surface; the rest follows the theme. */
@@ -70,7 +70,7 @@ export function setupFrom(options: Readonly<Record<string, unknown>> = {}): Setu
     memorySubcommands: new Set(list(options.memorySubcommands)),
     memoryPaths: list(options.memoryPaths),
     memoryLabels,
-    theme: options.theme === 'dark' || options.theme === 'light' ? options.theme : 'auto',
+    theme: options.theme === 'dark' || options.theme === 'light' || options.theme === 'fraunhofer' ? options.theme : 'auto',
     background: options.background === 'transparent' ? 'transparent' : 'solid',
     colors: colorsFrom(options.colors),
     layout: options.layout === 'you-bottom' ? 'you-bottom' : 'you-top',

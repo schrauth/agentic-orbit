@@ -87,10 +87,11 @@
           "enum": [
             "auto",
             "dark",
-            "light"
+            "light",
+            "fraunhofer"
           ],
           "default": "auto",
-          "description": "The map's colours: dark, light, or auto, which follows the workbench colour theme."
+          "description": "The map's colour theme: dark, light, auto (follows the workbench colour theme), or Fraunhofer light."
         },
         "agenticOrbit.background": {
           "type": "string",

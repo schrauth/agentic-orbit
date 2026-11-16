@@ -111,7 +111,7 @@ test('the SSE face opens with the setup frame, then the snapshot, then every boa
   const pageDir = path.join(os.tmpdir(), 'ao-face-page')
   fs.mkdirSync(pageDir, { recursive: true })
   fs.writeFileSync(path.join(pageDir, 'index.html'), '<html></html>')
-  const core = serveCore({ eventsFile: file, setup: { language: 'en', coreName: 'TESTCORE', memoryServers: ['memory'] } })
+  const core = serveCore({ eventsFile: file, setup: { language: 'en', coreName: 'TESTCORE', memoryServers: ['memory'], theme: 'fraunhofer' } })
   const port = await freePort()
   const face = await listenHttp(core, port, pageDir)
   try {
@@ -140,6 +140,7 @@ test('the SSE face opens with the setup frame, then the snapshot, then every boa
   assert.match(frames[0], /^event: setup\n/)
   const raw = JSON.parse(/^data: (.+)$/m.exec(frames[0])[1])
   assert.equal(raw.coreName, 'TESTCORE')
+  assert.equal(raw.theme, 'fraunhofer')
   assert.match(frames[1], /^event: board\n/)
   assert.equal(JSON.parse(/^data: (.+)$/m.exec(frames[1])[1]).entries.length, 0)
 
@@ -177,6 +178,14 @@ test('the SSE face opens with the setup frame, then the snapshot, then every boa
   }
 })
 
+test('the standalone palette menu and page styles expose Fraunhofer light', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8')
+  const css = fs.readFileSync(path.join(__dirname, '..', 'main.css'), 'utf8')
+
+  assert.match(html, /<option value="fraunhofer">Fraunhofer light<\/option>/)
+  assert.match(css, /:root\[data-theme='fraunhofer'\]\s*\{\s*--fg: #1c3f52;\s*--bg: #f5f2ea;/)
+})
+
 test('the CLI door: wrong feet are refused with a message, a config typo is not one', async () => {
   const server = path.join(__dirname, '..', 'out', 'server.js')
   for (const [args, message] of [
@@ -193,7 +202,7 @@ test('the CLI door: wrong feet are refused with a message, a config typo is not 
   const ws = path.join(os.tmpdir(), 'ao-cli-test-ws')
   fs.mkdirSync(ws, { recursive: true })
   const config = path.join(os.tmpdir(), 'ao-cli-test-config.json')
-  fs.writeFileSync(config, JSON.stringify({ language: 'en', speeed: 'turbo' }))
+  fs.writeFileSync(config, JSON.stringify({ language: 'en', theme: 'fraunhofer', speeed: 'turbo' }))
   const port = await freePort()
   const { child } = await startCli(['--workspace', ws, '--config', config, '--port', String(port)])
   try {
@@ -206,6 +215,23 @@ test('the CLI door: wrong feet are refused with a message, a config typo is not 
       setTimeout(() => resolve(text.includes('unknown key "speeed"')), 1000)
     })
     assert.ok(warned, 'the unknown key warned on stderr')
+    const setupFrame = await withTimeout(new Promise((resolve, reject) => {
+      let buf = ''
+      const req = http.get(`http://127.0.0.1:${port}/events`, res => {
+        res.on('data', chunk => {
+          buf += chunk
+          const end = buf.indexOf('\n\n')
+          if (end >= 0) {
+            req.destroy()
+            resolve(buf.slice(0, end))
+          }
+        })
+        res.on('error', reject)
+      })
+      req.on('error', reject)
+    }), 5000, 'the configured setup frame')
+    assert.match(setupFrame, /^event: setup\n/)
+    assert.equal(JSON.parse(/^data: (.+)$/m.exec(setupFrame)[1]).theme, 'fraunhofer')
     await new Promise((resolve, reject) => {
       http.get(`http://127.0.0.1:${port}/`, res => {
         assert.equal(res.statusCode, 200)

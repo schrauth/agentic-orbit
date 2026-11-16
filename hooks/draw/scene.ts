@@ -2,7 +2,7 @@
 // Nothing here touches the engine.
 import type { Board, Entry } from '../../types'
 import { shortModel, modelFamily } from '../classify'
-import { DARK, LIGHT, lightRules } from '../palette'
+import { DARK, FRAUNHOFER, LIGHT, lightRules } from '../palette'
 import type { Palette } from '../palette'
 import { STATIONS } from '../setup'
 import type { Setup } from '../setup'
@@ -111,7 +111,8 @@ function station(s: (typeof STATIONS)[number], i: number, { entries, board, now,
 }
 
 export function drawMap(board: Board, now: number, setup: Setup): string {
-  const c: Palette = { ...(setup.theme === 'light' ? LIGHT : DARK), ...setup.colors }
+  const base = setup.theme === 'light' ? LIGHT : setup.theme === 'fraunhofer' ? FRAUNHOFER : DARK
+  const c: Palette = { ...base, ...setup.colors }
   // How many places the ring is turned. The stations keep their order, so the far side of the person is always the network.
   const shift = setup.layout === 'you-bottom' ? STATIONS.length / 2 : 0
   const core: Point = { x: CX, y: CY }

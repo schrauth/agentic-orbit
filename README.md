@@ -6,9 +6,33 @@ A fork and further development of an idea from [lot-map](https://github.com/alex
 
 While GitHub Copilot works, every tool call, model step and skill sends a pulse from the centre to its station — so you see memory, files, shell, web and agents at work instead of reading a list of commands.
 
+And the map needs no VS Code to run: the same drawing, the same stations, live in a plain browser window — [standalone, below](#the-map-without-vs-code).
+
 ![The map during a work session](docs/demo.gif)
 
 *A made-up session replayed through the extension's own drawing code. [Video (MP4)](docs/demo.mp4).*
+
+## The map without VS Code
+
+The panel is one way to watch. The other is the **standalone host**: the same page, served on a loopback server, watching the same events file the extension's hook writes — the same live map in a browser window of its own. No VS Code, no extension install, nothing leaves the machine: the host reads the events file and binds `127.0.0.1` only.
+
+```bash
+cd standalone
+npm install
+npm run build
+npm start -- --workspace <path-to-the-project-being-watched>
+```
+
+Then open <http://127.0.0.1:8318>. Run it where the extension's hook is installed; for a project that has none, `--install-hooks <dir>` writes `.github/hooks/` there for you.
+
+Why reach for it:
+
+- **A second screen for the map.** Keep the editor in one window, the map filling a browser window on another display — every station, the worn spokes, the route, the answer ring, all at full size.
+- **The log beside the map, console style.** Unlike the panel's folded feed, every call keeps its own line — timestamp, station, label, duration — and the log only ever grows. The state lines sit pinned at its foot.
+- **Tuned right on the page.** A slim app-style bar slides out a side panel: palette, layout, motion, pace, language, log size — chosen while the map runs.
+- **For the room, not just the editor.** On a shared screen or a projector, anyone can watch the session work without leaning over your shoulder at a side pane.
+
+The full flag list — `--events-file`, `--port`, `--config`, `--proxy` — is under [Developing](#the-map-in-a-plain-browser-window).
 
 ## Install
 

@@ -1,6 +1,7 @@
 // The demo page: a fake clock walks the chosen scenario's steps through the fake session, and the map is
 // drawn from the same board and the same drawing the extension uses, on the same 1-second cadence the panel keeps.
 // The words on the controls live here: the demo is a workshop, not a shipped surface.
+import { LANGUAGES } from '../hooks/text'
 import { FakeSession, SCENARIOS, demoSetup, scenarioEnd } from './engine'
 import { ZOOMS, projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
@@ -147,7 +148,7 @@ function wireControls(): void {
   }
 
   const language = <HTMLSelectElement>document.getElementById('language')!
-  for (const l of ['en', 'de', 'es', 'fr', 'it', 'pt', 'ru']) language.add(new Option(l, l))
+  for (const l of LANGUAGES) language.add(new Option(l, l))
   language.onchange = () => {
     state.language = language.value
     render(true)

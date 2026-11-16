@@ -321,7 +321,7 @@ const pt: Strings = {
   minutes: (m, s) => `${m} min ${s} s`,
 }
 
-const TABLES = new Map<unknown, Strings>([['en', en], ['ru', ru], ['es', es], ['fr', fr], ['de', de], ['it', it], ['pt', pt]])
+const TABLES = new Map<unknown, Strings>([['en', en], ['de', de], ['es', es], ['fr', fr], ['it', it], ['pt', pt], ['ru', ru]])
 
 export const stringsFor = (language: unknown): Strings => TABLES.get(language) ?? en
 

@@ -22,7 +22,7 @@
 
 - The event → board translation lives in one shared, VS Code-free module — `vscode-extension/src/eventApplier.ts` — so the demo now replays exactly what the extension host performs, parking subagent names included; the `HookEvent` wire type moved to the shared `types` so the demo can read it without the host's Node-only watcher.
 
-- The 634-line `hooks/draw.ts` is split into five modules under `hooks/draw/` — the geometry every drawing shares, the times things hold and fade, the effects that fly along the spokes, the crew's seats, the main loop's route, and the scene that puts it together — with `hooks/draw.ts` itself kept as the one face the rest of the code knows. A pure move: every line of drawing logic is unchanged, and the SVG the map renders is byte-for-byte what it was.
+- The 634-line `hooks/draw.ts` is split into six modules under `hooks/draw/` — the geometry every drawing shares, the times things hold and fade, the effects that fly along the spokes, the crew's seats, the main loop's route, and the scene that puts it all together — with `hooks/draw.ts` itself kept as the one face the rest of the code knows. A pure move: every line of drawing logic is unchanged, and the SVG the map renders is byte-for-byte what it was.
 
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 

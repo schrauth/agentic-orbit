@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Agentic Orbit subagent storm: fires harmless, synthetic events through the real hook
-# for about a minute and a half — seven subagents in three overlapping waves, up to six
+# for about a minute — seven subagents in three overlapping waves, up to six
 # alive at once, so their planets circle the Agents station together and hand over in
 # flight. Between the waves, the main agent and one of the crew read and write the
 # made-up shared memory, so the Memory station lights up too.
@@ -42,11 +42,12 @@ FILE=$(events_file)
 BEFORE=0
 if [ -f "$FILE" ]; then BEFORE=$(wc -l < "$FILE"); fi
 
-# fire <event> <json> — one line into the event file, then a beat and a half to watch the pulse.
+# fire <event> <json> [wait] — append one event, then wait. A preToolUse wait is the
+# simulated tool duration; the default pause leaves a beat to watch the pulse.
 # stdout is dropped: the allow JSON answers Copilot, not the terminal.
 fire() {
   printf '%s' "$2" | node "$HOOK" "event=$1" > /dev/null
-  sleep 1.5
+  sleep "${3:-1.5}"
 }
 
 # line <left> <right> — one step of the storm, the arrow always in the same column.
@@ -61,7 +62,7 @@ line() {
 echo "Events file: $FILE"
 echo "Lines before: ${BEFORE}"
 echo
-echo "A subagent storm of about seventy seconds. The map shows:"
+echo "A subagent storm of about a minute, with varied tool durations. The map shows:"
 echo
 
 echo "— Session starts (model set)"
@@ -79,19 +80,19 @@ fire preToolUse  '{"tool_name":"task","tool_use_id":"s2t","description":"build t
 line "3. »read tests« launches" "Agents: start pulse, no planet yet"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"s3t","description":"read tests","tool_input":{"description":"read tests"}}'
 line "   survey sources reads a file" "Agents: planet »survey sources«, Files: pulse"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s1a","agent_id":"s1","tool_input":{"file_path":"/tmp/storm/quellen.md"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s1a","agent_id":"s1","tool_input":{"file_path":"/tmp/storm/quellen.md"}}' 0.7
 fire postToolUse '{"tool_name":"view","tool_use_id":"s1a","agent_id":"s1"}'
 line "   build tables runs a command" "Agents: planet »build tables«, Shell: pulse"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s2a","agent_id":"s2","tool_input":{"command":"date"}}'
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"s2a","agent_id":"s2","tool_input":{"command":"date"}}' 0.2
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s2a","agent_id":"s2"}'
 line "   read tests reads a file" "Agents: planet »read tests«, Files: pulse"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3","tool_input":{"file_path":"/tmp/storm/tests.spec.md"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3","tool_input":{"file_path":"/tmp/storm/tests.spec.md"}}' 0.5
 fire postToolUse '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3"}'
 
 echo
 echo "Between the waves — the main agent asks the shared memory"
 line "— »search notes« asks the memory" "Memory: pulse from the middle"
-fire preToolUse  '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1","tool_input":{"query":"storm plan"}}'
+fire preToolUse  '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1","tool_input":{"query":"storm plan"}}' 0.8
 fire postToolUse '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1"}'
 
 echo
@@ -101,16 +102,16 @@ fire preToolUse  '{"tool_name":"task","tool_use_id":"s4t","description":"inspect
 line "5. »rate texts« launches" "Agents: start pulse, no planet yet"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"s5t","description":"rate texts","tool_input":{"description":"rate texts"}}'
 line "   inspect images fetches a page" "Agents: planet »inspect images«, Network: pulse"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4","tool_input":{"command":"curl -I https://example.com"}}'
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4","tool_input":{"command":"curl -I https://example.com"}}' 2.4
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4"}'
 line "   rate texts reads a file" "Agents: planet »rate texts«, Files: pulse"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}' 0.6
 fire postToolUse '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5"}'
 line "   build tables reads the memory" "Agents: planet »build tables«, Memory: pulse"
-fire preToolUse  '{"tool_name":"mcp__memory__read_notes","tool_use_id":"s2m","agent_id":"s2","tool_input":{"id":"storm-tables"}}'
+fire preToolUse  '{"tool_name":"mcp__memory__read_notes","tool_use_id":"s2m","agent_id":"s2","tool_input":{"id":"storm-tables"}}' 0.9
 fire postToolUse '{"tool_name":"mcp__memory__read_notes","tool_use_id":"s2m","agent_id":"s2"}'
 line "   inspect images views an image" "Files: pulse from »inspect images«"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4","tool_input":{"file_path":"/tmp/storm/bild.svg"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4","tool_input":{"file_path":"/tmp/storm/bild.svg"}}' 1.4
 fire postToolUse '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4"}'
 
 echo
@@ -125,10 +126,10 @@ fire errorOccurred '{"tool_name":"task","tool_use_id":"s6t"}'
 line "   the launch is retried" "Agents: start pulse, the name parked anew"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"s6t2","description":"collect reports","tool_input":{"description":"collect reports"}}'
 line "   rate texts reads once more" "Files: pulse from »rate texts«"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}' 0.4
 fire postToolUse '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5"}'
 line "   collect reports reads a file" "Agents: planet »collect reports«, Files: pulse"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s6a","agent_id":"s6","tool_input":{"file_path":"/tmp/storm/bericht.md"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s6a","agent_id":"s6","tool_input":{"file_path":"/tmp/storm/bericht.md"}}' 0.8
 fire postToolUse '{"tool_name":"view","tool_use_id":"s6a","agent_id":"s6"}'
 line "7. »final polish« launches" "Agents: start pulse, no planet yet"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"s7t","description":"final polish","tool_input":{"description":"final polish"}}'
@@ -137,17 +138,17 @@ fire agentStop '{"agent_id":"s3"}'
 line "— inspect images is done" "its planet fades"
 fire agentStop '{"agent_id":"s4"}'
 line "   final polish reads a file via shell" "Agents: planet »final polish«, Files: pulse"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s7a","agent_id":"s7","tool_input":{"command":"cat /tmp/storm/bericht.md"}}'
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"s7a","agent_id":"s7","tool_input":{"command":"cat /tmp/storm/bericht.md"}}' 0.2
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s7a","agent_id":"s7"}'
 line "— rate texts is done" "its planet fades"
 fire agentStop '{"agent_id":"s5"}'
 line "— collect reports is done" "its planet fades"
 fire agentStop '{"agent_id":"s6"}'
 line "   final polish reads a file" "Files: pulse from »final polish«"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s7b","agent_id":"s7","tool_input":{"file_path":"/tmp/storm/runde.md"}}'
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s7b","agent_id":"s7","tool_input":{"file_path":"/tmp/storm/runde.md"}}' 0.5
 fire postToolUse '{"tool_name":"view","tool_use_id":"s7b","agent_id":"s7"}'
 line "   the answer is kept in memory" "Memory: pulse from the middle"
-fire preToolUse  '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2","tool_input":{"id":"storm-report"}}'
+fire preToolUse  '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2","tool_input":{"id":"storm-report"}}' 1.1
 fire postToolUse '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2"}'
 line "— final polish is done" "the last planet fades"
 fire agentStop '{"agent_id":"s7"}'

@@ -88,3 +88,36 @@ loader: `tsc`'s CommonJS output throws on its first line, the message
 listener never registers and the panel stays blank (observed 2026-11-15
 after the render split, see M-001). Bundling keeps `renderView` a shared
 module for the demo while the extension ships a self-contained script.
+
+### ADR-006: The standalone host mirrors the extension host
+
+**Status:** Accepted
+
+**Decision:** A new top-level package `standalone/` shows the map outside
+the VS Code extension, in a separate browser window, fed by the real hook
+events. It reuses `hooks/`, `types/`, and the VS Code-free modules under
+`vscode-extension/src/` (`hookWatcher`, `proxy`, `eventApplier`, `board`,
+`classifyCopilot`, `webview/render`); it must not import any module that
+imports `vscode`. The standalone host owns the board state, exactly as
+the extension host does: one `ApplierState`, every hook event applied
+through the shared `applyHookEvent`, proxy telemetry applied through
+`transitionBoard`. The host publishes whole `Board` snapshots; the page
+renders only and holds no event state — the same host/pane split the
+webview keeps (ADR-005's spirit, in a plain browser). Transport is
+Server-Sent Events over plain `http` on `127.0.0.1` only — no WebSocket,
+no new runtime dependency; a reconnect receives the current snapshot and
+is idempotent. `standalone/` ships nothing: like `demo/`, it is a
+workshop package, never packaged into the `.vsix`, invisible to the
+extension's build. Nothing in the shipped extension changes; its
+VS Code-free modules merely gain a second consumer, and any change to
+them must keep the extension's tests green.
+
+**Rationale:** `hookWatcher`, `eventApplier` and `proxy` are already
+VS Code-free; the demo already renders the real map in a browser. The
+only missing piece is the seam between real events and a live page —
+a second host, not a second engine.
+
+**Consequences:** A third package to typecheck in CI; a second reader of
+the events file (harmless: read-only tail); the page needs the server's
+Setup once at connect, so the stream opens with a `setup` frame before
+the first `board` frame.

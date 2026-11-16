@@ -47,12 +47,15 @@ function applySetup(): void {
   render(true)
 }
 
-/** The menu says what is in force: it opens on the host's choice, it does not retell the person's. */
+/** The menu says what is in force: the setup's own values, defaults included, so no field is blank. */
 function syncHeader(): void {
-  const effective = { ...rawSetup, ...overrides }
+  const s = state.setup
+  if (s === undefined) return
+  const language = { ...rawSetup, ...overrides }.language
+  const shown = { theme: s.theme, layout: s.layout, motion: s.motion, pace: s.pace, language: String(language ?? 'en') }
   for (const id of ['theme', 'layout', 'motion', 'pace', 'language'] as const) {
     const el = document.getElementById(id)
-    if (el instanceof HTMLSelectElement && el.value !== String(effective[id])) el.value = String(effective[id])
+    if (el instanceof HTMLSelectElement && el.value !== shown[id]) el.value = shown[id]
   }
 }
 
@@ -111,15 +114,22 @@ stream.onopen = () => markConnection(true)
 // The host gone: the map freezes on its last board, the word turns, and the stream reconnects itself.
 stream.onerror = () => markConnection(false)
 
-// The side menu: the three bars open it, the scrim or the Escape key close it.
+// The side menu: the menu button, the Options word or the scrim open it, the Escape key closes it.
 {
-  const button = document.getElementById('menubtn')
+  const toggle = (): HTMLElement | null => document.getElementById('menubtn')
   const scrim = document.getElementById('scrim')
   const setMenu = (open: boolean): void => {
     document.body.classList.toggle('menu-open', open)
-    if (button !== null) button.setAttribute('aria-expanded', String(open))
+    for (const id of ['menubtn', 'optionsbtn']) {
+      const el = document.getElementById(id)
+      if (el !== null) el.setAttribute('aria-expanded', String(open))
+    }
   }
-  if (button !== null) button.onclick = () => setMenu(!document.body.classList.contains('menu-open'))
+  const opener = (el: HTMLElement | null): void => {
+    if (el !== null) el.onclick = () => setMenu(!document.body.classList.contains('menu-open'))
+  }
+  opener(toggle())
+  opener(document.getElementById('optionsbtn'))
   if (scrim !== null) scrim.onclick = () => setMenu(false)
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') setMenu(false)

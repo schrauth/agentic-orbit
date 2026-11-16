@@ -197,7 +197,7 @@ npm test          # compile + focused regression tests
 npm run package   # → agentic-orbit-x.y.z.vsix
 ```
 
-`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch the stations light up in turn. For a longer look, `scripts/subagent-storm.sh` runs about a minute of made-up subagent traffic — ten subagents in overlapping waves, up to six planets circling the Agents station at once.
+`scripts/smoke-test.sh` fires made-up events through the real hook — no real file is read, written or fetched — so you can watch the stations light up in turn. For a longer look, `scripts/subagent-storm.sh` runs about seventy seconds of made-up subagent traffic — seven subagents in overlapping waves, up to six planets circling the Agents station at once, with the shared memory asked and answered between the waves.
 
 ### Working on the map's design: the browser demo
 

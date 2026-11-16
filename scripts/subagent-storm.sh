@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Agentic Orbit subagent storm: fires harmless, synthetic events through the real hook
-# for about a minute — ten subagents in three overlapping waves, up to six alive at
-# once, so their planets circle the Agents station together and hand over in flight.
+# for about a minute and a half — seven subagents in three overlapping waves, up to six
+# alive at once, so their planets circle the Agents station together and hand over in
+# flight. Between the waves, the main agent and one of the crew read and write the
+# made-up shared memory, so the Memory station lights up too.
 #
 #   - Nothing is read, written or sent: the events carry names and figures only.
 #   - Open the map first (Agentic Orbit: Open); each pulse appears as it fires.
@@ -40,11 +42,11 @@ FILE=$(events_file)
 BEFORE=0
 if [ -f "$FILE" ]; then BEFORE=$(wc -l < "$FILE"); fi
 
-# fire <event> <json> — one line into the event file, then a beat to watch the pulse.
+# fire <event> <json> — one line into the event file, then a beat and a half to watch the pulse.
 # stdout is dropped: the allow JSON answers Copilot, not the terminal.
 fire() {
   printf '%s' "$2" | node "$HOOK" "event=$1" > /dev/null
-  sleep 1
+  sleep 1.5
 }
 
 # line <left> <right> — one step of the storm, the arrow always in the same column.
@@ -59,7 +61,7 @@ line() {
 echo "Events file: $FILE"
 echo "Lines before: ${BEFORE}"
 echo
-echo "A subagent storm of about a minute. The map shows:"
+echo "A subagent storm of about seventy seconds. The map shows:"
 echo
 
 echo "— Session starts (model set)"
@@ -87,22 +89,26 @@ fire preToolUse  '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3","tool_
 fire postToolUse '{"tool_name":"view","tool_use_id":"s3a","agent_id":"s3"}'
 
 echo
-echo "Wave 2 — three more, all six orbits taken"
+echo "Between the waves — the main agent asks the shared memory"
+line "— »search notes« asks the memory" "Memory: pulse from the middle"
+fire preToolUse  '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1","tool_input":{"query":"storm plan"}}'
+fire postToolUse '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1"}'
+
+echo
+echo "Wave 2 — two more, five planets circling"
 line "4. »inspect images« launches" "Agents: start pulse, no planet yet"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"s4t","description":"inspect images","tool_input":{"description":"inspect images"}}'
 line "5. »rate texts« launches" "Agents: start pulse, no planet yet"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"s5t","description":"rate texts","tool_input":{"description":"rate texts"}}'
-line "6. »compare figures« launches" "Agents: start pulse, no planet yet"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s6t","description":"compare figures","tool_input":{"description":"compare figures"}}'
 line "   inspect images fetches a page" "Agents: planet »inspect images«, Network: pulse"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4","tool_input":{"command":"curl -I https://example.com"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"s4a","agent_id":"s4"}'
 line "   rate texts reads a file" "Agents: planet »rate texts«, Files: pulse"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s5a","agent_id":"s5"}'
-line "   compare figures, the command fails" "Agents: planet »compare figures«, Shell: red"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s6a","agent_id":"s6","tool_input":{"command":"date"}}'
-fire postToolUse '{"tool_name":"bash","tool_use_id":"s6a","agent_id":"s6","error":true}'
+line "   build tables reads the memory" "Agents: planet »build tables«, Memory: pulse"
+fire preToolUse  '{"tool_name":"mcp__memory__read_notes","tool_use_id":"s2m","agent_id":"s2","tool_input":{"id":"storm-tables"}}'
+fire postToolUse '{"tool_name":"mcp__memory__read_notes","tool_use_id":"s2m","agent_id":"s2"}'
 line "   inspect images views an image" "Files: pulse from »inspect images«"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4","tool_input":{"file_path":"/tmp/storm/bild.svg"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s4b","agent_id":"s4"}'
@@ -111,56 +117,40 @@ echo
 echo "Wave 3 — planets leave, new ones arrive"
 line "— survey sources is done" "its planet fades"
 fire agentStop '{"agent_id":"s1"}'
+line "— build tables is done" "its planet fades"
+fire agentStop '{"agent_id":"s2"}'
+line "6. »collect reports« — the launch fails" "Agents: neutron star, the parked name goes free"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s6t","description":"collect reports","tool_input":{"description":"collect reports"}}'
+fire errorOccurred '{"tool_name":"task","tool_use_id":"s6t"}'
+line "   the launch is retried" "Agents: start pulse, the name parked anew"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s6t2","description":"collect reports","tool_input":{"description":"collect reports"}}'
 line "   rate texts reads once more" "Files: pulse from »rate texts«"
 fire preToolUse  '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5","tool_input":{"file_path":"/tmp/storm/text.txt"}}'
 fire postToolUse '{"tool_name":"view","tool_use_id":"s5b","agent_id":"s5"}'
-line "— build tables is done" "its planet fades"
-fire agentStop '{"agent_id":"s2"}'
-line "7. »sort notes« launches" "Agents: start pulse, no planet yet"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s7t","description":"sort notes","tool_input":{"description":"sort notes"}}'
-line "   compare figures, a command fails" "Shell, red: pulse from »compare figures«"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s6b","agent_id":"s6","tool_input":{"command":"date"}}'
-fire postToolUse '{"tool_name":"bash","tool_use_id":"s6b","agent_id":"s6","error":true}'
+line "   collect reports reads a file" "Agents: planet »collect reports«, Files: pulse"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s6a","agent_id":"s6","tool_input":{"file_path":"/tmp/storm/bericht.md"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"s6a","agent_id":"s6"}'
+line "7. »final polish« launches" "Agents: start pulse, no planet yet"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"s7t","description":"final polish","tool_input":{"description":"final polish"}}'
 line "— read tests is done" "its planet fades"
 fire agentStop '{"agent_id":"s3"}'
-line "   sort notes reads a file" "Agents: planet »sort notes«, Files: pulse"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s7a","agent_id":"s7","tool_input":{"file_path":"/tmp/storm/notizen.md"}}'
-fire postToolUse '{"tool_name":"view","tool_use_id":"s7a","agent_id":"s7"}'
 line "— inspect images is done" "its planet fades"
 fire agentStop '{"agent_id":"s4"}'
-line "8. »final polish« launches" "Agents: start pulse, no planet yet"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s8t","description":"final polish","tool_input":{"description":"final polish"}}'
+line "   final polish reads a file via shell" "Agents: planet »final polish«, Files: pulse"
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"s7a","agent_id":"s7","tool_input":{"command":"cat /tmp/storm/bericht.md"}}'
+fire postToolUse '{"tool_name":"bash","tool_use_id":"s7a","agent_id":"s7"}'
 line "— rate texts is done" "its planet fades"
 fire agentStop '{"agent_id":"s5"}'
-line "   final polish reads a file via shell" "Agents: planet »final polish«, Files: pulse"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s8a","agent_id":"s8","tool_input":{"command":"cat /tmp/storm/bericht.md"}}'
-fire postToolUse '{"tool_name":"bash","tool_use_id":"s8a","agent_id":"s8"}'
-line "— compare figures is done" "its planet fades"
-fire agentStop '{"agent_id":"s6"}'
-line "9. »collect reports« — the launch fails" "Agents: neutron star, the parked name goes free"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s9t","description":"collect reports","tool_input":{"description":"collect reports"}}'
-fire errorOccurred '{"tool_name":"task","tool_use_id":"s9t"}'
-line "   the launch is retried" "Agents: start pulse, the name parked anew"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s9t2","description":"collect reports","tool_input":{"description":"collect reports"}}'
-line "— sort notes is done" "its planet fades"
-fire agentStop '{"agent_id":"s7"}'
-line "   collect reports reads a file" "Agents: planet »collect reports«, Files: pulse"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s9a","agent_id":"s9","tool_input":{"file_path":"/tmp/storm/bericht.md"}}'
-fire postToolUse '{"tool_name":"view","tool_use_id":"s9a","agent_id":"s9"}'
-line "— final polish is done" "its planet fades"
-fire agentStop '{"agent_id":"s8"}'
-line "10. »last round« launches" "Agents: start pulse, no planet yet"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"s10t","description":"last round","tool_input":{"description":"last round"}}'
 line "— collect reports is done" "its planet fades"
-fire agentStop '{"agent_id":"s9"}'
-line "   last round runs a command" "Agents: planet »last round«, Shell: pulse"
-fire preToolUse  '{"tool_name":"bash","tool_use_id":"s10a","agent_id":"s10","tool_input":{"command":"date"}}'
-fire postToolUse '{"tool_name":"bash","tool_use_id":"s10a","agent_id":"s10"}'
-line "   last round reads a file" "Files: pulse from »last round«"
-fire preToolUse  '{"tool_name":"view","tool_use_id":"s10b","agent_id":"s10","tool_input":{"file_path":"/tmp/storm/runde.md"}}'
-fire postToolUse '{"tool_name":"view","tool_use_id":"s10b","agent_id":"s10"}'
-line "— last round is done" "the last planet fades"
-fire agentStop '{"agent_id":"s10"}'
+fire agentStop '{"agent_id":"s6"}'
+line "   final polish reads a file" "Files: pulse from »final polish«"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"s7b","agent_id":"s7","tool_input":{"file_path":"/tmp/storm/runde.md"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"s7b","agent_id":"s7"}'
+line "   the answer is kept in memory" "Memory: pulse from the middle"
+fire preToolUse  '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2","tool_input":{"id":"storm-report"}}'
+fire postToolUse '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2"}'
+line "— final polish is done" "the last planet fades"
+fire agentStop '{"agent_id":"s7"}'
 
 echo
 line "— Answer ready" "wide ring"
@@ -168,9 +158,9 @@ fire agentStop '{}'
 
 AFTER=$(wc -l < "$FILE")
 echo
-echo "Lines after: ${AFTER} (expected: $((BEFORE + 53)))"
-if [ "$AFTER" -ge "$((BEFORE + 53))" ]; then
-  echo "✓ All 53 events written — the storm ran through."
+echo "Lines after: ${AFTER} (expected: $((BEFORE + 45)))"
+if [ "$AFTER" -ge "$((BEFORE + 45))" ]; then
+  echo "✓ All 45 events written — the storm ran through."
 else
   echo "✕ Lines are missing — the hook did not write every event."
   exit 1

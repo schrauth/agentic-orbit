@@ -3,10 +3,9 @@
 // Nothing here ships in the extension, and nothing here reads a file, starts a process or sends anything.
 // The events carry names and figures only, made up for the demo: no code, no prompts, no content.
 import type { Board } from '../types'
-import { shortModel } from '../hooks/classify'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
-import { emptyBoard, transitionBoard } from '../vscode-extension/src/board'
+import { emptyBoard } from '../vscode-extension/src/board'
 import { applyHookEvent, emptyState } from '../vscode-extension/src/eventApplier'
 import type { ApplierState } from '../vscode-extension/src/eventApplier'
 
@@ -23,6 +22,7 @@ export type FakeEvent = {
   commandName?: string
   filePath?: string
   url?: string
+  promptTokens?: number
 }
 
 /** One beat of a scenario: a hook event, a model step the proxy would have measured, or both, `at` ms after it starts. */
@@ -57,22 +57,9 @@ export class FakeSession {
     applyHookEvent(this.state, e, setup, this.base + at)
   }
 
-  /** What the loopback proxy would have measured: a model step and the context it saw. */
+  /** What the loopback proxy would have measured: the same `modelStep` line a host appends, replayed. */
   telemetry(model: string, promptTokens: number, at: number, setup: Setup): void {
-    const now = this.base + at
-    const step = (this.state.board.step ?? 0) + 1
-    this.state.board = transitionBoard(
-      this.state.board,
-      {
-        type: 'modelStep',
-        model,
-        step,
-        label: `${shortModel(model) || model || 'model'} · ${setup.t.step(step)}`,
-        promptTokens,
-        limit: CONTEXT_LIMIT,
-      },
-      now,
-    ).board
+    this.apply({ event: 'modelStep', model, promptTokens }, at, setup)
   }
 }
 

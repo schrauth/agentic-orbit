@@ -3,16 +3,15 @@
 // side menu tunes the looks here on the page — they override what the host's setup says.
 import { setupFrom, type Setup } from '../hooks/setup'
 import { LANGUAGES } from '../hooks/text'
-import { ZOOMS, projectView } from '../hooks/view'
+import { projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
 import { renderView } from '../vscode-extension/src/webview/render'
 
 /** How often the map is redrawn while it runs: the panel keeps the same beat. */
 const REDRAW_MS = 1000
 
-const state: { setup?: Setup; board?: Parameters<typeof projectView>[0]; clock: number; zoom: number; minimized: boolean } = {
+const state: { setup?: Setup; board?: Parameters<typeof projectView>[0]; clock: number; minimized: boolean } = {
   clock: 0,
-  zoom: ZOOMS.length,
   minimized: false,
 }
 let lastDrawn = -1
@@ -121,7 +120,6 @@ function render(force: boolean): void {
   lastDrawn = state.clock
   if (state.board === undefined || state.setup === undefined) return
   const view: ViewProjection = projectView(state.board, Date.now(), state.setup, {
-    width: state.zoom >= ZOOMS.length ? undefined : ZOOMS[state.zoom],
     hidden: state.minimized,
   })
   renderView(view, {
@@ -129,14 +127,8 @@ function render(force: boolean): void {
       state.minimized = false
       render(true)
     },
-    zoomOut: () => {
-      state.zoom = Math.max(0, state.zoom - 1)
-      render(true)
-    },
-    zoomIn: () => {
-      state.zoom = Math.min(ZOOMS.length, state.zoom + 1)
-      render(true)
-    },
+    zoomOut: () => render(true),
+    zoomIn: () => render(true),
     hide: () => {
       state.minimized = true
       render(true)
@@ -162,22 +154,15 @@ stream.onopen = () => markConnection(true)
 // The host gone: the map freezes on its last board, the word turns, and the stream reconnects itself.
 stream.onerror = () => markConnection(false)
 
-// The side menu: the menu button, the Options word or the scrim open it, the Escape key closes it.
+// The side menu: the three bars on the right edge open it, the scrim or the Escape key closes it.
 {
-  const toggle = (): HTMLElement | null => document.getElementById('menubtn')
+  const button = document.getElementById('menubtn')
   const scrim = document.getElementById('scrim')
   const setMenu = (open: boolean): void => {
     document.body.classList.toggle('menu-open', open)
-    for (const id of ['menubtn', 'optionsbtn']) {
-      const el = document.getElementById(id)
-      if (el !== null) el.setAttribute('aria-expanded', String(open))
-    }
+    if (button !== null) button.setAttribute('aria-expanded', String(open))
   }
-  const opener = (el: HTMLElement | null): void => {
-    if (el !== null) el.onclick = () => setMenu(!document.body.classList.contains('menu-open'))
-  }
-  opener(toggle())
-  opener(document.getElementById('optionsbtn'))
+  if (button !== null) button.onclick = () => setMenu(!document.body.classList.contains('menu-open'))
   if (scrim !== null) scrim.onclick = () => setMenu(false)
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') setMenu(false)

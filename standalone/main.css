@@ -319,11 +319,10 @@ body.menu-open #drawer {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* The shared renderer still writes the zoom buttons, but the page keeps that element hidden:
+   in a browser the map scales with the window on its own. */
 #buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-  margin-bottom: 8px;
+  display: none;
 }
 .btn {
   background: transparent;

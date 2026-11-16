@@ -12,13 +12,12 @@
 <body>
 <div id="topbar">
   <div class="bar-left">
-    <button id="menubtn" class="btn" aria-label="Open the looks menu" aria-expanded="false" aria-controls="drawer">
-      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-    </button>
     <span id="title">Agentic Orbit</span>
     <span id="connection" class="waiting">waiting</span>
   </div>
-  <button id="optionsbtn" class="btn" aria-label="Open the looks menu" aria-expanded="false" aria-controls="drawer">Options</button>
+  <button id="menubtn" class="btn" aria-label="Open the looks menu" aria-expanded="false" aria-controls="drawer">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </button>
 </div>
 <div id="scrim"></div>
 <div id="drawer" aria-label="The looks menu">
@@ -59,7 +58,7 @@
 <div id="main">
   <div id="stage">
     <div id="map"></div>
-    <div id="buttons"></div>
+    <div id="buttons" hidden></div>
   </div>
   <div id="feedwrap">
     <div id="feed" hidden></div>

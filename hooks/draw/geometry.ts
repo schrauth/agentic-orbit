@@ -19,7 +19,8 @@ const RY = 237
 const AGENT_RX = 322
 const AGENT_RY = 324
 export const NODE = 24
-export const CORE = 44
+/** The circle in the middle: big enough that the model's family name sits in it with room. */
+export const CORE = 50
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */
 export const PLANET = 10.5
 /** A subagent's orbit around the agents station: the innermost ring's reach, and the step between the rings. */

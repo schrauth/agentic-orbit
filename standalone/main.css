@@ -205,11 +205,11 @@ body.menu-open #drawer {
    The content holds a working width on a huge screen — the map and the log stay side by side
    in the middle. The map takes the room the window gives it, even past the width it was
    drawn at — a vector scales up cleanly — while the log column hugs its own height
-   instead of stretching down alongside it. */
+   instead of stretching down alongside it, and sits level with the map's middle circle. */
 #main {
   display: flex;
   gap: 28px;
-  align-items: flex-start;
+  align-items: center;
   max-width: 1600px;
   margin-left: auto;
   margin-right: auto;
@@ -220,7 +220,6 @@ body.menu-open #drawer {
 }
 #feedwrap {
   flex: 0 0 460px;
-  margin-top: 14px;
   margin-right: 18px;
   padding: 10px 12px;
   display: flex;
@@ -239,7 +238,7 @@ body.menu-open #drawer {
 }
 #log {
   flex: 0 0 auto;
-  height: 380px;
+  height: 570px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

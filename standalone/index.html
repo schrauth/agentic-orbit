@@ -10,29 +10,31 @@
 <link rel="stylesheet" href="main.css">
 </head>
 <body>
-<div id="statusbar">
-  <span id="title">Agentic Orbit — live map</span>
-  <span id="connection" class="waiting">waiting</span>
-</div>
-<div id="header">
-  <select id="theme" title="The map's palette">
-    <option value="auto">auto</option>
-    <option value="dark">dark</option>
-    <option value="light">light</option>
-  </select>
-  <select id="layout" title="Where you sit on the map">
-    <option value="you-top">you top</option>
-    <option value="you-bottom">you bottom</option>
-  </select>
-  <select id="motion" title="How much the map moves">
-    <option value="full">motion full</option>
-    <option value="reduced">motion reduced</option>
-  </select>
-  <select id="pace" title="The speed of the data exchanges">
-    <option value="normal">pace normal</option>
-    <option value="slow">pace slow</option>
-  </select>
-  <select id="language" title="The language of the labels"></select>
+<div id="topbar">
+  <div class="bar-left">
+    <span id="title">Agentic Orbit</span>
+    <span id="connection" class="waiting">waiting</span>
+  </div>
+  <div class="bar-right">
+    <select id="theme" title="The map's palette">
+      <option value="auto">auto</option>
+      <option value="dark">dark</option>
+      <option value="light">light</option>
+    </select>
+    <select id="layout" title="Where you sit on the map">
+      <option value="you-top">you top</option>
+      <option value="you-bottom">you bottom</option>
+    </select>
+    <select id="motion" title="How much the map moves">
+      <option value="full">motion full</option>
+      <option value="reduced">motion reduced</option>
+    </select>
+    <select id="pace" title="The speed of the data exchanges">
+      <option value="normal">pace normal</option>
+      <option value="slow">pace slow</option>
+    </select>
+    <select id="language" title="The language of the labels"></select>
+  </div>
 </div>
 <div id="main">
   <div id="stage">

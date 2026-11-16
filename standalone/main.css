@@ -37,56 +37,100 @@ body {
   color: var(--fg);
   background-color: var(--bg);
 }
-#statusbar {
+/* A modern app-style top bar: it sits over the page, frosted, and stays put when the page
+   scrolls. Title and connection live on the left, the looks-options on the right. */
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 8px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: -10px -12px 14px;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+}
+.bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 #title {
-  opacity: 0.8;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  white-space: nowrap;
 }
-#connection {
-  font-size: 12px;
-  line-height: 18px;
-  padding: 1px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-#connection.live {
-  color: var(--link);
-  border-color: var(--link);
-}
-#connection.waiting {
-  opacity: 0.6;
-}
-/* The thin line of looks-options: no box of its own, just a quiet row above the map. */
-#header {
+.bar-right {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  padding: 2px 0 8px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  opacity: 0.8;
 }
-#header select {
+#connection {
+  font-size: 12px;
+  line-height: 18px;
+  padding: 1px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+#connection::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: baseline;
+  background-color: currentColor;
+}
+#connection.live {
+  color: var(--link);
+  border-color: color-mix(in srgb, var(--link) 45%, transparent);
+}
+#connection.live::before {
+  animation: pulse 2s ease-in-out infinite;
+}
+#connection.waiting {
+  opacity: 0.55;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+/* Pill-shaped selects: quiet chrome that only surfaces on hover. */
+.bar-right select {
   background: transparent;
   color: var(--fg);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0 4px;
+  border-radius: 999px;
+  padding: 0 10px;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 20px;
   font-family: var(--font);
   cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 150ms, border-color 150ms, background-color 150ms;
 }
-#header select:hover {
-  background: rgba(128, 128, 128, 0.15);
+.bar-right select:hover {
+  background: rgba(128, 128, 128, 0.12);
+  border-color: color-mix(in srgb, var(--fg) 35%, transparent);
+  opacity: 1;
+}
+.bar-right select:focus {
+  outline: none;
+  border-color: var(--link);
+  opacity: 1;
 }
 /* Wide window: the feed sits beside the map and scrolls on its own. Narrow one: it goes back
    under the map, and stays narrower than the window so it never fills the whole width. */

@@ -121,3 +121,26 @@ a second host, not a second engine.
 the events file (harmless: read-only tail); the page needs the server's
 Setup once at connect, so the stream opens with a `setup` frame before
 the first `board` frame.
+
+---
+
+### ADR-007: Proxy telemetry is an event like any other
+
+**Status:** Accepted
+
+**Decision:** What the loopback proxy measures — the model's name and a
+request's prompt-token count — is appended to the shared, machine-local
+events file as a `modelStep` line, and every consumer applies it through
+the shared `applyHookEvent`. No host applies proxy telemetry directly;
+hosts only append the line. `sessionStart` also sets `board.model` from
+its `model` field, so the model's name shows before the first proxy
+request.
+
+**Rationale:** The events file is the one stream the map is drawn from;
+telemetry was the only feed that bypassed it, which left the standalone
+map without model pulses and the model's name. The new line carries names
+and figures only (ADR-002), into the same temporary file the hook already
+writes (ADR-001). Consequences: model steps inherit the watcher's ~40ms
+debounce — the same latency every hook event already has — and the proxy
+now appends this one figures-only line, where PRIVACY.md said it writes
+nothing (corrected there); `proxy.ts` itself stays unchanged.

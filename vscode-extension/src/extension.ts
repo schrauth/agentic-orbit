@@ -11,6 +11,7 @@ import { emptyBoard, seated, transitionBoard } from './board'
 import { classifyCopilot } from './classifyCopilot'
 import { eventsFileFor, watchEvents } from './hookWatcher'
 import type { HookEvent } from './hookWatcher'
+import { hookJson } from './hookManifest'
 import { startProxy } from './proxy'
 import type { ProxyServer } from './proxy'
 import { AgenticOrbitPanel } from './panel'
@@ -215,23 +216,8 @@ async function installHooks(): Promise<void> {
   try {
     await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(folder.uri, '.github', 'hooks'))
     await vscode.workspace.fs.copy(source, dest, { overwrite: true })
-    // Copilot's hook file format: version must be the number 1, each entry a command hook
-    // whose `command` runs on every shell. Events the map does not know are dropped by the watcher.
-    const command = (event: string) =>
-      `node .github/hooks/agentic-orbit-hook.js event=${event}`
-    const hook = {
-      version: 1,
-      hooks: {
-        sessionStart: [{ type: 'command', command: command('sessionStart') }],
-        userPromptSubmitted: [{ type: 'command', command: command('userPromptSubmitted') }],
-        preToolUse: [{ type: 'command', command: command('preToolUse') }],
-        postToolUse: [{ type: 'command', command: command('postToolUse') }],
-        postToolUseFailure: [{ type: 'command', command: command('errorOccurred') }],
-        agentStop: [{ type: 'command', command: command('agentStop') }],
-        errorOccurred: [{ type: 'command', command: command('errorOccurred') }],
-      },
-    }
-    const encoded = new TextEncoder().encode(`${JSON.stringify(hook, null, 2)}\n`)
+    // The manifest data lives in its own module; the watcher drops events the map does not know.
+    const encoded = new TextEncoder().encode(hookJson('.github/hooks/agentic-orbit-hook.js'))
     await vscode.workspace.fs.writeFile(configUri, encoded)
     void vscode.window.showInformationMessage(
       'Agentic Orbit: hooks written to .github/hooks/. The event file is watched; nothing leaves this machine.',

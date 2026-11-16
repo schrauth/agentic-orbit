@@ -7,6 +7,7 @@ const { classifyShell } = require('../out/hooks/classify.js')
 const { projectView } = require('../out/hooks/view.js')
 const { setupFrom } = require('../out/hooks/setup.js')
 const { emptyBoard, transitionBoard } = require('../out/vscode-extension/src/board.js')
+const { HOOK_EVENTS, hookJson } = require('../out/vscode-extension/src/hookManifest.js')
 
 test('shell classification keeps wrappers, nested network calls, and PowerShell file commands', () => {
   const setup = setupFrom()
@@ -39,6 +40,19 @@ test('view projection includes feed rows, counts, and the shared drawing', () =>
   assert.ok(view.rows.some(row => row.label === 'README.md'))
   assert.match(view.counts, /Files 1/)
   assert.match(view.svg, /<svg/)
+})
+
+test('hook manifest lists every event exactly once and parses as JSON', () => {
+  const manifest = hookJson('.github/hooks/agentic-orbit-hook.js')
+  const parsed = JSON.parse(manifest)
+
+  assert.equal(parsed.version, 1)
+  assert.deepEqual(Object.keys(parsed.hooks), [...HOOK_EVENTS])
+  for (const event of HOOK_EVENTS) {
+    const entries = parsed.hooks[event]
+    assert.equal(entries.length, 1, `${event} must appear exactly once`)
+    assert.equal(entries[0].type, 'command')
+  }
 })
 
 // M-001 / ADR-005: the panel loads this file as a classic <script src>, where

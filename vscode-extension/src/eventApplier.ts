@@ -46,6 +46,7 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       if (e.model !== undefined) {
         const before = s.lastModel
         s.lastModel = e.model
+        s.board = { ...s.board, model: e.model }
         if (before !== undefined && before !== e.model) {
           s.board = transitionBoard(
             s.board,
@@ -113,6 +114,22 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
           now,
         ).board
       }
+      break
+    }
+    case 'modelStep': {
+      const step = (s.board.step ?? 0) + 1
+      s.board = transitionBoard(
+        s.board,
+        {
+          type: 'modelStep',
+          model: e.model ?? '',
+          step,
+          label: `${shortModel(e.model ?? '') || e.model || 'model'} · ${setup.t.step(step)}`,
+          promptTokens: e.promptTokens ?? 0,
+          limit: setup.contextWindowLimit,
+        },
+        now,
+      ).board
       break
     }
     case 'errorOccurred': {

@@ -104,6 +104,19 @@ test('foldRows folds consecutive finished rows and never folds a running one awa
   assert.equal(foldRows(many, 5).length, 5)
 })
 
+test('sessionStart names the model; modelStep steps, rings the context and finishes its entry', () => {
+  const s = emptyState()
+  // The name arrives with the session, before any proxy request: the status line can show it.
+  applyHookEvent(s, { event: 'sessionStart', model: 'gpt-5.2' }, setup, 100)
+  assert.equal(s.board.model, 'gpt-5.2')
+  // The proxy's measured line: one more step, the ring against the limit, a finished model entry.
+  applyHookEvent(s, { event: 'modelStep', model: 'gpt-5.2', promptTokens: 12800 }, setup, 200)
+  assert.equal(s.board.step, 1)
+  assert.equal(Math.round(s.board.context ?? 0), 10)
+  const entry = s.board.entries.find(e => e.station === 'model')
+  assert.ok(entry !== undefined && entry.status === 'ok' && entry.endedAt !== undefined)
+})
+
 test('routeOf keeps the stops in order and counts a revisited station once', () => {
   const entry = (station, at) => ({ station, from: 'core', startedAt: at, status: 'ok', endedAt: at, label: 'x' })
   // A station seen twice in a row counts once, with the newer moment.

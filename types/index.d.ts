@@ -25,9 +25,6 @@ export type Board = {
   counts: Partial<Record<StationId, number>>
   model?: string
   step?: number
-  /** How many of the memory station's count a hook brought unasked. */
-  pushed?: number
-  /** Errors and refusals per station since the person's last message. */
   faults?: Partial<Record<StationId, number>>
   /** The subagents' seats around the agents station: those still at work, and those lately over, kept until their stay is up.
    * A seat carries the short name the agent was started with; never anything of its prompt. */
@@ -36,12 +33,6 @@ export type Board = {
   context?: number
   /** When the model last changed. */
   switchedAt?: number
-  /** The row of the feed the person opened to read whole: its entry's id. */
-  open?: string
-  /** The editor's pane folded to its line of now; kept between sessions as well. */
-  minimized?: boolean
-  /** How wide the editor draws the map, in CSS pixels; absent, as wide as the pane. Kept between sessions as well. */
-  zoom?: number
 }
 
 export type BoardEntryStart = {

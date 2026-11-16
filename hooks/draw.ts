@@ -357,12 +357,8 @@ function station(s: (typeof STATIONS)[number], i: number, { entries, board, now,
     `<text x="${x}" y="${n1(p.y + NODE + 15)}" text-anchor="middle" ${FONT} font-size="12.5" ${rim} fill="${isLit || isAlarm ? c.bone : c.ash}">${names[s.id]}</text>`
 
   if (count > 0) {
-    // Memory keeps two counts: what was asked for, and what a hook brought down unasked.
-    const pushed = s.id === 'memory' ? Math.min(count, board.pushed ?? 0) : 0
-    const asked = count - pushed
-    const figures =
-      pushed === 0 ? String(count) : `${asked > 0 ? `${asked} ` : ''}<tspan fill="${main}">↓${pushed}</tspan>`
-    over += `<text x="${x}" y="${n1(p.y + NODE + 30)}" text-anchor="middle" ${FONT} font-size="10.5" ${rim} fill="${c.dim}">${figures}</text>`
+    // Memory shows what was asked for; the pushed/asked split never had a writer.
+    over += `<text x="${x}" y="${n1(p.y + NODE + 30)}" text-anchor="middle" ${FONT} font-size="10.5" ${rim} fill="${c.dim}">${count}</text>`
   }
 
   // Top right: how many run at once. Top left: what went wrong since the last message, until the next one.

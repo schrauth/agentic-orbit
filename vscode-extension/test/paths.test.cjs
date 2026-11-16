@@ -10,6 +10,7 @@ const { test } = require('node:test')
 const { classifyCopilot } = require('../out/vscode-extension/src/classifyCopilot.js')
 const { eventsFileFor, parseEvents } = require('../out/vscode-extension/src/hookWatcher.js')
 const { applyHookEvent, emptyState } = require('../out/vscode-extension/src/eventApplier.js')
+const { modelStepEvent, appendEvent } = require('../out/vscode-extension/src/eventWriter.js')
 const { foldRows } = require('../out/hooks/feed.js')
 const { routeOf } = require('../out/hooks/draw.js')
 const { setupFrom } = require('../out/hooks/setup.js')
@@ -79,6 +80,20 @@ test('parked names: launch parks, oldest claim first, failure gives back, turn c
   at({ event: 'preToolUse', callId: 'c4', tool: 'task', description: 'third plan' }, 500)
   at({ event: 'agentStop' }, 600)
   assert.equal(s.parked.size, 0)
+})
+
+test('the writer appends the line the hook could have written, and never throws', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ao-writer-'))
+  const file = path.join(dir, 'events.jsonl')
+  // The round trip: the event a proxy's telemetry becomes, appended as one line, read back whole.
+  appendEvent(file, modelStepEvent({ model: 'm', promptTokens: 5 }))
+  await new Promise(resolve => setTimeout(resolve, 100))
+  const lines = fs.readFileSync(file, 'utf8').trim().split('\n')
+  assert.equal(lines.length, 1)
+  assert.deepEqual(JSON.parse(lines[0]), { v: 1, event: 'modelStep', ts: JSON.parse(lines[0]).ts, model: 'm', promptTokens: 5 })
+  // A file nowhere to be found costs a still map, never a crash.
+  assert.doesNotThrow(() => appendEvent(path.join(dir, 'nowhere', 'events.jsonl'), modelStepEvent({ model: 'm', promptTokens: 5 })))
+  fs.rmSync(dir, { recursive: true, force: true })
 })
 
 test('foldRows folds consecutive finished rows and never folds a running one away', () => {

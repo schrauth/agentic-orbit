@@ -59,21 +59,15 @@ body {
 .bar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 #title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  opacity: 0.85;
+  opacity: 0.9;
   white-space: nowrap;
-}
-.bar-right {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
 }
 #connection {
   font-size: 12px;
@@ -108,35 +102,109 @@ body {
     opacity: 0.35;
   }
 }
-/* Pill-shaped selects: quiet chrome that only surfaces on hover. */
-.bar-right select {
+/* The menu button: three quiet bars, the one shape every app's side menu wears. */
+#menubtn {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+}
+#menubtn .bar {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--fg);
+  opacity: 0.85;
+  transition: opacity 150ms, transform 200ms;
+}
+#menubtn:hover .bar {
+  opacity: 1;
+}
+/* The open drawer turns its bars into a cross. */
+body.menu-open #menubtn .bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+body.menu-open #menubtn .bar:nth-child(2) {
+  opacity: 0;
+}
+body.menu-open #menubtn .bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+/* The side menu slides in from the left, over a scrim that dims and closes. */
+#scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms;
+}
+#drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 21;
+  width: 260px;
+  box-sizing: border-box;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  transform: translateX(-102%);
+  transition: transform 220ms ease-out;
+}
+body.menu-open #scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+body.menu-open #drawer {
+  transform: translateX(0);
+}
+.drawer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.drawer-group label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+}
+.drawer-group select {
   background: transparent;
   color: var(--fg);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0 10px;
-  font-size: 12px;
-  line-height: 20px;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 13px;
+  line-height: 22px;
   font-family: var(--font);
   cursor: pointer;
-  opacity: 0.85;
-  transition: opacity 150ms, border-color 150ms, background-color 150ms;
+  transition: border-color 150ms, background-color 150ms;
 }
-.bar-right select:hover {
+.drawer-group select:hover {
   background: rgba(128, 128, 128, 0.12);
   border-color: color-mix(in srgb, var(--fg) 35%, transparent);
-  opacity: 1;
 }
-.bar-right select:focus {
+.drawer-group select:focus {
   outline: none;
   border-color: var(--link);
-  opacity: 1;
 }
 /* Wide window: the feed sits beside the map and scrolls on its own. Narrow one: it goes back
    under the map, and stays narrower than the window so it never fills the whole width. */
 #main {
   display: flex;
-  gap: 16px;
+  gap: 28px;
   align-items: flex-start;
 }
 #stage {
@@ -144,7 +212,9 @@ body {
   min-width: 0;
 }
 #feedwrap {
-  flex: 0 0 360px;
+  flex: 0 0 460px;
+  margin-top: 14px;
+  margin-right: 18px;
   overflow-y: auto;
   max-height: calc(100vh - 90px);
 }

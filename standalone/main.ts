@@ -1,6 +1,6 @@
 // The live page: it holds nothing but the drawing. The board arrives whole from the host over the
 // event stream, and every frame renders it the same way the panel beside the editor does. The
-// header's options tune the looks here on the page — they override what the host's setup says.
+// side menu tunes the looks here on the page — they override what the host's setup says.
 import { setupFrom, type Setup } from '../hooks/setup'
 import { LANGUAGES } from '../hooks/text'
 import { ZOOMS, projectView } from '../hooks/view'
@@ -47,7 +47,7 @@ function applySetup(): void {
   render(true)
 }
 
-/** The header says what is in force: it opens on the host's choice, it does not retell the person's. */
+/** The menu says what is in force: it opens on the host's choice, it does not retell the person's. */
 function syncHeader(): void {
   const effective = { ...rawSetup, ...overrides }
   for (const id of ['theme', 'layout', 'motion', 'pace', 'language'] as const) {
@@ -111,7 +111,22 @@ stream.onopen = () => markConnection(true)
 // The host gone: the map freezes on its last board, the word turns, and the stream reconnects itself.
 stream.onerror = () => markConnection(false)
 
-// The header's options: whatever the person picks here wins over the host's setup words, and holds
+// The side menu: the three bars open it, the scrim or the Escape key close it.
+{
+  const button = document.getElementById('menubtn')
+  const scrim = document.getElementById('scrim')
+  const setMenu = (open: boolean): void => {
+    document.body.classList.toggle('menu-open', open)
+    if (button !== null) button.setAttribute('aria-expanded', String(open))
+  }
+  if (button !== null) button.onclick = () => setMenu(!document.body.classList.contains('menu-open'))
+  if (scrim !== null) scrim.onclick = () => setMenu(false)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') setMenu(false)
+  })
+}
+
+// The menu's options: whatever the person picks here wins over the host's setup words, and holds
 // across reconnects until the person picks again. syncHeader leaves an override alone — the select
 // shows the host's choice only where the person has not made one.
 {

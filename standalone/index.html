@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- The live map page: the same drawing the panel shows, fed by the host's stream instead of a
-     webview. The host decides what the map shows; this page renders it, and its thin header
-     lets the person tune the looks without asking the host for a new setup. -->
+     webview. The host decides what the map shows; this page renders it, and its side menu —
+     behind the three bars — lets the person tune the looks without asking the host for a new setup. -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -12,27 +12,46 @@
 <body>
 <div id="topbar">
   <div class="bar-left">
+    <button id="menubtn" class="btn" aria-label="Open the looks menu" aria-expanded="false" aria-controls="drawer">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
     <span id="title">Agentic Orbit</span>
     <span id="connection" class="waiting">waiting</span>
   </div>
-  <div class="bar-right">
+</div>
+<div id="scrim"></div>
+<div id="drawer" aria-label="The looks menu">
+  <div class="drawer-group">
+    <label for="theme">Palette</label>
     <select id="theme" title="The map's palette">
       <option value="auto">auto</option>
       <option value="dark">dark</option>
       <option value="light">light</option>
     </select>
+  </div>
+  <div class="drawer-group">
+    <label for="layout">Layout</label>
     <select id="layout" title="Where you sit on the map">
       <option value="you-top">you top</option>
       <option value="you-bottom">you bottom</option>
     </select>
+  </div>
+  <div class="drawer-group">
+    <label for="motion">Motion</label>
     <select id="motion" title="How much the map moves">
-      <option value="full">motion full</option>
-      <option value="reduced">motion reduced</option>
+      <option value="full">full</option>
+      <option value="reduced">reduced</option>
     </select>
+  </div>
+  <div class="drawer-group">
+    <label for="pace">Pace</label>
     <select id="pace" title="The speed of the data exchanges">
-      <option value="normal">pace normal</option>
-      <option value="slow">pace slow</option>
+      <option value="normal">normal</option>
+      <option value="slow">slow</option>
     </select>
+  </div>
+  <div class="drawer-group">
+    <label for="language">Language</label>
     <select id="language" title="The language of the labels"></select>
   </div>
 </div>

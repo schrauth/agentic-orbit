@@ -20,10 +20,8 @@ export type HookEvent = {
   aborted?: boolean
   description?: string
   commandName?: string
-  command?: string
   filePath?: string
   url?: string
-  promptTokens?: number
 }
 
 export function eventsFileFor(workspace: string, override?: string): string {

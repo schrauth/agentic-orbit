@@ -28,6 +28,8 @@
 
 - The extension's front door is a table of contents again: reading the settings, installing the hooks and starting the proxy each live in their own module — `config.ts`, `installHooks.ts`, `proxyCommand.ts` — and `extension.ts` is down to the wiring: the three commands, the watcher, and the state the map is drawn from.
 
+- The proxy no longer silently truncates a request over 8 MB: bodies are buffered whole and forwarded byte-identical, deliberately — a corrupted request sent with a correct-looking `Content-Length` was the worst failure mode it could have. A new round-trip test sends nine megabytes through the proxy to a fake upstream and holds the proxy to it.
+
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 
 - The project's own agents are now part of the repository: the five generic definitions under `.github/agents/` — Architect, Builder, Memory & ADR, Reviewer and Version Control — are tracked instead of ignored, so a fresh clone carries the team that works on it.

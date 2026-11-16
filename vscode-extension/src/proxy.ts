@@ -89,15 +89,16 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
   }
 
   const server = http.createServer((req, res) => {
-    let body: Buffer[] = []
-    let bodySize = 0
+    // Bodies are buffered whole, deliberately: dropping a chunk over a fixed size would forward a
+    // corrupted request with a correct-looking Content-Length, silently. A large prompt is a
+    // legitimate on-prem edge case, and the operator's own request bounds memory.
+    const body: Buffer[] = []
     req.on('data', (chunk: Buffer) => {
-      bodySize += chunk.length
-      if (bodySize <= 8 * 1024 * 1024) body.push(chunk)
+      body.push(chunk)
     })
     req.on('end', () => {
       const payload = Buffer.concat(body)
-      body = []
+      body.length = 0
       const isChat = req.url === '/v1/chat/completions' || req.url === '/chat/completions' || req.url === '/chat/completions/'
       if (!isChat) {
         pipe(req, res, payload, req.url ?? '/')

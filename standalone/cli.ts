@@ -39,7 +39,8 @@ const HELP = `Agentic Orbit — the live map in a plain browser window.
   --config <file>                          a JSON with the setup keys (language, coreName, layout,
                                            motion, pace, theme, background, colors, memoryServers,
                                            memoryCommands, memorySubcommands, memoryPaths,
-                                           memoryLabels, contextWindowLimit) — the palette defaults to dark
+                                           memoryLabels, contextWindowLimit) — the palette defaults
+                                           to dark, the memory servers to ["memory"]
   --install-hooks <dir>                    write .github/hooks/ into the workspace and exit
   --proxy <targetBaseUrl>                  also start the loopback proxy for the context window
   --proxy-port <n>                         where the proxy listens (default 8317)
@@ -131,6 +132,9 @@ async function main(): Promise<void> {
   const setup = args.config !== undefined ? setupFromConfig(args.config) : {}
   // The palette defaults to dark: a map of the night's work. A config file or the page's menu says otherwise.
   if (setup.theme === undefined) setup.theme = 'dark'
+  // The memory servers default to the same list the extension's settings hand out, so both faces of
+  // the map sort an mcp__memory__ call to the Memory station alike. A config file may empty the list.
+  if (setup.memoryServers === undefined) setup.memoryServers = ['memory']
 
   const eventsFile = args.eventsFile !== undefined ? args.eventsFile : eventsFileFor(args.workspace ?? '')
   const host = serveCore({ eventsFile, setup })

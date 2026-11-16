@@ -233,7 +233,7 @@ Then open <http://127.0.0.1:8318>. The flags:
 
 - `--workspace <path>` — whose events to watch; the events file's name follows from it. Or `--events-file <path>` to point at the file itself — exactly one of the two.
 - `--port <n>` — where the page is served (default 8318; loopback only).
-- `--config <file>` — a JSON with the setup keys, the same settings the extension reads: `language`, `coreName`, `layout`, `motion`, `pace`, `theme`, `background`, `colors`, `memoryServers`, `memoryCommands`, `memorySubcommands`, `memoryPaths`, `memoryLabels`, `contextWindowLimit`.
+- `--config <file>` — a JSON with the setup keys, the same settings the extension reads: `language`, `coreName`, `layout`, `motion`, `pace`, `theme`, `background`, `colors`, `memoryServers`, `memoryCommands`, `memorySubcommands`, `memoryPaths`, `memoryLabels`, `contextWindowLimit`. Without one, the palette defaults to dark and the memory servers to `["memory"]`, exactly as the extension's settings do.
 - `--install-hooks <dir>` — write `.github/hooks/` into that workspace and exit, for a project where the extension has not done it.
 - `--proxy <baseUrl>` / `--proxy-port <n>` — also start the loopback proxy for the context window (default port 8317), as the extension's command does.
 

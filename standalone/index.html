@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- The live map page: the same drawing the panel shows, fed by the host's stream instead of a
+     webview. The host decides what the map shows; this page renders it and nothing else. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic Orbit — live map</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div id="statusbar">
+  <span id="title">Agentic Orbit — live map</span>
+  <span id="connection" class="waiting">waiting</span>
+</div>
+<div id="map"></div>
+<div id="nowline"></div>
+<div id="counts"></div>
+<div id="buttons"></div>
+<div id="feed"></div>
+<script src="bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+/* The live page's own look: the demo page's stylesheet with the workshop controls gone, and a
+   status bar in their place — one word says whether the host's stream is flowing. Nothing here ships. */
+:root,
+:root[data-theme='dark'] {
+  --fg: #ebe6dc;
+  --bg: #0a0c11;
+  --link: #e1ac6e;
+  --err: #e8654f;
+  --border: #272c36;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs: 13px;
+}
+:root[data-theme='light'] {
+  --fg: #1f2228;
+  --bg: #f5f2ea;
+  --link: #b8762a;
+  --err: #c5402b;
+  --border: #cfc9bc;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] {
+    --fg: #1f2228;
+    --bg: #f5f2ea;
+    --link: #b8762a;
+    --err: #c5402b;
+    --border: #cfc9bc;
+  }
+}
+html {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: var(--font);
+  font-size: var(--fs);
+  color: var(--fg);
+  background-color: var(--bg);
+}
+#statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+#title {
+  opacity: 0.8;
+}
+#connection {
+  font-size: 12px;
+  line-height: 18px;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+#connection.live {
+  color: var(--link);
+  border-color: var(--link);
+}
+#connection.waiting {
+  opacity: 0.6;
+}
+#map {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+#nowline {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.9;
+  margin-bottom: 4px;
+}
+#counts {
+  opacity: 0.7;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.btn {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 18px;
+  font-family: var(--font);
+}
+.btn:hover {
+  background: rgba(128, 128, 128, 0.15);
+}
+.row {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.row .label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+.row[data-id] .label,
+.row[data-id] {
+  cursor: pointer;
+}
+.row.open {
+  white-space: normal;
+}
+.row .time {
+  flex: 0 0 auto;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 6ch;
+}
+.row.dim {
+  opacity: 0.65;
+}
+.row.link {
+  color: var(--link);
+}
+.row.err {
+  color: var(--err);
+}

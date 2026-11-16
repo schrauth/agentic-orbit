@@ -27,7 +27,7 @@ const frame = (board: Board): string => `event: board\ndata: ${JSON.stringify(bo
  * the stream with the current board snapshot (a reconnect picks up where the host is), anything
  * else is a 404. The heartbeat re-sends while an entry runs, on the panel's own beat.
  */
-export function serveHttp(host: Host, port: number, onPageDir?: string): { close: () => void; url: string } {
+export function serveHttp(host: Host, port: number, onPageDir?: string): { close: () => void; url: string; server: http.Server } {
   const dir = onPageDir ?? PAGE_DIR
   const clients = new Set<Client>()
 
@@ -93,9 +93,6 @@ export function serveHttp(host: Host, port: number, onPageDir?: string): { close
 
   host.onBoard(publish)
 
-  // Loopback only: the host serves the same machine, never the network.
-  server.listen(port, '127.0.0.1')
-
   return {
     close: () => {
       clearInterval(timer)
@@ -106,5 +103,17 @@ export function serveHttp(host: Host, port: number, onPageDir?: string): { close
     get url(): string {
       return `http://127.0.0.1:${port}/`
     },
+    server,
   }
+}
+
+/** serveHttp bound and listening on loopback: resolves only when the port actually answers. */
+export function listenHttp(host: Host, port: number, onPageDir?: string): Promise<{ close: () => void; url: string; server: http.Server }> {
+  const face = serveHttp(host, port, onPageDir)
+  return new Promise((resolve, reject) => {
+    face.server.once('listening', () => resolve(face))
+    face.server.once('error', reject)
+    // Loopback only: the host serves the same machine, never the network.
+    face.server.listen(port, '127.0.0.1')
+  })
 }

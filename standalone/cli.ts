@@ -11,6 +11,7 @@ import type { ProxyServer } from '../vscode-extension/src/proxy'
 import { serveCore } from './server'
 import type { HostSetup } from './server'
 import { serveHttp } from './http'
+import { listenHttp } from './http'
 
 /** Every key the config file may carry: the same raw shape config.ts builds from VS Code's settings. */
 const CONFIG_KEYS = new Set([
@@ -135,7 +136,8 @@ async function main(): Promise<void> {
   if (args.proxy !== undefined) {
     proxy = await startProxy(args.proxyPort, args.proxy, host.telemetry)
   }
-  const face = serveHttp(host, args.port)
+  // The port only answers once it is bound: the startup line tells the truth, or it waits.
+  const face = await listenHttp(host, args.port)
   process.stdout.write(`http://127.0.0.1:${args.port}/ — watching ${eventsFile}\n`)
 
   process.on('SIGINT', () => {

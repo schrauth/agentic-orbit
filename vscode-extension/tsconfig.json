@@ -14,19 +14,8 @@
     "declaration": false
   },
   "include": [
-    "src/extension.ts",
-    "src/board.ts",
-    "src/classifyCopilot.ts",
-    "src/hookWatcher.ts",
-    "src/proxy.ts",
-    "src/panel.ts",
-    "src/webview/main.ts",
-    "../hooks/setup.ts",
-    "../hooks/palette.ts",
-    "../hooks/classify.ts",
-    "../hooks/draw.ts",
-    "../hooks/feed.ts",
-    "../hooks/text.ts",
+    "src",
+    "../hooks",
     "../types/index.d.ts"
   ]
 }

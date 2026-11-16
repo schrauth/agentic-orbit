@@ -216,11 +216,18 @@ body.menu-open #drawer {
   margin-top: 14px;
   margin-right: 18px;
   padding: 10px 12px;
-  overflow-y: auto;
   max-height: calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: color-mix(in srgb, var(--fg) 2.5%, transparent);
+}
+/* The log scrolls on its own while the state lines stay put at the panel's foot. */
+#feed {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 @media (max-width: 920px) {
   #main {
@@ -229,9 +236,11 @@ body.menu-open #drawer {
   #feedwrap {
     flex-basis: auto;
     max-height: none;
-    overflow-y: visible;
     width: auto;
     max-width: 640px;
+  }
+  #feed {
+    overflow-y: visible;
   }
 }
 #map {
@@ -244,11 +253,14 @@ body.menu-open #drawer {
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0.9;
+  margin-top: 8px;
   margin-bottom: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 #counts {
   opacity: 0.7;
-  margin-bottom: 6px;
+  margin-bottom: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

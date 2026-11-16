@@ -26,6 +26,8 @@
 
 - The demo's five hand-written scenarios — a calm turn, a storm of subagents, a subagent project, a run of errors and refusals, a context that fills up — moved into their own `demo/scenarios.ts`; the engine keeps the fake clock and the shared translation, and the demo page now reads the scenarios straight from the module that owns them.
 
+- The extension's front door is a table of contents again: reading the settings, installing the hooks and starting the proxy each live in their own module — `config.ts`, `installHooks.ts`, `proxyCommand.ts` — and `extension.ts` is down to the wiring: the three commands, the watcher, and the state the map is drawn from.
+
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 
 - The project's own agents are now part of the repository: the five generic definitions under `.github/agents/` — Architect, Builder, Memory & ADR, Reviewer and Version Control — are tracked instead of ignored, so a fresh clone carries the team that works on it.

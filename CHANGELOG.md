@@ -32,6 +32,8 @@
 
 - CI now runs what the contribution rule demands: the extension job runs the full test suite instead of only compiling, and a second job typechecks the demo — the two gates this whole cleanup stands on, so a broken test or a demo/contract drift can no longer merge silently.
 
+- The paths this cleanup touched are pinned by tests now: Copilot's tool-to-station mapping, the hook file's event parsing and its hash-name default path, the parked-name lifecycle (launch parks, oldest claim first, a failed launch hands back, the turn's end clears), the feed's row folding, and the trail's route — each case written to fail if the behavior were reverted.
+
 - The README was brought back in step with the extension as it is: the subagents' seats (five inner rings and one wide outer ring they share), the `coreName`, `background` and `colors` settings, the proxy command, and the three screenshots that had no place in it yet. What the hook pipeline does not report yet — the Browser station, the Hooks station, memory a hook brought unasked, calls that outlive their turn — now says so plainly instead of describing it as though it happened.
 
 - The project's own agents are now part of the repository: the five generic definitions under `.github/agents/` — Architect, Builder, Memory & ADR, Reviewer and Version Control — are tracked instead of ignored, so a fresh clone carries the team that works on it.

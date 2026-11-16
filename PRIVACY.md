@@ -14,6 +14,7 @@ Names, and nothing else. The code that does so is `clean`, `hostOf` and `classif
 - a web address: the host alone, without a login, password, path or query;
 - a shell command: the short description the model wrote for it, or the command's name, never the command line;
 - a search, a memory call, a subagent: the tool's name, or the short description it was started with, never the pattern, the query or the text.
+- a refused tool: its name, never the input that was refused.
 
 Control characters are taken out of every label before it is drawn.
 

@@ -176,6 +176,11 @@ function render(force: boolean): void {
       render(true)
     },
   })
+  // The shared renderer caps the map at the width it was drawn at; on this page the stage can be
+  // wider than that, and a vector scales up without losing a thing. The cap comes off here,
+  // every frame, because the renderer puts it back every frame.
+  const svg = document.querySelector<SVGElement>('#map svg')
+  if (svg !== null) svg.style.maxWidth = ''
 }
 
 const stream = new EventSource('/events')

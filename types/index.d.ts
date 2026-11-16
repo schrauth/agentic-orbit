@@ -4,7 +4,7 @@ export type StationId =
 
 export type Status = 'run' | 'ok' | 'err' | 'block'
 
-/** One compact metadata line, as the workspace hook writes it. Unknown events are ignored by the reader. */
+/** One compact metadata line, written by the workspace hook — and, for `modelStep` lines, by the loopback proxy's telemetry. Unknown events are ignored by the reader. */
 export type HookEvent = {
   v?: number
   event?: string
@@ -21,6 +21,8 @@ export type HookEvent = {
   commandName?: string
   filePath?: string
   url?: string
+  /** What one model request carried, in prompt tokens — the figure the loopback proxy measured. */
+  promptTokens?: number
 }
 
 /** One action on the map. Labels carry names and record numbers, never the text of a memory. */

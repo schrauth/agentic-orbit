@@ -18,7 +18,8 @@ const RY = 237
 /** The agents station sits far out beyond the ring, so the wide orbits of its planets never touch its neighbours. */
 const AGENT_RX = 322
 const AGENT_RY = 324
-export const NODE = 24
+/** A station's tile: the circle every kind of work lights up on. */
+export const NODE = 27
 /** The circle in the middle: big enough that the model's family name sits in it with room. */
 export const CORE = 50
 /** A subagent's planet: smaller than a station, big enough for a glyph of its own. */

@@ -85,26 +85,27 @@ function station(s: (typeof STATIONS)[number], i: number, { entries, board, now,
   const rim = `paint-order="stroke" stroke="${c.ground}" stroke-width="3.5" stroke-linejoin="round"`
   let over =
     `<circle cx="${x}" cy="${y}" r="${NODE}" fill="${c.raised}" stroke="${c.line}" stroke-width="1.2"/>${cooling}` +
-    `<path transform="translate(${x} ${y})" d="${s.icon}" fill="none" stroke="${glyphColor}" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<text x="${x}" y="${n1(p.y + NODE + 15)}" text-anchor="middle" ${FONT} font-size="12.5" ${rim} fill="${isLit || isAlarm ? c.bone : c.ash}">${names[s.id]}</text>`
+    // The glyphs were drawn for a 24-radius tile and ride the tile's size.
+    `<path transform="translate(${x} ${y}) scale(${n1(NODE / 24)})" d="${s.icon}" fill="none" stroke="${glyphColor}" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<text x="${x}" y="${n1(p.y + NODE + 16)}" text-anchor="middle" ${FONT} font-size="14" ${rim} fill="${isLit || isAlarm ? c.bone : c.ash}">${names[s.id]}</text>`
 
   if (count > 0) {
     // Memory shows what was asked for; the pushed/asked split never had a writer.
-    over += `<text x="${x}" y="${n1(p.y + NODE + 30)}" text-anchor="middle" ${FONT} font-size="10.5" ${rim} fill="${c.dim}">${count}</text>`
+    over += `<text x="${x}" y="${n1(p.y + NODE + 31)}" text-anchor="middle" ${FONT} font-size="11.5" ${rim} fill="${c.dim}">${count}</text>`
   }
 
   // Top right: how many run at once. Top left: what went wrong since the last message, until the next one.
   const corner = NODE * 0.74
   if (running.length > 1) {
     over +=
-      `<circle cx="${n1(p.x + corner)}" cy="${n1(p.y - corner)}" r="9" fill="${c.raised}" stroke="${color}" stroke-width="1"/>` +
-      `<text x="${n1(p.x + corner)}" y="${n1(p.y - corner + 3.2)}" text-anchor="middle" ${FONT} font-size="9.5" fill="${hot}">×${running.length}</text>`
+      `<circle cx="${n1(p.x + corner)}" cy="${n1(p.y - corner)}" r="10" fill="${c.raised}" stroke="${color}" stroke-width="1"/>` +
+      `<text x="${n1(p.x + corner)}" y="${n1(p.y - corner + 3.5)}" text-anchor="middle" ${FONT} font-size="10.5" fill="${hot}">×${running.length}</text>`
   }
   const faults = board.faults?.[s.id] ?? 0
   if (faults > 0) {
     over +=
-      `<circle cx="${n1(p.x - corner)}" cy="${n1(p.y - corner)}" r="8.2" fill="${c.red}"/>` +
-      `<text x="${n1(p.x - corner)}" y="${n1(p.y - corner + 3.4)}" text-anchor="middle" ${FONT} font-size="10" font-weight="700" fill="${c.ground}">${faults > 99 ? '99+' : faults}</text>`
+      `<circle cx="${n1(p.x - corner)}" cy="${n1(p.y - corner)}" r="9" fill="${c.red}"/>` +
+      `<text x="${n1(p.x - corner)}" y="${n1(p.y - corner + 3.8)}" text-anchor="middle" ${FONT} font-size="11" font-weight="700" fill="${c.ground}">${faults > 99 ? '99+' : faults}</text>`
   }
   return { under, over }
 }
@@ -279,7 +280,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
       const y = legendBottom - (crew.length - 1 - crew.indexOf(seatAgent)) * 16
       const name = (seatAgent.name ?? setup.t.subagent).length > 28 ? `${(seatAgent.name ?? setup.t.subagent).slice(0, 27)}…` : seatAgent.name ?? setup.t.subagent
       body += `${fade.open}<circle cx="${legendX}" cy="${n1(y - 4)}" r="5" fill="${hue}"/>` +
-        `<text x="${legendX + 13}" y="${n1(y)}" ${FONT} font-size="11" fill="${c.ash}">${escapeXml(name)}</text>${fade.close}`
+        `<text x="${legendX + 13}" y="${n1(y)}" ${FONT} font-size="12" fill="${c.ash}">${escapeXml(name)}</text>${fade.close}`
     })
   }
 
@@ -287,7 +288,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
 
   // A name longer than three letters shrinks to stay inside the circle.
   const coreName = board.model === undefined ? setup.core : modelFamily(board.model)
-  const coreSize = Math.min(18.5, 68 / (0.75 * coreName.length))
+  const coreSize = Math.min(21, 77 / (0.75 * coreName.length))
 
   // The core breathes at rest and quickens while something runs.
   const period = anyRunning ? 1800 : 5400
@@ -318,7 +319,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
     body +=
       `<circle ${ring} stroke="${c.line}" opacity=".7"/>` +
       `<circle ${ring} stroke="${full >= 90 ? c.red : full >= 70 ? c.accent : c.ash}" pathLength="100" stroke-dasharray="${full} 100" transform="rotate(-90 ${CX} ${CY})"/>` +
-      `<text x="${CX}" y="${n1(CY - 21)}" text-anchor="middle" ${FONT} font-size="8.5" fill="${c.dim}">${full}%</text>`
+      `<text x="${CX}" y="${n1(CY - 21)}" text-anchor="middle" ${FONT} font-size="9.5" fill="${c.dim}">${full}%</text>`
   }
 
   const switchAge = board.switchedAt === undefined ? Infinity : now - board.switchedAt
@@ -326,7 +327,7 @@ export function drawMap(board: Board, now: number, setup: Setup): string {
   // The core names the family of the model at work; before the first request it is the core the person set.
   body += `<text x="${CX}" y="${CY + (board.model === undefined ? 6 : 1)}" text-anchor="middle" ${FONT} font-size="${n1(coreSize)}" letter-spacing="${n1(coreSize * 0.147)}" fill="${c.bone}">${escapeXml(coreName)}</text>`
   if (board.model !== undefined) {
-    body += `<text x="${CX}" y="${n1(CY + 19)}" text-anchor="middle" ${FONT} font-size="10" fill="${isSwitching ? c.hot : c.ash}">${escapeXml(shortModel(board.model))}</text>`
+    body += `<text x="${CX}" y="${n1(CY + 21)}" text-anchor="middle" ${FONT} font-size="11" fill="${isSwitching ? c.hot : c.ash}">${escapeXml(shortModel(board.model))}</text>`
   }
 
   // A changed model rings at the core and at its station for a few seconds.

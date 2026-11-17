@@ -1,6 +1,6 @@
 # User guide
 
-Agentic Orbit can show Copilot activity in the VS Code panel or in the browser app. This guide explains the map, its settings and where its events come from. For running the map outside VS Code, see the [App guide](./app.md).
+Agentic Orbit shows Copilot activity as a live map in a browser app on your machine. This guide explains the map, its setup and where its events come from. For starting and running the app, see the [App guide](./app.md).
 
 ## The stations
 
@@ -8,7 +8,7 @@ Agentic Orbit can show Copilot activity in the VS Code panel or in the browser a
 | --- | --- |
 | **Operator** | your messages, and the questions and files sent to you |
 | **Model** | each model request the proxy measures, and tools the map knows no station for yet |
-| **Memory** | MCP servers you name in the settings, and shell commands or paths you name there — without any of these, the station stays dark |
+| **Memory** | MCP servers you name in the setup, and shell commands or paths you name there — without any of these, the station stays dark |
 | **Files** | file tools, and shell commands that work on files and nothing else — they read, search, move, delete or edit in place (`cat`, `grep`, `mv`, `rm`, `sed`, `tee`, `find … -delete`) |
 | **Shell** | every other shell command |
 | **Network** | web fetch and search, MCP servers, and shell commands known to reach the network: `curl`, `gh`, `ssh`, `rsync`, `git push`, `npm install`, `docker pull` and the like — also inside `$(…)` |
@@ -19,7 +19,7 @@ Agentic Orbit can show Copilot activity in the VS Code panel or in the browser a
 
 ### Memory is yours to name
 
-**Memory** lights up only for what you name in the settings: an MCP server in `agenticOrbit.memoryServers` (only the server `memory` is named by default), a shell command in `agenticOrbit.memoryCommands`, or a path fragment in `agenticOrbit.memoryPaths`. Without a memory server or command, the station never lights — and nothing is lost, it simply has nothing to watch.
+**Memory** lights up only for what you name in the setup: an MCP server in `memoryServers` (only the server `memory` is named by default), a shell command in `memoryCommands`, or a path fragment in `memoryPaths`. Without a memory server or command, the station never lights — and nothing is lost, it simply has nothing to watch.
 
 ### What waits
 
@@ -104,38 +104,36 @@ Two decoupled sources are available:
 
 ### Workspace hooks
 
-**Agentic Orbit: Install Workspace Hooks** writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the open project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The extension watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn.
+The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn.
 
-The hook is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the extension is not running, so the agent is never blocked. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
+The hook is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the app is not running, so the agent is never blocked. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
 
 ### The loopback proxy
 
-The proxy is optional and supplies the context-window ring. Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [Settings](#settings)). It forwards every request to your on-prem LLM unchanged — streamed, unbuffered — while reading token usage from the stream and appending a `modelStep` line to the shared events file. Both the panel and the browser map show those model steps.
+The proxy is optional and supplies the context-window ring. Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [Setup](#setup)). It forwards every request to your on-prem LLM unchanged — streamed, unbuffered — while reading token usage from the stream and appending a `modelStep` line to the shared events file. The map shows those model steps.
 
-## Settings
+## Setup
 
-| Setting | Default | Meaning |
+The app reads its setup from a JSON file passed with `--config` (see the [App guide](./app.md)); the page's side menu overrides palette, layout, motion, pace and language while it runs. The keys:
+
+| Key | Default | Meaning |
 | --- | --- | --- |
-| `agenticOrbit.coreName` | `COPILOT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
-| `agenticOrbit.proxy.enabled` | `false` | Start the proxy on activation |
-| `agenticOrbit.proxy.port` | `8317` | Loopback port |
-| `agenticOrbit.proxy.targetBaseUrl` | — | Your on-prem LLM base URL, e.g. `https://llm.internal/v1` |
-| `agenticOrbit.contextWindowLimit` | `128000` | Tokens the ring is full at |
-| `agenticOrbit.hookEventsFile` | — | Override where hook events are read from; empty means `agentic-orbit-<workspace hash>.jsonl` in the OS temp folder |
-| `agenticOrbit.layout` | `you-top` | `you-top` / `you-bottom` |
-| `agenticOrbit.language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |
-| `agenticOrbit.theme` | `auto` | `auto` / `dark` / `light` / `fraunhofer` (Fraunhofer light theme) |
-| `agenticOrbit.background` | `solid` | `solid`, or `transparent`, which lets the panel behind the map show through |
-| `agenticOrbit.colors` | — | Colours that replace the map's own, each written as `name=#rrggbb`, comma-separated. Names: `background`, `node`, `line`, `spoke`, `text`, `label`, `faint`, `accent`, `active`, `error`, `memory`, `memoryActive`, `route` |
-| `agenticOrbit.motion` | `full` | `full` / `reduced` |
-| `agenticOrbit.pace` | `normal` | `normal` / `slow`, which draws every data exchange at half speed |
-| `agenticOrbit.memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
-| `agenticOrbit.memoryCommands` | `[]` | Shell command names that read as Memory |
-| `agenticOrbit.memorySubcommands` | `[]` | Shell subcommands that read as Memory |
-| `agenticOrbit.memoryPaths` | `[]` | Path fragments: a file path holding one reads as Memory |
-| `agenticOrbit.memoryLabels` | `[]` | Tool relabelings as `tool=name`, e.g. `mcp__wiki__search=wiki` |
+| `coreName` | `COPILOT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
+| `contextWindowLimit` | `128000` | Tokens the ring is full at |
+| `layout` | `you-top` | `you-top` / `you-bottom` |
+| `language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |
+| `theme` | `dark` (CLI) | `auto` / `dark` / `light` / `fraunhofer` (Fraunhofer light theme) |
+| `background` | `solid` | `solid` or `transparent` |
+| `colors` | — | Colours that replace the map's own, each written as `name=#rrggbb`, comma-separated. Names: `background`, `node`, `line`, `spoke`, `text`, `label`, `faint`, `accent`, `active`, `error`, `memory`, `memoryActive`, `route` |
+| `motion` | `full` | `full` / `reduced` |
+| `pace` | `normal` | `normal` / `slow`, which draws every data exchange at half speed |
+| `memoryServers` | `["memory"]` | MCP servers whose tools read as Memory |
+| `memoryCommands` | `[]` | Shell command names that read as Memory |
+| `memorySubcommands` | `[]` | Shell subcommands that read as Memory |
+| `memoryPaths` | `[]` | Path fragments: a file path holding one reads as Memory |
+| `memoryLabels` | `[]` | Tool relabelings as `tool=name`, e.g. `mcp__wiki__search=wiki` |
 
-The browser host accepts the same setup values through its config file, plus host-specific flags; see the [App guide](./app.md).
+The proxy has no config key: it is started with `--proxy <baseUrl>` and `--proxy-port` (default `8317`); the events file's place is a CLI flag (`--events-file`) or derived from the `--workspace` path.
 
 ## Privacy
 

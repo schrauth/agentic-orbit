@@ -1,6 +1,6 @@
 # Browser app
 
-The app shows the same live map as the VS Code panel in a browser window, without VS Code. It watches the workspace hook's events file and serves the page on loopback only.
+Agentic Orbit is a browser app: a small Node host watches the workspace hook's events file and serves the live map on a page bound to your machine's loopback only. Nothing it shows is content — names, timings and figures.
 
 ## Quick start
 
@@ -33,13 +33,13 @@ You can instead point directly to an events file with `--events-file <path>`; pr
 | `--proxy <baseUrl>` | Also start the loopback proxy for context-window telemetry |
 | `--proxy-port <n>` | Proxy port; default `8317` |
 
-The config file uses the setup keys shared with the extension: `language`, `coreName`, `layout`, `motion`, `pace`, `theme`, `background`, `colors`, `memoryServers`, `memoryCommands`, `memorySubcommands`, `memoryPaths`, `memoryLabels`, and `contextWindowLimit`. Without a config file, the palette defaults to dark and the memory servers to `["memory"]`.
+The config file uses the setup keys: `language`, `coreName`, `layout`, `motion`, `pace`, `theme`, `background`, `colors`, `memoryServers`, `memoryCommands`, `memorySubcommands`, `memoryPaths`, `memoryLabels`, and `contextWindowLimit`. Their meaning is in the [user guide's setup table](./usage.md#setup). Without a config file, the palette defaults to dark and the memory servers to `["memory"]`.
 
 ## Using the page
 
 The page reconnects if the host restarts and keeps the last board while waiting. The map scales to the browser window. On a wide window, a console-style event log sits beside the map; on a narrow one, it moves below. The log shows each call separately with a timestamp, station, label and duration, follows new events while scrolled to the bottom, and holds 50–500 lines (100 by default).
 
-The top bar opens a side panel for palette, layout, motion, pace, language and log size. The host's setup is the starting point; changes made on the page take precedence after you make them.
+The top bar opens a side menu for palette, layout, motion, pace, language and log size. The host's setup is the starting point; changes made on the page take precedence after you make them.
 
 The running host reads the events file and binds `127.0.0.1`; it writes nothing. The `--install-hooks` option is separate and intentionally writes hook files into the selected workspace. See the [privacy policy](../PRIVACY.md) for the details of what those hooks record.
 

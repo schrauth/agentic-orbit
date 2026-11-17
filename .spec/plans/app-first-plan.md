@@ -9,20 +9,20 @@ links cite the tree as it is today, and tasks name the moves explicitly.
 The pivot is **subtraction plus a move, not a rebuild**. Everything that makes the map work is
 already IDE-independent and already runs outside VS Code:
 
-- **The app exists.** [standalone/](../../standalone) owns the full pipeline today: the CLI door
-  ([cli.ts](../../standalone/cli.ts)), the event→board core ([server.ts](../../standalone/server.ts)),
-  the SSE face ([http.ts](../../standalone/http.ts)), and the live page
-  ([main.ts](../../standalone/main.ts)). It binds loopback only and needs no VS Code API.
+- **The app exists.** [standalone/](../../app) owns the full pipeline today: the CLI door
+  ([cli.ts](../../app/cli.ts)), the event→board core ([server.ts](../../app/server.ts)),
+  the SSE face ([http.ts](../../app/http.ts)), and the live page
+  ([main.ts](../../app/main.ts)). It binds loopback only and needs no VS Code API.
 - **The core the app reaches for lives one package over.** The VS-Code-free modules under
   `vscode-extension/src/` — `hookWatcher` (90 lines), `eventApplier` (147), `eventWriter` (15),
   `proxy` (197), `board` (157), `classifyCopilot` (149), `hookManifest` (23), `webview/render`
   (75) — are imported by the app with plain relative paths. They move home; their contents do not
   change.
 - **The hook script is the privacy-reviewed artifact.**
-  [agentic-orbit-hook.js](../../vscode-extension/res/agentic-orbit-hook.js) moves byte-identical.
-- **The pins already exist.** [paths.test.cjs](../../vscode-extension/test/paths.test.cjs),
-  [quality.test.cjs](../../vscode-extension/test/quality.test.cjs) and
-  [proxy.test.cjs](../../vscode-extension/test/proxy.test.cjs) pin the surviving core's behavior.
+  [agentic-orbit-hook.js](../../app/res/agentic-orbit-hook.js) moves byte-identical.
+- **The pins already exist.** [paths.test.cjs](../../app/test/paths.test.cjs),
+  [quality.test.cjs](../../app/test/quality.test.cjs) and
+  [proxy.test.cjs](../../app/test/proxy.test.cjs) pin the surviving core's behavior.
   They are adopted, not rewritten.
 
 What dies is glue and nothing else: [extension.ts](../../vscode-extension/src/extension.ts),
@@ -53,7 +53,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
    with one rename — `webview/render.ts` becomes `app/render.ts`, because there is no webview and
    no reason to keep a one-file directory.
 3. **Tests are adopted through the existing bundle surface.** The app's tests require
-   `out/test-entry.js`, the esbuild bundle [test-entry.ts](../../standalone/test-entry.ts) builds.
+   `out/test-entry.js`, the esbuild bundle [test-entry.ts](../../app/test-entry.ts) builds.
    It grows to export the full pinned surface (the modules plus the `hooks/` helpers the old
    tests pin), so the adopted tests change their `require` lines and nothing else. This keeps one
    build pipeline (esbuild) instead of adding `tsc` output the extension needed.
@@ -75,7 +75,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 
 ## Phase 1 — The record of the pivot
 
-### - [ ] Task 1.1: Record ADR-008 and the status of ADR-005/006
+### - [x] Task 1.1: Record ADR-008 and the status of ADR-005/006
 
 - **Problem:** The pivot inverts ADR-006's premise ("the standalone host mirrors the extension
   host"; "nothing in the shipped extension changes") and retires ADR-005's subject. Future rounds
@@ -95,12 +95,12 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 
 ## Phase 2 — The package becomes the app
 
-### - [ ] Task 2.1: Rename `standalone/` to `app/`, take the product name
+### - [x] Task 2.1: Rename `standalone/` to `app/`, take the product name
 
 - **Problem:** The product cannot be called "standalone" once it is the only face; and every
   path, job and doc that says `standalone` is a place this rename must reach now, not later.
 - **Affected files:** `git mv standalone app` (all of it: sources, `index.html`, `main.css`,
-  `test/`, `test-entry.ts`, `.gitignore`, `tsconfig.json`); [app/package.json](../../standalone/package.json)
+  `test/`, `test-entry.ts`, `.gitignore`, `tsconfig.json`); [app/package.json](../../app/package.json)
   (`"name": "agentic-orbit"`, description: the live map of the agent's work, served on loopback —
   no "ships nothing in the extension" clause anymore); [check.yml](../../.github/workflows/check.yml)
   (the `standalone` job becomes `app`, `working-directory: app`); [README.md](../../README.md)
@@ -120,7 +120,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 
 ## Phase 3 — The core moves home; the extension retires
 
-### - [ ] Task 3.1: Move the core into `app/`, delete `vscode-extension/` — one atomic commit
+### - [x] Task 3.1: Move the core into `app/`, delete `vscode-extension/` — one atomic commit
 
 - **Problem:** The app still reaches into a package this pivot deletes, and the extension cannot
   survive its own core being taken. These two edits have no green intermediate state — they are
@@ -130,12 +130,12 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
   `eventWriter.ts`, `proxy.ts`, `board.ts`, `classifyCopilot.ts`, `hookManifest.ts` likewise →
   `app/`; `vscode-extension/src/webview/render.ts` → `app/render.ts`;
   `vscode-extension/res/agentic-orbit-hook.js` → `app/res/agentic-orbit-hook.js`
-  **byte-identical**. Re-points: [app/server.ts](../../standalone/server.ts),
-  [app/cli.ts](../../standalone/cli.ts), [app/main.ts](../../standalone/main.ts),
-  [app/test-entry.ts](../../standalone/test-entry.ts) (`../vscode-extension/src/x` → `./x`,
-  `…/webview/render` → `./render`); [app/package.json](../../standalone/package.json) build
+  **byte-identical**. Re-points: [app/server.ts](../../app/server.ts),
+  [app/cli.ts](../../app/cli.ts), [app/main.ts](../../app/main.ts),
+  [app/test-entry.ts](../../app/test-entry.ts) (`../vscode-extension/src/x` → `./x`,
+  `…/webview/render` → `./render`); [app/package.json](../../app/package.json) build
   script (copy the hook script from local `res/`, drop the `../vscode-extension/res` copy);
-  [app/tsconfig.json](../../standalone/tsconfig.json) (drop the `../vscode-extension/src/…`
+  [app/tsconfig.json](../../app/tsconfig.json) (drop the `../vscode-extension/src/…`
   includes; keep `*.ts`, `../hooks`, `../types/index.d.ts`); [demo/engine.ts](../../demo/engine.ts),
   [demo/main.ts](../../demo/main.ts), [demo/tsconfig.json](../../demo/tsconfig.json)
   (`../vscode-extension/src/…` → `../app/…`, render → `../app/render`). Deletions, the whole of
@@ -158,12 +158,12 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 
 ## Phase 4 — Adopt the pins
 
-### - [ ] Task 4.1: The extension's test suite, adopted into the app
+### - [x] Task 4.1: The extension's test suite, adopted into the app
 
 - **Problem:** The deleted tests pin behavior that survives (classification, parsing, the
   parked-name lifecycle, the writer, board transitions, the manifest, the proxy's body handling,
   the module-free page bundle). Losing them is losing the project's memory.
-- **Affected files:** [app/test-entry.ts](../../standalone/test-entry.ts) grows to export the
+- **Affected files:** [app/test-entry.ts](../../app/test-entry.ts) grows to export the
   pinned surface: `eventsFileFor`, `parseEvents`, `applyHookEvent`, `emptyState`,
   `modelStepEvent`, `appendEvent` (now local), `classifyCopilot` (local), `setupFrom`,
   `classifyShell`, `projectView`, `foldRows`, `routeOf` (from `../hooks/…`), `emptyBoard`,
@@ -184,7 +184,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 
 ## Phase 5 — The story told
 
-### - [ ] Task 5.1: README — the app is the product
+### - [x] Task 5.1: README — the app is the product
 
 - **Problem:** The README still teaches two faces; one is gone.
 - **Affected files:** [README.md](../../README.md).
@@ -197,7 +197,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 - **Verification:** The README's commands, run as written on this machine, produce a serving host
   and a live page; every link resolves.
 
-### - [ ] Task 5.2: The docs — app, usage, development
+### - [x] Task 5.2: The docs — app, usage, development
 
 - **Problem:** usage.md still speaks of a panel and `agenticOrbit.*` settings; development.md
   still builds an extension; app.md (moved in Task 2.1) still frames the app as the map
@@ -215,7 +215,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
   (`AGENTIC_ORBIT_EVENTS_FILE=/tmp/… scripts/smoke-test.sh` against a running host lights the
   page); cross-links resolve.
 
-### - [ ] Task 5.3: The standing pages and the wording sweep
+### - [x] Task 5.3: The standing pages and the wording sweep
 
 - **Problem:** CONTRIBUTING, PRIVACY, SECURITY and the PR template are contracts and must stay
   true; the moved code's comments still speak of "the extension" and "the webview".
@@ -241,7 +241,7 @@ Estimated scope: 8 tasks, 4 of them substantive; every task lands and verifies o
 
 ## Phase 6 — CI's final shape
 
-### - [ ] Task 6.1: The app job runs the tests
+### - [x] Task 6.1: The app job runs the tests
 
 - **Problem:** The app's CI job still only typechecks, because its tests were adopted only in
   Phase 4; and the workflow's comment still narrates three packages.

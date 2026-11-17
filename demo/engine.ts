@@ -71,7 +71,7 @@ export function demoSetup(options: { theme?: string; layout?: string; motion?: s
     layout: options.layout ?? 'you-top',
     motion: options.motion ?? 'full',
     pace: options.pace ?? 'normal',
-    coreName: 'AGENT',
+    coreName: 'CORE',
     background: 'solid',
     contextWindowLimit: CONTEXT_LIMIT,
   })

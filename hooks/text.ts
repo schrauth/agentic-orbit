@@ -19,6 +19,7 @@ export type Strings = {
   nothingYet: string
   noCounts: string
   idle: string
+  thinking: string
   context: string
   andMore: (n: number) => string
   webSearch: string
@@ -60,6 +61,7 @@ const en: Strings = {
   nothingYet: 'Nothing yet.',
   noCounts: 'No counts yet.',
   idle: 'Nothing is running.',
+  thinking: 'Thinking…',
   context: 'context',
   andMore: n => ` and ${n} more`,
   webSearch: 'web search',
@@ -101,6 +103,7 @@ const ru: Strings = {
   nothingYet: 'Пока ничего не было.',
   noCounts: 'Счётчики пусты.',
   idle: 'Ожидание',
+  thinking: 'Думает…',
   context: 'контекст',
   andMore: n => ` и ещё ${n}`,
   webSearch: 'поиск в сети',
@@ -142,6 +145,7 @@ const es: Strings = {
   nothingYet: 'Todavía nada.',
   noCounts: 'Aún no hay recuentos.',
   idle: 'No hay nada en ejecución.',
+  thinking: 'Pensando…',
   context: 'contexto',
   andMore: n => ` y ${n} más`,
   webSearch: 'búsqueda web',
@@ -183,6 +187,7 @@ const fr: Strings = {
   nothingYet: 'Rien pour le moment.',
   noCounts: 'Aucun compteur pour le moment.',
   idle: 'Rien en cours.',
+  thinking: 'Réflexion…',
   context: 'contexte',
   andMore: n => ` et ${n} de plus`,
   webSearch: 'recherche web',
@@ -224,6 +229,7 @@ const de: Strings = {
   nothingYet: 'Noch nichts.',
   noCounts: 'Noch keine Zählerstände.',
   idle: 'Nichts läuft.',
+  thinking: 'Denkt…',
   context: 'Kontext',
   andMore: n => ` und ${n} weitere`,
   webSearch: 'Websuche',
@@ -265,6 +271,7 @@ const it: Strings = {
   nothingYet: 'Ancora niente.',
   noCounts: 'Ancora nessun conteggio.',
   idle: 'Niente in esecuzione.',
+  thinking: 'Pensa…',
   context: 'contesto',
   andMore: n => ` e altri ${n}`,
   webSearch: 'ricerca web',
@@ -307,6 +314,7 @@ const pt: Strings = {
   nothingYet: 'Ainda nada.',
   noCounts: 'Ainda sem contagens.',
   idle: 'Nada em execução.',
+  thinking: 'Pensando…',
   context: 'contexto',
   andMore: n => ` e mais ${n}`,
   webSearch: 'pesquisa na web',

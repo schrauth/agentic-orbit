@@ -96,7 +96,7 @@ Under the map are a line that says what runs now, and the last rows:
 | `✕` | failed or blocked |
 | `◆` | a change of model |
 
-Finished calls that follow one another at one station fold into one row, marked `+2` for the two it stands for besides the one named. Buttons at the end of the line zoom the map, fold the pane to that one line and bring the map back.
+Finished calls that follow one another at one station fold into one row, marked `+2` for the two it stands for besides the one named. While the model thinks — the person's message open, no call running, the centre breathing — the line says so; an open call or the finished turn takes the words back. Buttons at the end of the line zoom the map, fold the pane to that one line and bring the map back.
 
 ## How it sees Copilot work
 

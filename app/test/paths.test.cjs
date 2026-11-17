@@ -1,6 +1,6 @@
 // The paths the cleanup moved or fixed: Copilot's tool mapping, the hook file's event parsing,
-// the parked-name lifecycle, feed row folding, and the trail's route. Behavior assertions, each
-// one failing if the mapped behavior were reverted.
+// the parked-name lifecycle, feed row folding, the now-line's thinking words, and the trail's
+// route. Behavior assertions, each one failing if the mapped behavior were reverted.
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
@@ -11,7 +11,7 @@ const { classifyCopilot } = require('../out/test-entry.js')
 const { eventsFileFor, parseEvents } = require('../out/test-entry.js')
 const { applyHookEvent, emptyState } = require('../out/test-entry.js')
 const { modelStepEvent, appendEvent } = require('../out/test-entry.js')
-const { foldRows } = require('../out/test-entry.js')
+const { foldRows, nowParts, describeNow } = require('../out/test-entry.js')
 const { routeOf } = require('../out/test-entry.js')
 const { setupFrom } = require('../out/test-entry.js')
 
@@ -117,6 +117,34 @@ test('foldRows folds consecutive finished rows and never folds a running one awa
   // The fold cap is respected: alternating stations cannot fold, so the cap stops the row count.
   const many = Array.from({ length: 30 }, (_, i) => row(i % 2 === 0 ? 'files' : 'edit', 'ok', i, i + 1))
   assert.equal(foldRows(many, 5).length, 5)
+})
+
+test('the now-line says the model thinks between the message and the answer', () => {
+  const s = emptyState()
+  const at = (ev, ms) => applyHookEvent(s, ev, setup, ms)
+  // A session just begun, model named, nothing sent yet: the line rests.
+  at({ event: 'sessionStart', model: 'gpt-5.2' }, 100)
+  assert.equal(nowParts(s.board, setup.t).what, setup.t.idle)
+  assert.equal(describeNow(s.board, setup.t), 'Nothing is running. · gpt 5.2')
+  // The person's message opens the turn and no call is open yet — the same state that breathes
+  // the centre — so the line says the model thinks, with the model's name kept at the right.
+  at({ event: 'userPromptSubmitted' }, 200)
+  const thinking = nowParts(s.board, setup.t)
+  assert.equal(thinking.what, setup.t.thinking)
+  assert.equal(thinking.meter, 'gpt 5.2')
+  assert.equal(describeNow(s.board, setup.t), 'Thinking… · gpt 5.2')
+  // An open call takes the words; the gaps between calls give them back.
+  at({ event: 'preToolUse', callId: 'm1', tool: 'read_file', filePath: '/w/src/board.ts' }, 300)
+  assert.equal(nowParts(s.board, setup.t).what, 'Files: src/board.ts')
+  at({ event: 'postToolUse', callId: 'm1' }, 400)
+  assert.equal(nowParts(s.board, setup.t).what, setup.t.thinking)
+  // The finished turn ends the thinking; so does an aborted one.
+  at({ event: 'agentStop' }, 500)
+  assert.equal(nowParts(s.board, setup.t).what, setup.t.idle)
+  at({ event: 'userPromptSubmitted' }, 600)
+  assert.equal(nowParts(s.board, setup.t).what, setup.t.thinking)
+  at({ event: 'agentStop', aborted: true }, 700)
+  assert.equal(nowParts(s.board, setup.t).what, setup.t.idle)
 })
 
 test('sessionStart names the model; modelStep steps, rings the context and finishes its entry', () => {

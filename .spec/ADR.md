@@ -75,7 +75,7 @@ everything else.
 
 ### ADR-005: The webview ships as one bundled, module-free script
 
-**Status:** Accepted
+**Status:** Superseded by ADR-008 — its rule lives on in the app's served page bundle
 
 **Decision:** The panel loads exactly one classic script,
 `out/vscode-extension/src/webview/main.js`, built by bundling
@@ -91,7 +91,7 @@ module for the demo while the extension ships a self-contained script.
 
 ### ADR-006: The standalone host mirrors the extension host
 
-**Status:** Accepted
+**Status:** Retired by ADR-008 — the mirrored extension no longer exists; the reuse rule it granted is now the app's own
 
 **Decision:** A new top-level package `standalone/` shows the map outside
 the VS Code extension, in a separate browser window, fed by the real hook
@@ -144,3 +144,25 @@ writes (ADR-001). Consequences: model steps inherit the watcher's ~40ms
 debounce — the same latency every hook event already has — and the proxy
 now appends this one figures-only line, where PRIVACY.md said it writes
 nothing (corrected there); `proxy.ts` itself stays unchanged.
+
+---
+
+### ADR-008: The browser app is the product; the extension retires
+
+**Status:** Accepted
+
+**Decision:** The standalone host becomes the product package `app/`
+(name `agentic-orbit`); the VS Code extension is retired and deleted
+with its settings surface and `.vsix`. Its VS-Code-free core modules
+(`hookWatcher`, `eventApplier`, `eventWriter`, `proxy`, `board`,
+`classifyCopilot`, `hookManifest`, `render`) and the hook script move
+into the app, contents unchanged. The wire contract — the `v: 1` JSONL
+event lines, the `Board` type, telemetry-as-event — is frozen. The demo
+stays a workshop package; the producer side stays Copilot's hook
+manifest.
+
+**Rationale:** The app already runs the full pipeline outside VS Code,
+and the core was VS Code-free by design (ADR-006's list); dropping the
+extension is subtraction plus a move, not a rebuild. Multi-host event
+adapters remain a separate future effort; the JSONL contract stays so
+one can be added without a v2.

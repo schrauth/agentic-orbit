@@ -226,7 +226,7 @@ body.menu-open #drawer {
   min-width: 0;
 }
 #feedwrap {
-  flex: 0 0 460px;
+  flex: 0 0 400px;
   margin-right: 18px;
   padding: 10px 12px;
   display: flex;
@@ -256,7 +256,7 @@ body.menu-open #drawer {
 }
 #log {
   flex: 0 0 auto;
-  height: 570px;
+  height: 640px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

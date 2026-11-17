@@ -1,6 +1,6 @@
 # Browser app
 
-Agentic Orbit is a browser app: a small Node host watches the workspace hook's events file and serves the live map on a page bound to your machine's loopback only. Nothing it shows is content — names, timings and figures.
+Agentic Orbit is a browser app: a small Node host watches the workspace hook's events file and serves the live map on a page bound to your machine's loopback only. Nothing it shows is content — names, timings and figures. Today that hook is Copilot's — the one producer there is; a second agent host's hook is future work, not configuration.
 
 ## Quick start
 

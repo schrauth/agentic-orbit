@@ -4,7 +4,7 @@ Thank you for taking the time to help.
 
 ## The project in one line
 
-A browser app that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names.
+A browser app that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names. Today only Copilot's workspace hook tells the map its story: the app runs beside any editor, but a second producer — another IDE's or agent host's hook — is future work.
 
 ## The agent team
 

@@ -100,7 +100,7 @@ Finished calls that follow one another at one station fold into one row, marked 
 
 ## How it sees Copilot work
 
-Two decoupled sources are available:
+Two decoupled sources are available. The hook — the map's main feed — is Copilot's and reports Copilot's events only: no other agent host's story reaches the map yet. Another IDE or host would need its own hook writing the same compact lines; that adapter is future work, not a setting.
 
 ### Workspace hooks
 

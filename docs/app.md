@@ -1,17 +1,17 @@
-# Standalone browser map
+# Browser app
 
-The standalone host shows the same live map as the VS Code panel in a browser window, without VS Code. It watches the workspace hook's events file and serves the page on loopback only.
+The app shows the same live map as the VS Code panel in a browser window, without VS Code. It watches the workspace hook's events file and serves the page on loopback only.
 
 ## Quick start
 
 ```bash
-cd standalone
+cd app
 npm install
 npm run build
 npm start -- --workspace <path-to-the-project-being-watched>
 ```
 
-Open <http://127.0.0.1:8318>. The watched project needs the workspace hooks installed. To install them from the standalone package:
+Open <http://127.0.0.1:8318>. The watched project needs the workspace hooks installed. To install them from the app package:
 
 ```bash
 npm start -- --install-hooks <path-to-the-project>

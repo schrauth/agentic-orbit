@@ -1,6 +1,6 @@
 # User guide
 
-Agentic Orbit can show Copilot activity in the VS Code panel or in the standalone browser host. This guide explains the map, its settings and where its events come from. For running the map outside VS Code, see [Standalone](./standalone.md).
+Agentic Orbit can show Copilot activity in the VS Code panel or in the browser app. This guide explains the map, its settings and where its events come from. For running the map outside VS Code, see the [App guide](./app.md).
 
 ## The stations
 
@@ -110,7 +110,7 @@ The hook is fail-safe by design: it always exits `0` within milliseconds and ans
 
 ### The loopback proxy
 
-The proxy is optional and supplies the context-window ring. Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [Settings](#settings)). It forwards every request to your on-prem LLM unchanged — streamed, unbuffered — while reading token usage from the stream and appending a `modelStep` line to the shared events file. Both the extension and standalone map show those model steps.
+The proxy is optional and supplies the context-window ring. Point your custom model's base URL at `http://127.0.0.1:8317/v1` (see [Settings](#settings)). It forwards every request to your on-prem LLM unchanged — streamed, unbuffered — while reading token usage from the stream and appending a `modelStep` line to the shared events file. Both the panel and the browser map show those model steps.
 
 ## Settings
 
@@ -135,7 +135,7 @@ The proxy is optional and supplies the context-window ring. Point your custom mo
 | `agenticOrbit.memoryPaths` | `[]` | Path fragments: a file path holding one reads as Memory |
 | `agenticOrbit.memoryLabels` | `[]` | Tool relabelings as `tool=name`, e.g. `mcp__wiki__search=wiki` |
 
-The standalone host accepts the same setup values through its config file, plus host-specific flags; see [Standalone](./standalone.md).
+The browser host accepts the same setup values through its config file, plus host-specific flags; see the [App guide](./app.md).
 
 ## Privacy
 

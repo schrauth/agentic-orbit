@@ -10,24 +10,24 @@ A live map of GitHub Copilot's work: tool calls, model steps and agents pulse fr
 
 Inspired from [lot-map](https://github.com/alexeyw/lot-map) by Aleksei Volodin.
 
-## Run the standalone map
+## Run the map
 
 Watch a real Copilot session in a browser window of its own — no VS Code extension install required. The host reads the workspace hook's events file and binds to your machine only.
 
 ```bash
-cd standalone
+cd app
 npm install
 npm run build
 npm start -- --workspace <path-to-the-project-being-watched>
 ```
 
-Open <http://127.0.0.1:8318>. The project needs the workspace hooks installed. To install them from Standalone, run `npm start -- --install-hooks <path-to-the-project>` once, then start a new Copilot session and run the host command above.
+Open <http://127.0.0.1:8318>. The project needs the workspace hooks installed. To install them from the app, run `npm start -- --install-hooks <path-to-the-project>` once, then start a new Copilot session and run the host command above.
 
 - Keep the map full-size on a second screen or shared display.
 - See every call in a console-style log, with timestamp, station, label and duration.
 - Tune palette, layout, motion, pace, language and log size while the session runs.
 
-See the [Standalone guide](docs/standalone.md) for all options and details.
+See the [App guide](docs/app.md) for all options and details.
 
 ## Use the VS Code extension
 
@@ -46,7 +46,7 @@ In the project you want to watch, run **Agentic Orbit: Install Workspace Hooks**
 ## Learn more
 
 - [User guide: stations, map, hooks and settings](docs/usage.md)
-- [Standalone browser host](docs/standalone.md)
+- [Browser app guide](docs/app.md)
 - [Development and visual previews](docs/development.md)
 - [Privacy](PRIVACY.md)
 - [Changelog](CHANGELOG.md)

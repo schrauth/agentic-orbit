@@ -1,5 +1,5 @@
 # Every pull request and every push to main: the extension's tests run, and the demo and the
-# standalone host typecheck.
+# app typecheck.
 name: check
 
 on:
@@ -47,7 +47,7 @@ jobs:
           npm ci
           npm run typecheck
 
-  standalone:
+  app:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -58,7 +58,7 @@ jobs:
         with:
           node-version: 22
       - name: Typecheck
-        working-directory: standalone
+        working-directory: app
         run: |
           npm ci
           npm run typecheck

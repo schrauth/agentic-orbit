@@ -14,7 +14,7 @@ The repository carries its own Copilot agents in [`.github/agents/`](.github/age
 
 - `cd vscode-extension && npm ci && npm test` passes; this compiles the extension and runs its focused regression tests.
 - `cd demo && npm ci && npm run typecheck` passes; the demo is built from the shared `hooks/` code and the extension's VS Code-free modules, so this catches drift between them.
-- `cd standalone && npm ci && npm run typecheck` passes; the standalone host is built from those same VS Code-free modules, so this catches drift on its side too. CI runs all three on every pull request and every push to `main`.
+- `cd app && npm ci && npm run typecheck` passes; the app is built from those same VS Code-free modules, so this catches drift on its side too. CI runs all three on every pull request and every push to `main`.
 - Nothing new reaches the network, reads files outside its own workspace hook file, or starts processes other than the hook it installs.
 - A label never holds content: a file keeps the last two parts of its path, a web address its host, a shell command its description or name.
 - The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the extension is not running.

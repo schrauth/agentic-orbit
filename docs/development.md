@@ -37,6 +37,6 @@ The drawing uses the real shared code from `hooks/`; `demo/engine.ts` feeds synt
 
 ## Live browser map
 
-To see real session activity in a browser without VS Code, use the [standalone host](./standalone.md). Unlike the demo, it reads the events file written by the workspace hook.
+To see real session activity in a browser without VS Code, use the [browser app](./app.md). Unlike the demo, it reads the events file written by the workspace hook.
 
 Words and translations live in `hooks/text.ts`; adding a language means adding another table there.

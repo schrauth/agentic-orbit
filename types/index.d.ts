@@ -21,6 +21,8 @@ export type HookEvent = {
   commandName?: string
   filePath?: string
   url?: string
+  /** The name of the skill a call loaded; a name, never the text the skill carried. */
+  skill?: string
   /** What one model request carried, in prompt tokens — the figure the loopback proxy measured. */
   promptTokens?: number
 }

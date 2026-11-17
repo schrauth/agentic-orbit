@@ -5,6 +5,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
+const { spawnSync } = require('node:child_process')
 const { test } = require('node:test')
 
 const { classifyCopilot } = require('../out/test-entry.js')
@@ -26,7 +27,7 @@ test('Copilot tool mapping sends each tool to its station', () => {
   assert.equal(classifyCopilot('run_in_terminal', { command: 'curl -I https://example.com' }, setup).station, 'web')
   // Agents, skills, the browser's fetches, and the person's questions.
   assert.equal(classifyCopilot('task', { description: 'plan the work' }, setup).station, 'agents')
-  assert.equal(classifyCopilot('run_skill', { skill: 'commit' }, setup).station, 'skills')
+  assert.equal(classifyCopilot('skill', { skill: 'commit' }, setup).station, 'skills')
   assert.equal(classifyCopilot('fetch_webpage', { url: 'https://example.com/x' }, setup).station, 'web')
   assert.equal(classifyCopilot('web_search', {}, setup).station, 'web')
   // MCP: a server the person named as memory reads as Memory, any other as the network's periphery.
@@ -45,6 +46,37 @@ test('Copilot labels take the description over the tool name', () => {
   assert.equal(bare.label, setup.t.subagent)
   // A file row shows the last two path parts, never the whole path.
   assert.equal(classifyCopilot('read_file', { file_path: '/w/pkg/src/file.ts' }, setup).label, 'src/file.ts')
+})
+
+test('a skill call shows its name; without one the row stays generic', () => {
+  const s = emptyState()
+  // The name the hook took from the call's input rides the line to the map: the row says which skill ran.
+  applyHookEvent(s, { event: 'preToolUse', callId: 'sk1', tool: 'skill', skill: 'commit' }, setup, 100)
+  assert.equal(s.board.entries.at(-1)?.station, 'skills')
+  assert.equal(s.board.entries.at(-1)?.label, 'commit')
+  // No name arrived: the row says what it was, but not which.
+  applyHookEvent(s, { event: 'preToolUse', callId: 'sk2', tool: 'skill' }, setup, 200)
+  assert.equal(s.board.entries.at(-1)?.label, setup.t.skill)
+})
+
+test('the hook takes the name of a skill call, and only that, into its line', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ao-skill-'))
+  const file = path.join(dir, 'events.jsonl')
+  const hook = path.join(__dirname, '..', 'res', 'agentic-orbit-hook.js')
+  const run = spawnSync(process.execPath, [hook, 'event=preToolUse'], {
+    input: JSON.stringify({ tool_name: 'skill', tool_use_id: 't1', tool_input: { skill: 'commit' } }),
+    env: { ...process.env, AGENTIC_ORBIT_EVENTS_FILE: file },
+    encoding: 'utf8',
+    timeout: 5000,
+  })
+  // Fail-safe whatever happens: exit 0, the allow JSON answering Copilot.
+  assert.equal(run.status, 0)
+  assert.deepEqual(JSON.parse(run.stdout), { permissionDecision: 'allow' })
+  const line = JSON.parse(fs.readFileSync(file, 'utf8').trim())
+  // Metadata only: the event, the ids, the tool's name — and the skill's name, never its text.
+  assert.deepEqual(Object.keys(line).sort(), ['aborted', 'callId', 'error', 'event', 'skill', 'tool', 'ts', 'v'])
+  assert.equal(line.skill, 'commit')
+  fs.rmSync(dir, { recursive: true, force: true })
 })
 
 test('parseEvents drops malformed lines and arrays, keeps objects only', () => {

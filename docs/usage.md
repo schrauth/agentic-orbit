@@ -14,7 +14,7 @@ Agentic Orbit shows Copilot activity as a live map in a browser app on your mach
 | **Network** | web fetch and search, MCP servers, and shell commands known to reach the network: `curl`, `gh`, `ssh`, `rsync`, `git push`, `npm install`, `docker pull` and the like — also inside `$(…)` |
 | **Browser** | browser tools — none of Copilot's reaches this station yet, so it waits |
 | **Agents** | subagents; their own calls start from this station |
-| **Skills** | skills and tool search |
+| **Skills** | a skill the model runs, named in the row |
 | **Hooks** | hooks that refuse a call, ask for permission or take a moment — none is reported yet, so the station waits |
 
 ### Memory is yours to name
@@ -104,7 +104,7 @@ Two decoupled sources are available. The hook — the map's main feed — is Cop
 
 ### Workspace hooks
 
-The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn.
+The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name.
 
 The hook is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the app is not running, so the agent is never blocked. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
 

@@ -79,6 +79,9 @@ function oneLine(input, argv) {
   if (command !== '') out.commandName = short(firstWord(command), 40)
   var path = str(input.file_path) || str(input.filePath) || str(input.path) || str(args.file_path) || str(args.filePath) || str(args.path)
   if (path !== '') out.filePath = short(path, 160)
+  // The name of the skill a call loads only: never its text, never what it was told to do.
+  var skill = str(input.skill) || str(args.skill)
+  if (skill !== '') out.skill = short(skill, 64)
   var url = str(input.url) || str(input.uri) || str(args.url) || str(args.uri)
   if (url !== '') out.url = short(url, 160)
   var status = str(input.status) || str(input.result_status) || str(input.resultStatus)

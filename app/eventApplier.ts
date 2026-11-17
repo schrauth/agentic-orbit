@@ -65,7 +65,7 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       break
     }
     case 'preToolUse': {
-      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
+      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath, skill: e.skill }, setup)
       // A call that launches a subagent also names it: the short description only, its prompt is content.
       // The id the child circles under is its own session's, minted only when the child starts, so
       // the launch cannot carry it. The name waits under the launch call's id until the child's first
@@ -133,7 +133,7 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       break
     }
     case 'errorOccurred': {
-      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath }, setup)
+      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath, skill: e.skill }, setup)
       const id = e.callId !== undefined ? s.open.get(e.callId) : undefined
       if (e.callId !== undefined) s.open.delete(e.callId)
       // The call failed, so the child it meant to start never came: its parked name goes back.

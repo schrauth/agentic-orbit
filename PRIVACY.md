@@ -13,14 +13,15 @@ Names, and nothing else. The code that does so is `clean`, `hostOf` and `classif
 - a file: the last two parts of its path;
 - a web address: the host alone, without a login, password, path or query;
 - a shell command: the short description the model wrote for it, or the command's name, never the command line;
-- a search, a memory call, a subagent: the tool's name, or the short description it was started with, never the pattern, the query or the text.
+- a search, a memory call, a subagent: the tool's name, or the short description it was started with, never the pattern, the query or the text;
+- a skill: its name, never the text it carried;
 - a refused tool: its name, never the input that was refused.
 
 Control characters are taken out of every label before it is drawn.
 
 ## What it keeps, and where
 
-- The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The app reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The host binds `127.0.0.1` only, and writes nothing.
+- The hook writes one compact JSON line per call — the event's name, the tool's name, a short description, a command's name, a skill's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The app reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The host binds `127.0.0.1` only, and writes nothing.
 - The page keeps one choice between visits, in the browser's own local storage: how many lines its log holds. The model's name is read from the current session's events — and, when the proxy is on, written there as one more line — and kept nowhere else.
 - Nothing else is written anywhere, and nothing is ever sent anywhere: the app makes no network requests and talks to no one.
 

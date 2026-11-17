@@ -26,7 +26,6 @@ export type Strings = {
   artifact: string
   workflow: string
   skill: string
-  loadingTools: string
   questionForYou: string
   fileForYou: string
   ms: (n: number) => string
@@ -68,7 +67,6 @@ const en: Strings = {
   artifact: 'artifact',
   workflow: 'workflow',
   skill: 'skill',
-  loadingTools: 'loading tools',
   questionForYou: 'question for you',
   fileForYou: 'file for you',
   ms: n => `${n} ms`,
@@ -110,7 +108,6 @@ const ru: Strings = {
   artifact: 'артефакт',
   workflow: 'рабочий процесс',
   skill: 'скилл',
-  loadingTools: 'загрузка инструментов',
   questionForYou: 'вопрос тебе',
   fileForYou: 'файл тебе',
   ms: n => `${n} мс`,
@@ -152,7 +149,6 @@ const es: Strings = {
   artifact: 'artefacto',
   workflow: 'flujo de trabajo',
   skill: 'skill',
-  loadingTools: 'cargando herramientas',
   questionForYou: 'pregunta para ti',
   fileForYou: 'archivo para ti',
   ms: n => `${n} ms`,
@@ -194,7 +190,6 @@ const fr: Strings = {
   artifact: 'artefact',
   workflow: 'workflow',
   skill: 'skill',
-  loadingTools: 'chargement des outils',
   questionForYou: 'question pour vous',
   fileForYou: 'fichier pour vous',
   ms: n => `${n} ms`,
@@ -236,7 +231,6 @@ const de: Strings = {
   artifact: 'Artefakt',
   workflow: 'Workflow',
   skill: 'Skill',
-  loadingTools: 'Werkzeuge werden geladen',
   questionForYou: 'Frage an dich',
   fileForYou: 'Datei für dich',
   ms: n => `${n} ms`,
@@ -278,7 +272,6 @@ const it: Strings = {
   artifact: 'artefatto',
   workflow: 'workflow',
   skill: 'skill',
-  loadingTools: 'caricamento strumenti',
   questionForYou: 'domanda per te',
   fileForYou: 'file per te',
   ms: n => `${n} ms`,
@@ -321,7 +314,6 @@ const pt: Strings = {
   artifact: 'artefacto',
   workflow: 'workflow',
   skill: 'skill',
-  loadingTools: 'a carregar ferramentas',
   questionForYou: 'pergunta para ti',
   fileForYou: 'ficheiro para ti',
   ms: n => `${n} ms`,

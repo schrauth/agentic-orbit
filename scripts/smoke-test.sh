@@ -71,9 +71,9 @@ echo "5. Web fetch                             → Network (example.com)"
 fire preToolUse  '{"tool_name":"webfetch","tool_use_id":"t5","tool_input":{"url":"https://example.com/docs"}}'
 fire postToolUse '{"tool_name":"webfetch","tool_use_id":"t5"}'
 
-echo "6. Skills / tool search                  → Skills"
-fire preToolUse  '{"tool_name":"search_tools","tool_use_id":"t6"}'
-fire postToolUse '{"tool_name":"search_tools","tool_use_id":"t6"}'
+echo "6. A skill runs                           → Skills (commit)"
+fire preToolUse  '{"tool_name":"skill","tool_use_id":"t6","tool_input":{"skill":"commit"}}'
+fire postToolUse '{"tool_name":"skill","tool_use_id":"t6"}'
 
 echo "7. Subagents at once                      → Agents: three planets circle together"
 fire preToolUse  '{"tool_name":"task","tool_use_id":"t7a","agent_id":"a1","description":"research","tool_input":{"description":"research"}}'

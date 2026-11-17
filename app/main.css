@@ -237,7 +237,7 @@ body.menu-open #drawer {
   background: color-mix(in srgb, var(--fg) 2.5%, transparent);
 }
 /* The summary is the log section's second part, but not part of the centreing: it hangs below
-   the panel, so the log alone holds the map's middle circle and the state lines ride under it. */
+   the map pane, so the log alone holds the map's middle circle and the state lines ride under it. */
 #summary {
   position: absolute;
   top: 100%;
@@ -246,7 +246,7 @@ body.menu-open #drawer {
   margin-top: 10px;
   padding: 0 12px;
 }
-/* The log scrolls on its own; the state lines have left the panel's foot — they hang below
+/* The log scrolls on its own; the state lines have left the map pane's foot — they hang below
  *  it now, in #summary. The hidden #feed keeps what the shared renderer writes there; the
  *  visible log is the page's own — every call a line, console style, never folded. It keeps
  *  a shell window's height of its own, not the map's: the two are neighbours,
@@ -349,7 +349,7 @@ body.menu-open #drawer {
     overflow-y: visible;
   }
   #summary {
-    /* Stacked, the summary goes back inside the panel, at its foot as before. */
+    /* Stacked, the summary goes back inside the map pane, at its foot as before. */
     position: static;
     margin-top: 10px;
     padding: 0;

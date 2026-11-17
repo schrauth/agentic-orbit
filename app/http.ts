@@ -25,7 +25,7 @@ const frame = (board: Board): string => `event: board\ndata: ${JSON.stringify(bo
 /**
  * The whole face: `GET /` serves the page from the directory the build filled, `GET /events` opens
  * the stream with the current board snapshot (a reconnect picks up where the host is), anything
- * else is a 404. The heartbeat re-sends while an entry runs, on the panel's own beat.
+ * else is a 404. The heartbeat re-sends while an entry runs, on the map's own beat.
  */
 export function serveHttp(host: Host, port: number, onPageDir?: string): { close: () => void; url: string; server: http.Server } {
   const dir = onPageDir ?? PAGE_DIR
@@ -86,7 +86,7 @@ export function serveHttp(host: Host, port: number, onPageDir?: string): { close
     })
   })
 
-  // The heartbeat: while something runs, the stream ticks once a second, as the panel does.
+  // The heartbeat: while something runs, the stream ticks once a second, as the map's own beat does.
   const timer = setInterval(() => {
     if (host.board().entries.some(e => e.status === 'run')) publish(host.board())
   }, 1000)

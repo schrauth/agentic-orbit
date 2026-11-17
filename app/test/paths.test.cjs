@@ -22,7 +22,7 @@ test('Copilot tool mapping sends each tool to its station', () => {
   assert.equal(classifyCopilot('read_file', { file_path: '/w/src/main.ts' }, setup).station, 'files')
   assert.equal(classifyCopilot('read_file', { file_path: '/w/.memory/plan.md' }, setup).station, 'memory')
   assert.equal(classifyCopilot('grep_search', {}, setup).station, 'files')
-  // The shell goes through the extension's own classifier: a network command reads as Network.
+  // The shell goes through the app's own classifier: a network command reads as Network.
   assert.equal(classifyCopilot('run_in_terminal', { command: 'curl -I https://example.com' }, setup).station, 'web')
   // Agents, skills, the browser's fetches, and the person's questions.
   assert.equal(classifyCopilot('task', { description: 'plan the work' }, setup).station, 'agents')

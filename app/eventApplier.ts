@@ -1,5 +1,5 @@
-// One event → board translation, shared by the extension host and the browser demo: the demo
-// replays exactly what the host performs, name parking included. VS Code-free by contract
+// One event → board translation, shared by the app host and the browser demo: the demo
+// replays exactly what the host performs, name parking included. Host-free by contract
 // (ADR-003): this module imports the board, the classifier and the hooks, nothing of the host.
 import type { Board, HookEvent } from '../types'
 import { shortModel } from '../hooks/classify'
@@ -13,7 +13,7 @@ export type ApplierState = {
   board: Board
   /** callId → the id of the entry the call started, while the call runs. */
   open: Map<string, string>
-  /** callId → the parked label, matching the extension's parkedNames semantics. */
+  /** callId → the parked label (the parkedNames semantics). */
   parked: Map<string, string>
   lastModel?: string
 }

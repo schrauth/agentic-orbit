@@ -1,14 +1,14 @@
 # Privacy
 
-The extension draws a live map of the work: which stations are used, when, for how long, and how the calls were named. This page says exactly what it observes, what it keeps, and where it goes.
+The app draws a live map of the work: which stations are used, when, for how long, and how the calls were named. This page says exactly what it observes, what it keeps, and where it goes.
 
 ## What it observes
 
-To draw the map, the extension's workspace hook is handed every tool call's whole input, including command lines and the text written to files, and the loopback proxy, when you turn it on, sees the model's request and response streams pass through unchanged. That is how an extension that follows tool calls works; it is also the whole of what the extension can see.
+To draw the map, the app's workspace hook is handed every tool call's whole input, including command lines and the text written to files, and the loopback proxy, when you turn it on, sees the model's request and response streams pass through unchanged. That is how a map that follows tool calls works; it is also the whole of what the app can see.
 
 ## What it takes from that
 
-Names, and nothing else. The code that does so is `clean`, `hostOf` and `classifyShell` in `hooks/classify.ts`, and `classifyCopilot` in `vscode-extension/src/classifyCopilot.ts`:
+Names, and nothing else. The code that does so is `clean`, `hostOf` and `classifyShell` in `hooks/classify.ts`, and `classifyCopilot` in `app/classifyCopilot.ts`:
 
 - a file: the last two parts of its path;
 - a web address: the host alone, without a login, password, path or query;
@@ -20,9 +20,9 @@ Control characters are taken out of every label before it is drawn.
 
 ## What it keeps, and where
 
-- The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The extension reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The browser host under `app/` reads that same names-only file the same way, binds `127.0.0.1` only, and writes nothing.
-- The extension keeps one piece of state between sessions, in VS Code's own store for the extension: whether the pane is folded. The model's name is read from the current session's events — and, when the proxy is on, written there as one more line — and kept nowhere else.
-- Nothing else is written anywhere, and nothing is ever sent anywhere: the extension makes no network requests and talks to no one.
+- The hook writes one compact JSON line per call — the event's name, the tool's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The app reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The host binds `127.0.0.1` only, and writes nothing.
+- The page keeps one choice between visits, in the browser's own local storage: how many lines its log holds. The model's name is read from the current session's events — and, when the proxy is on, written there as one more line — and kept nowhere else.
+- Nothing else is written anywhere, and nothing is ever sent anywhere: the app makes no network requests and talks to no one.
 
 ## The proxy
 
@@ -30,4 +30,4 @@ The loopback proxy is off by default. When you turn it on, it listens on `127.0.
 
 ## Faults
 
-A fault in the extension or its hook never reaches a tool call or a model turn: the hook always exits `0` and answers `preToolUse` with a valid allow JSON, whatever happens to it.
+A fault in the app or its hook never reaches a tool call or a model turn: the hook always exits `0` and answers `preToolUse` with a valid allow JSON, whatever happens to it.

@@ -33,7 +33,7 @@ export function parseEvents(buffer: string): HookEvent[] {
 /**
  * Watches the hook's file from its end, and hands every new event to `onEvent`.
  * The watcher holds the file open between sessions' writes: fs.watch fires again on the next append.
- * Closed when the extension deactivates; errors are reported once and then only watched around.
+ * Closed when the host deactivates; errors are reported once and then only watched around.
  */
 export function watchEvents(file: string, onEvent: (e: HookEvent) => void): { close: () => void } {
   let offset = fs.existsSync(file) ? fs.statSync(file).size : 0

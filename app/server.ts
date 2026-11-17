@@ -1,5 +1,4 @@
-// The standalone host: it does outside the editor what the extension host does inside it —
-// resolves the hook's events file, tails it, applies every event through the shared translation,
+// The app's host: it resolves the hook's events file, tails it, applies every event through the shared translation,
 // and owns the one board state the map is drawn from. Nothing it shows is content.
 // The core of this file is plain and testable; the HTTP face and the CLI door live in their own modules.
 import { watchEvents } from './hookWatcher'
@@ -11,7 +10,7 @@ import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
 import type { Board } from '../types'
 
-/** The setup the person set for the host: the same raw shape `setupFrom` takes from VS Code's settings. */
+/** The setup the person set for the host: the same raw shape `setupFrom` reads from the config file. */
 export type HostSetup = Record<string, unknown> & { contextWindowLimit?: number }
 
 export type CoreOptions = { eventsFile: string; setup: HostSetup }
@@ -30,8 +29,8 @@ export type Host = {
 
 /**
  * The event → board core: one state, one watcher, one publisher. The events file is resolved and
- * tailed exactly as the extension resolves and tails it (`eventsFileFor`, then `watchEvents`), every
- * event applied exactly as the extension applies it (`applyHookEvent`, the shared translation), and
+ * tailed through the shared helpers (`eventsFileFor`, then `watchEvents`), every
+ * event applied through the shared translation (`applyHookEvent`), and
  * every change handed to whoever listens. No HTTP here — the caller wires the publishing.
  */
 export function serveCore(options: CoreOptions): Host {

@@ -4,7 +4,7 @@ Thank you for taking the time to help.
 
 ## The project in one line
 
-A VS Code extension that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names.
+A browser app that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names.
 
 ## The agent team
 
@@ -12,16 +12,15 @@ The repository carries its own Copilot agents in [`.github/agents/`](.github/age
 
 ## Before you send a change
 
-- `cd vscode-extension && npm ci && npm test` passes; this compiles the extension and runs its focused regression tests.
-- `cd demo && npm ci && npm run typecheck` passes; the demo is built from the shared `hooks/` code and the extension's VS Code-free modules, so this catches drift between them.
-- `cd app && npm ci && npm run typecheck` passes; the app is built from those same VS Code-free modules, so this catches drift on its side too. CI runs all three on every pull request and every push to `main`.
+- `cd app && npm ci && npm test` passes; this builds the app and runs its focused regression tests.
+- `cd demo && npm ci && npm run typecheck` passes; the demo is built from the same shared `hooks/` code as the app, so this catches drift between them. CI runs both on every pull request and every push to `main`.
 - Nothing new reaches the network, reads files outside its own workspace hook file, or starts processes other than the hook it installs.
 - A label never holds content: a file keeps the last two parts of its path, a web address its host, a shell command its description or name.
-- The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the extension is not running.
+- The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the app is not running.
 
 ## Words
 
-Labels and rows live in `hooks/text.ts`. A new language is one more table there and one more value of `agenticOrbit.language`.
+Labels and rows live in `hooks/text.ts`. A new language is one more table there and one more value of the `language` config key.
 
 ## Sending
 

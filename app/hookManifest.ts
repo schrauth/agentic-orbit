@@ -1,5 +1,5 @@
 // The hooks manifest Copilot reads: which events the map listens to, and the one command that
-// reports each. Kept as plain data so a test can pin it; the wiring stays in the extension.
+// reports each. Kept as plain data so a test can pin it; the wiring stays with the installer.
 export const HOOK_EVENTS = [
   'sessionStart',
   'userPromptSubmitted',

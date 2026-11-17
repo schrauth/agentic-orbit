@@ -1,5 +1,5 @@
 // The live page: it holds nothing but the drawing. The board arrives whole from the host over the
-// event stream, and every frame renders it the same way the panel beside the editor does. The
+// event stream, and every frame renders it the same way the demo's page does. The
 // side menu tunes the looks here on the page — they override what the host's setup says.
 import { setupFrom, type Setup } from '../hooks/setup'
 import { LANGUAGES } from '../hooks/text'
@@ -7,7 +7,7 @@ import { projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
 import { renderView } from './render'
 
-/** How often the map is redrawn while it runs: the panel keeps the same beat. */
+/** How often the map is redrawn while it runs: the demo keeps the same beat. */
 const REDRAW_MS = 1000
 
 const state: { setup?: Setup; board?: Parameters<typeof projectView>[0]; clock: number; minimized: boolean } = {
@@ -38,7 +38,7 @@ function parseFrame(data: string): unknown {
   }
 }
 
-/* The rolling log: unlike the panel's folded feed, every call gets its own line, console style.
+/* The rolling log: unlike the map's folded feed, every call gets its own line, console style.
  *  A running call shows a live line the moment it starts; when it ends, the same line gets its
  *  verdict and duration instead of a second one. Lines are never replaced or folded — the only
  *  thing that leaves the log is age: past the chosen size, the oldest lines drop off the top.

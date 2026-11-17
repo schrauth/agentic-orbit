@@ -1,5 +1,5 @@
 // The CLI door: flags in, one host process out. It resolves what to watch, tunes the setup the way
-// VS Code's settings would, and starts the core and its HTTP face — plus, on request, the shared
+// the config file says, and starts the core and its HTTP face — plus, on request, the shared
 // loopback proxy that measures the context window. The console gets one startup line and nothing
 // else; the page is where the story is told.
 import * as fs from 'fs'
@@ -13,7 +13,7 @@ import type { HostSetup } from './server'
 import { serveHttp } from './http'
 import { listenHttp } from './http'
 
-/** Every key the config file may carry: the same raw shape config.ts builds from VS Code's settings. */
+/** Every key the config file may carry: the same raw shape `setupFrom` reads. */
 const CONFIG_KEYS = new Set([
   'language',
   'coreName',
@@ -101,7 +101,7 @@ function setupFromConfig(file: string): HostSetup {
   return setup
 }
 
-/** The same two files the extension's Install Workspace Hooks command writes: the script, the manifest. */
+/** The same two files --install-hooks writes: the script, the manifest. */
 function installHooksInto(dir: string): void {
   const hooks = path.join(dir, '.github', 'hooks')
   fs.mkdirSync(hooks, { recursive: true })
@@ -132,8 +132,8 @@ async function main(): Promise<void> {
   const setup = args.config !== undefined ? setupFromConfig(args.config) : {}
   // The palette defaults to dark: a map of the night's work. A config file or the page's menu says otherwise.
   if (setup.theme === undefined) setup.theme = 'dark'
-  // The memory servers default to the same list the extension's settings hand out, so both faces of
-  // the map sort an mcp__memory__ call to the Memory station alike. A config file may empty the list.
+  // The memory servers default to the same list the shared setup hands out, so the app and the demo
+  // sort an mcp__memory__ call to the Memory station alike. A config file may empty the list.
   if (setup.memoryServers === undefined) setup.memoryServers = ['memory']
 
   const eventsFile = args.eventsFile !== undefined ? args.eventsFile : eventsFileFor(args.workspace ?? '')

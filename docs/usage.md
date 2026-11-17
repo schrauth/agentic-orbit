@@ -118,7 +118,7 @@ The app reads its setup from a JSON file passed with `--config` (see the [App gu
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `coreName` | `COPILOT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
+| `coreName` | `AGENT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
 | `contextWindowLimit` | `128000` | Tokens the ring is full at |
 | `layout` | `you-top` | `you-top` / `you-bottom` |
 | `language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |

@@ -64,7 +64,7 @@ export function setupFrom(options: Readonly<Record<string, unknown>> = {}): Setu
   const core = typeof options.coreName === 'string' ? options.coreName.trim().slice(0, 10) : ''
   return {
     t: stringsFor(options.language),
-    core: core === '' ? 'COPILOT' : core,
+    core: core === '' ? 'AGENT' : core,
     memoryServers: new Set(list(options.memoryServers)),
     memoryCommands: list(options.memoryCommands),
     memorySubcommands: new Set(list(options.memorySubcommands)),

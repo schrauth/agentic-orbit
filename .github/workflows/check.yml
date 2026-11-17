@@ -1,4 +1,4 @@
-# Every pull request and every push to main: the demo and the app typecheck.
+# Every pull request and every push to main: the app builds and runs its tests, the demo typechecks.
 name: check
 
 on:
@@ -40,8 +40,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - name: Typecheck
+      - name: Test
         working-directory: app
         run: |
           npm ci
-          npm run typecheck
+          npm test

@@ -5,7 +5,7 @@ import { setupFrom, type Setup } from '../hooks/setup'
 import { LANGUAGES } from '../hooks/text'
 import { projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
-import { renderView } from '../vscode-extension/src/webview/render'
+import { renderView } from './render'
 
 /** How often the map is redrawn while it runs: the panel keeps the same beat. */
 const REDRAW_MS = 1000

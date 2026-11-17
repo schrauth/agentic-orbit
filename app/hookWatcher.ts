@@ -4,9 +4,9 @@ import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 import * as crypto from 'crypto'
-import type { HookEvent } from '../../types'
+import type { HookEvent } from '../types'
 
-export type { HookEvent } from '../../types'
+export type { HookEvent } from '../types'
 
 export function eventsFileFor(workspace: string, override?: string): string {
   if (override !== undefined && override !== '') return override

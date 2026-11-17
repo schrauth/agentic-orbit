@@ -1,8 +1,8 @@
 // Which station a GitHub Copilot tool call belongs to and what to call it: a name, never content.
 // Reuses the extension's own shell classifier, so the same command line reads the same on both maps.
-import type { StationId } from '../../types'
-import { classifyShell, hostOf, isMemoryPath } from '../../hooks/classify'
-import type { Setup } from '../../hooks/setup'
+import type { StationId } from '../types'
+import { classifyShell, hostOf, isMemoryPath } from '../hooks/classify'
+import type { Setup } from '../hooks/setup'
 
 export type Classified = { station: StationId; label: string }
 

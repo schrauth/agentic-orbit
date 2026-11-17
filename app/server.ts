@@ -2,11 +2,11 @@
 // resolves the hook's events file, tails it, applies every event through the shared translation,
 // and owns the one board state the map is drawn from. Nothing it shows is content.
 // The core of this file is plain and testable; the HTTP face and the CLI door live in their own modules.
-import { watchEvents } from '../vscode-extension/src/hookWatcher'
-import type { HookEvent } from '../vscode-extension/src/hookWatcher'
-import { applyHookEvent, emptyState } from '../vscode-extension/src/eventApplier'
-import type { ApplierState } from '../vscode-extension/src/eventApplier'
-import { modelStepEvent, appendEvent } from '../vscode-extension/src/eventWriter'
+import { watchEvents } from './hookWatcher'
+import type { HookEvent } from './hookWatcher'
+import { applyHookEvent, emptyState } from './eventApplier'
+import type { ApplierState } from './eventApplier'
+import { modelStepEvent, appendEvent } from './eventWriter'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
 import type { Board } from '../types'

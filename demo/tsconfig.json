@@ -13,8 +13,8 @@
     "*.ts",
     "../hooks",
     "../types/index.d.ts",
-    "../vscode-extension/src/board.ts",
-    "../vscode-extension/src/classifyCopilot.ts",
-    "../vscode-extension/src/eventApplier.ts"
+    "../app/board.ts",
+    "../app/classifyCopilot.ts",
+    "../app/eventApplier.ts"
   ]
 }

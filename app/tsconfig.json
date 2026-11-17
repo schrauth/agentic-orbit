@@ -12,13 +12,6 @@
   "include": [
     "*.ts",
     "../hooks",
-    "../types/index.d.ts",
-    "../vscode-extension/src/board.ts",
-    "../vscode-extension/src/classifyCopilot.ts",
-    "../vscode-extension/src/eventApplier.ts",
-    "../vscode-extension/src/hookManifest.ts",
-    "../vscode-extension/src/hookWatcher.ts",
-    "../vscode-extension/src/proxy.ts",
-    "../vscode-extension/src/webview/render.ts"
+    "../types/index.d.ts"
   ]
 }

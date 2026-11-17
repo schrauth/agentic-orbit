@@ -6,7 +6,7 @@ import { FakeSession, demoSetup } from './engine'
 import { SCENARIOS, scenarioEnd } from './scenarios'
 import { ZOOMS, projectView } from '../hooks/view'
 import type { ViewProjection } from '../types'
-import { renderView } from '../vscode-extension/src/webview/render'
+import { renderView } from '../app/render'
 
 const BASE = 1_770_000_000_000
 /** How often the map is redrawn while it runs: the panel keeps the same beat. */

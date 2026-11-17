@@ -1,4 +1,4 @@
-import type { ViewProjection } from '../../../types'
+import type { ViewProjection } from '../types'
 
 export type RenderActions = {
   show: () => void

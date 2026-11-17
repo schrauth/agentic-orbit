@@ -1,8 +1,8 @@
 // The map's state: one board, entries begun and finished,
 // counts, faults, agents, context. Nothing here touches VS Code; it is plain state in the extension host.
-import type { Board, BoardEntryStart, BoardTransition, BoardTransitionResult, Entry, StationId, Status } from '../../types'
-import { clean } from '../../hooks/classify'
-import { AGENT_FADE_MS, AGENT_HOLD_MS } from '../../hooks/draw'
+import type { Board, BoardEntryStart, BoardTransition, BoardTransitionResult, Entry, StationId, Status } from '../types'
+import { clean } from '../hooks/classify'
+import { AGENT_FADE_MS, AGENT_HOLD_MS } from '../hooks/draw'
 
 const KEEP = 80
 /** How many seats the board keeps around the agents station: those at work and those lately over, until their stay is up. */

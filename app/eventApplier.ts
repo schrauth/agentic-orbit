@@ -1,11 +1,11 @@
 // One event → board translation, shared by the extension host and the browser demo: the demo
 // replays exactly what the host performs, name parking included. VS Code-free by contract
 // (ADR-003): this module imports the board, the classifier and the hooks, nothing of the host.
-import type { Board, HookEvent } from '../../types'
-import { shortModel } from '../../hooks/classify'
+import type { Board, HookEvent } from '../types'
+import { shortModel } from '../hooks/classify'
 import { seated, transitionBoard, emptyBoard } from './board'
 import { classifyCopilot } from './classifyCopilot'
-import type { Setup } from '../../hooks/setup'
+import type { Setup } from '../hooks/setup'
 
 /** The state the translation carries between events: the board, the calls still open,
  * the names parked for subagents not yet started, and the model the session last showed. */

@@ -2,7 +2,7 @@
 // model steps, in the same compact line format the workspace hook writes. Never throws
 // and never waits — a failed append degrades to a still map, never a broken answer.
 import * as fs from 'fs'
-import type { HookEvent } from '../../types'
+import type { HookEvent } from '../types'
 
 /** One model request the loopback proxy measured: its model's name, and how many prompt tokens it carried. */
 export function modelStepEvent(tel: { model: string; promptTokens: number }): HookEvent {

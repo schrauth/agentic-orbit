@@ -5,9 +5,9 @@
 import type { Board } from '../types'
 import { setupFrom } from '../hooks/setup'
 import type { Setup } from '../hooks/setup'
-import { emptyBoard } from '../vscode-extension/src/board'
-import { applyHookEvent, emptyState } from '../vscode-extension/src/eventApplier'
-import type { ApplierState } from '../vscode-extension/src/eventApplier'
+import { emptyBoard } from '../app/board'
+import { applyHookEvent, emptyState } from '../app/eventApplier'
+import type { ApplierState } from '../app/eventApplier'
 
 /** What the workspace hook writes in one line; the demo's events have the same shape, with made-up values. */
 export type FakeEvent = {

@@ -166,3 +166,24 @@ and the core was VS Code-free by design (ADR-006's list); dropping the
 extension is subtraction plus a move, not a rebuild. Multi-host event
 adapters remain a separate future effort; the JSONL contract stays so
 one can be added without a v2.
+
+### ADR-009: One board per session; views are projections; retention, not lifecycle
+
+**Status:** Accepted
+
+**Decision:** The host keeps one `ApplierState` per hook session id
+(events without one share an implicit bucket); the merged workspace
+view is derived from those states by a pure projection, and the focused
+view shows one session's board — never a second apply path. The page
+switches the host-wide view at runtime; no session end is ever claimed:
+sessions are ranked by recency and evicted by a retention window, and
+proxy-measured context that cannot be attributed to exactly one open
+turn is drawn as shared, never guessed.
+
+**Rationale:** Every concurrent-session defect of the one-board design
+(cross-session resets, sweeps, parked-name collisions, one shared
+context) comes from shared mutable state, not from the view; demuxing
+fixes them by construction, and two projections over the same states
+stay consistent by definition. Sessions have no end event, so the UI
+must not claim one — recency ranking is the honest shape, bounded by
+host restart as today. Plan: `.spec/plans/multi-session-boards-plan.md`.

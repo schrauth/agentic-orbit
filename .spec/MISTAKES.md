@@ -23,18 +23,16 @@ merge or delete an entry without updating every reference to it.
 
 | Area | Covers | Entries |
 | --- | --- | --- |
-| `hooks/` | Pure library: classification, drawing, feed, wording (`text.ts`) | — |
-| `vscode-extension/src/` | Extension host: `board.ts`, `classifyCopilot.ts`, `hookWatcher.ts`, `panel.ts`, proxy | — |
-| `webview` | `vscode-extension/src/webview/` — message-only, no extension-host imports | M-001 |
-| `hook script` | Installed workspace hook (`vscode-extension/res/agentic-orbit-hook.js`, `hooks.json`) — must stay fail-safe | — |
-| `types & settings` | `types/index.d.ts`, hook event schema, `vscode-extension/package.json` settings surface | — |
-| `docs` | README, CONTRIBUTING, PRIVACY, CHANGELOG, `.spec/` | — |
-
-*(No entries yet — this file starts empty by design.)*
+| `app/` | The host — `server`, `http`, `cli`, `proxy`, `eventApplier`, `board`, `classifyCopilot`, `hookWatcher`, `eventWriter`, `hookManifest` — and the page it serves, `main.ts` and `render.ts`, which ships as one classic script | M-001 |
+| `app/res` | The installed hook and its manifest — `agentic-orbit-hook.js`, `hooks.json` — must stay fail-safe | — |
+| `hooks/` | Pure library: classification, drawing, feed, wording (`text.ts`), the projection (`view.ts`) | — |
+| `types` | Contracts in `types/index.d.ts`, and the hook event schema | — |
+| `docs` | README, CONTRIBUTING, PRIVACY, SECURITY, CHANGELOG, `docs/` | — |
+| `.spec/` | ADR, decision log, this register, plans, review | — |
 
 ### M-001: CommonJS `require` shipped into the webview's classic script
 
-- **Area:** `webview`
+- **Area:** `app/`
 - **Symptom:** The panel is completely blank; no console or test failure
   anywhere. Nothing renders, ever.
 - **Cause:** Commit `35860be` split `webview/main.ts` into `main.ts` +
@@ -45,7 +43,8 @@ merge or delete an entry without updating every reference to it.
   before the `message` listener registers — and the empty divs stay empty.
   Extension host, Node tests and the esbuild-bundled demo all worked,
   which is why it slipped through.
-- **Rule:** The shipped webview script must be a single bundle containing
+- **Rule:** The page's shipped script must be a single bundle containing
   no `require`/`import` (ADR-005). Type checks and Node-based tests never
-  prove the webview runs; treat the compiled `main.js` as the artifact to
-  verify (guard test) and smoke-test the panel after webview build changes.
+  prove the page runs; treat the compiled `out/web/bundle.js` as the
+  artifact to verify (guard test) and smoke-test the page after bundle
+  build changes.

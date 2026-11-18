@@ -12,7 +12,7 @@ export const ZOOMS: readonly number[] = [180, 220, 260, 310, 370, 440, 530, 570,
 
 const LONG_LABEL = 28
 
-/** Project board state into the message consumed by the extension panel and browser demo. */
+/** Project board state into the message consumed by the page and the workshop. */
 export function projectView(board: Board, now: number, setup: Setup, options: ViewOptions = {}): ViewProjection {
   const { t } = setup
   const turnMs = new Map<string, number>()

@@ -1,4 +1,4 @@
-// What the map is made of and what the person set: the stations, and the extension's options made ready to use.
+// What the map is made of and what the person set: the stations, and the app's options made ready to use.
 // Nothing here touches the engine.
 import type { StationId } from '../types'
 import { COLOR_NAMES } from './palette'
@@ -27,7 +27,7 @@ function ring(x: number, y: number, r: number): string {
 
 // ---- what the person set -----------------------------------------------------------------------
 
-/** The extension's options made ready to use. Whatever is missing or malformed counts as not set. */
+/** The app's options made ready to use. Whatever is missing or malformed counts as not set. */
 export type Setup = {
   t: Strings
   core: string

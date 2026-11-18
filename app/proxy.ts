@@ -17,6 +17,10 @@ export type ProxyServer = {
   close: () => void
 }
 
+/** How much of an answer the proxy keeps to look for its `usage`. A usage block sits at the end of an
+ * answer, so the tail is enough, and the cap keeps a long non-streaming answer from being held whole. */
+const ANSWER_TAIL = 65536
+
 /** The tokens a request carries, counted without its text: roughly four characters each, as the map's estimate. */
 function estimateTokens(body: string): number {
   try {
@@ -139,13 +143,11 @@ export function startProxy(port: number, targetBaseUrl: string, onTelemetry: (t:
             res.write(chunk)
             if (counted || model === '') return
             const type = (answer.headers['content-type'] ?? '').toString()
-            if (type.includes('application/json') && !type.includes('event-stream')) {
-              // A whole JSON answer: its `usage` is counted once it has arrived.
-              rest = `${rest}${chunk.toString('utf8')}`
-              return
-            }
-            // Some servers append a final chunk with `usage`; the tail is kept to find it.
-            rest = `${rest}${chunk.toString('utf8')}`.slice(-4096)
+            // `usage` sits at the end of an answer, so only its tail is kept: a non-streaming answer
+            // can be large, and holding it whole would grow with every token it carries. Without a
+            // `usage` in the kept tail, `count` falls back to the request's own size.
+            rest = `${rest}${chunk.toString('utf8')}`.slice(-ANSWER_TAIL)
+            if (type.includes('application/json') && !type.includes('event-stream')) return
             const usage = /"usage"\s*:\s*\{[^}]*?"prompt_tokens"\s*:\s*(\d+)/.exec(rest)
             if (usage !== null) count()
           })

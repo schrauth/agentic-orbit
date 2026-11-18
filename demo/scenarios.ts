@@ -1,7 +1,7 @@
 // The demo's made-up sessions: five hand-written scenarios the fake engine replays, each a small
 // story of a working session in hook events and model steps. The events carry names and figures
-// only, made up for the demo: no code, no prompts, no content. Nothing here ships in the
-// extension, and nothing here reads a file, starts a process or sends anything.
+// only, made up for the demo: no code, no prompts, no content. Nothing here ships, and
+// nothing here reads a file, starts a process or sends anything.
 import type { FakeEvent, Scenario, Step } from './engine'
 
 

@@ -1,6 +1,6 @@
 // The fake backend of the browser demo: it replays made-up hook events through the same board and the
-// same drawing the extension uses, so a design can be judged without installing anything.
-// Nothing here ships in the extension, and nothing here reads a file, starts a process or sends anything.
+// same drawing the app uses, so a design can be judged without starting it.
+// Nothing here reads a file, starts a process or sends anything.
 // The events carry names and figures only, made up for the demo: no code, no prompts, no content.
 import type { Board } from '../types'
 import { setupFrom } from '../hooks/setup'
@@ -29,7 +29,7 @@ export type FakeEvent = {
 export type Step = { at: number; ev?: FakeEvent; tel?: { model: string; promptTokens: number } }
 export type Scenario = { name: string; steps: Step[] }
 
-/** The context window the demo assumes, like the extension's own default. */
+/** The context window the demo assumes, like the app's own default. */
 const CONTEXT_LIMIT = 128000
 
 const LONG_LABEL = 28
@@ -40,7 +40,7 @@ export class FakeSession {
 
   constructor(private readonly base: number) {}
 
-  /** The board the shared translation last produced — the same state the extension host keeps. */
+  /** The board the shared translation last produced — the same state the app's host keeps. */
   get board(): Board {
     return this.state.board
   }
@@ -52,7 +52,7 @@ export class FakeSession {
     this.state.lastModel = undefined
   }
 
-  /** One hook event, applied exactly as the extension host applies it: the same shared translation. */
+  /** One hook event, applied exactly as the app's host applies it: the same shared translation. */
   apply(e: FakeEvent, at: number, setup: Setup): void {
     applyHookEvent(this.state, e, setup, this.base + at)
   }
@@ -63,7 +63,7 @@ export class FakeSession {
   }
 }
 
-/** The options the demo's controls hold, made into the same `Setup` the extension makes of its own. */
+/** The options the demo's controls hold, made into the same `Setup` the app makes of its own. */
 export function demoSetup(options: { theme?: string; layout?: string; motion?: string; pace?: string; language?: string }): Setup {
   return setupFrom({
     language: options.language ?? 'en',

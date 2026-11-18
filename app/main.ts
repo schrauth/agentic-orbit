@@ -10,9 +10,8 @@ import { renderView } from './render'
 /** How often the map is redrawn while it runs: the demo keeps the same beat. */
 const REDRAW_MS = 1000
 
-const state: { setup?: Setup; board?: Parameters<typeof projectView>[0]; clock: number; minimized: boolean } = {
+const state: { setup?: Setup; board?: Parameters<typeof projectView>[0]; clock: number } = {
   clock: 0,
-  minimized: false,
 }
 let lastDrawn = -1
 
@@ -163,21 +162,10 @@ function render(force: boolean): void {
   if (!force && state.clock - lastDrawn < REDRAW_MS && lastDrawn >= 0) return
   lastDrawn = state.clock
   if (state.board === undefined || state.setup === undefined) return
-  const view: ViewProjection = projectView(state.board, Date.now(), state.setup, {
-    hidden: state.minimized,
-  })
-  renderView(view, {
-    show: () => {
-      state.minimized = false
-      render(true)
-    },
-    zoomOut: () => render(true),
-    zoomIn: () => render(true),
-    hide: () => {
-      state.minimized = true
-      render(true)
-    },
-  })
+  // No controls of its own: the page draws no buttons and the map scales with the window, so the
+  // renderer is asked for the map and the rows alone.
+  const view: ViewProjection = projectView(state.board, Date.now(), state.setup)
+  renderView(view)
   // The shared renderer caps the map at the width it was drawn at; on this page the stage can be
   // wider than that, and a vector scales up without losing a thing. The cap comes off here,
   // every frame, because the renderer puts it back every frame.

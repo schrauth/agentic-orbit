@@ -24,11 +24,16 @@ export function parseEvents(buffer: string): HookEvent[] {
       const parsed: unknown = JSON.parse(text)
       if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) out.push(parsed as HookEvent)
     } catch {
-      // A half-written line from the hook appending as we read: it comes whole with the next change.
+      // Not one JSON object, so not an event: dropped here, never an error. A line the hook is still
+      // writing does not reach this point — the watcher holds its bytes back until the line is whole.
     }
   }
   return out
 }
+
+/** How much of an unfinished line the watcher holds: a hook line runs to about a kilobyte, so this is
+ * generous, and a writer that never finishes a line cannot make the watcher grow without end. */
+const MAX_CARRY = 8192
 
 /**
  * Watches the hook's file from its end, and hands every new event to `onEvent`.
@@ -37,11 +42,19 @@ export function parseEvents(buffer: string): HookEvent[] {
  */
 export function watchEvents(file: string, onEvent: (e: HookEvent) => void): { close: () => void } {
   let offset = fs.existsSync(file) ? fs.statSync(file).size : 0
+  // The bytes of a line the hook was still writing when we last read. They are neither parsed nor dropped:
+  // they wait here, as bytes, until the rest of the line arrives — so a character split across two reads
+  // is decoded whole instead of as two replacement marks.
+  let carry = Buffer.alloc(0)
   const read = (): void => {
     try {
       const size = fs.statSync(file).size
       if (size <= offset) {
-        if (size < offset) offset = size // the file was truncated or written anew
+        if (size < offset) {
+          // The file was truncated or written anew: the bytes held belong to no line of this one.
+          offset = size
+          carry = Buffer.alloc(0)
+        }
         return
       }
       const fd = fs.openSync(file, 'r')
@@ -49,8 +62,16 @@ export function watchEvents(file: string, onEvent: (e: HookEvent) => void): { cl
         const length = size - offset
         const buffer = Buffer.alloc(length)
         fs.readSync(fd, buffer, 0, length, offset)
+        const bytes = Buffer.concat([carry, buffer])
+        // Only whole lines are handed on: everything up to the last newline is one, and what follows it
+        // waits for the bytes that finish it. A buffer that ends in a newline holds nothing back.
+        const end = bytes.lastIndexOf(0x0a)
+        const whole = end < 0 ? '' : bytes.toString('utf8', 0, end + 1)
+        carry = end < 0 ? Buffer.from(bytes) : Buffer.from(bytes.subarray(end + 1))
+        if (carry.length > MAX_CARRY) carry = Buffer.alloc(0)
+        // The offset covers the bytes read, never the line held back: that one is read again from `carry`.
         offset = size
-        for (const e of parseEvents(buffer.toString('utf8'))) onEvent(e)
+        for (const e of parseEvents(whole)) onEvent(e)
       } finally {
         fs.closeSync(fd)
       }

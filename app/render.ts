@@ -1,5 +1,7 @@
 import type { ViewProjection } from '../types'
 
+/** What a surface's own controls do. A surface with no controls of its own — the app's page, where
+ *  the map scales with the window — passes none, and the renderer draws no buttons for it. */
 export type RenderActions = {
   show: () => void
   zoomOut: () => void
@@ -9,20 +11,18 @@ export type RenderActions = {
 
 let expanded: string | undefined
 
-export function renderView(view: ViewProjection, actions: RenderActions): void {
+export function renderView(view: ViewProjection, actions?: RenderActions): void {
   const map = document.getElementById('map')
   const feed = document.getElementById('feed')
   const nowline = document.getElementById('nowline')
-  const buttons = document.getElementById('buttons')
   const counts = document.getElementById('counts')
-  if (map === null || feed === null || nowline === null || buttons === null || counts === null) return
+  if (map === null || feed === null || nowline === null || counts === null) return
 
   if (view.hidden) {
     map.innerHTML = ''
     feed.innerHTML = ''
     nowline.textContent = ''
-    buttons.innerHTML = `<button id="show" class="btn" title="${escapeHtml(view.labels.showMap)}" aria-label="${escapeHtml(view.labels.showMap)}">▢</button>`
-    bind('show', actions.show)
+    if (actions !== undefined) drawButtons(view, actions)
     return
   }
 
@@ -45,10 +45,7 @@ export function renderView(view: ViewProjection, actions: RenderActions): void {
     })
     .join('')
   nowline.textContent = view.nowline
-  buttons.innerHTML = `<button id="zoom-out" class="btn" title="${escapeHtml(view.labels.zoomOut)}" aria-label="${escapeHtml(view.labels.zoomOut)}">–</button><button id="zoom-in" class="btn" title="${escapeHtml(view.labels.zoomIn)}" aria-label="${escapeHtml(view.labels.zoomIn)}">+</button><button id="hide" class="btn" title="${escapeHtml(view.labels.hideMap)}" aria-label="${escapeHtml(view.labels.hideMap)}">×</button>`
-  bind('zoom-out', actions.zoomOut)
-  bind('zoom-in', actions.zoomIn)
-  bind('hide', actions.hide)
+  if (actions !== undefined) drawButtons(view, actions)
 
   for (const row of feed.querySelectorAll<HTMLDivElement>('.row[data-id]')) {
     const toggle = () => {
@@ -63,6 +60,21 @@ export function renderView(view: ViewProjection, actions: RenderActions): void {
       }
     }
   }
+}
+
+/** The buttons of a surface that has controls. A surface with no `#buttons` element gets none. */
+function drawButtons(view: ViewProjection, actions: RenderActions): void {
+  const buttons = document.getElementById('buttons')
+  if (buttons === null) return
+  if (view.hidden) {
+    buttons.innerHTML = `<button id="show" class="btn" title="${escapeHtml(view.labels.showMap)}" aria-label="${escapeHtml(view.labels.showMap)}">▢</button>`
+    bind('show', actions.show)
+    return
+  }
+  buttons.innerHTML = `<button id="zoom-out" class="btn" title="${escapeHtml(view.labels.zoomOut)}" aria-label="${escapeHtml(view.labels.zoomOut)}">–</button><button id="zoom-in" class="btn" title="${escapeHtml(view.labels.zoomIn)}" aria-label="${escapeHtml(view.labels.zoomIn)}">+</button><button id="hide" class="btn" title="${escapeHtml(view.labels.hideMap)}" aria-label="${escapeHtml(view.labels.hideMap)}">×</button>`
+  bind('zoom-out', actions.zoomOut)
+  bind('zoom-in', actions.zoomIn)
+  bind('hide', actions.hide)
 }
 
 function bind(id: string, onPress: () => void): void {

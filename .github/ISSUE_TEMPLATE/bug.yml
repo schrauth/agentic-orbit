@@ -17,8 +17,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Extension version
-      description: From the Extensions pane, or the top of CHANGELOG.md in your copy.
+      label: App version
+      description: From the top of CHANGELOG.md in your copy.
       placeholder: 0.1.0
     validations:
       required: true
@@ -39,7 +39,7 @@ body:
     id: settings
     attributes:
       label: Settings you changed
-      description: Only the ones that differ from the defaults, such as `agenticOrbit.language` or `agenticOrbit.theme`.
+      description: Only the keys that differ from the defaults in your `--config` file — `language`, `theme`, `layout`, `motion` or `pace`.
   - type: dropdown
     id: who
     attributes:

@@ -56,6 +56,26 @@ function withTimeout(promise, ms, what) {
   return Promise.race([promise, refuse]).finally(() => clearTimeout(timer))
 }
 
+/** Poll until `ok()` holds. The watcher reads on a debounce, so every wait here is a poll, not a sleep. */
+async function until(ok, what, ms = 3000) {
+  for (let waited = 0; waited < ms; waited += 20) {
+    if (ok()) return
+    await new Promise(r => setTimeout(r, 20))
+  }
+  throw new Error(`timed out waiting for ${what}`)
+}
+
+/** A core tailing a fresh, empty events file, with the boards it published collected. */
+function tailing(name) {
+  const file = path.join(os.tmpdir(), `ao-${name}-${Date.now()}.jsonl`)
+  fs.rmSync(file, { force: true })
+  fs.writeFileSync(file, '')
+  const boards = []
+  const core = serveCore({ eventsFile: file, setup: SETUP })
+  core.onBoard(board => boards.push(board))
+  return { file, core, boards, stop: () => { core.close(); fs.rmSync(file, { force: true }) } }
+}
+
 test('the core tails the events file and publishes the boards the events make', async () => {
   const file = path.join(os.tmpdir(), `ao-core-${Date.now()}.jsonl`)
   fs.rmSync(file, { force: true })
@@ -101,6 +121,60 @@ test('the core tails the events file and publishes the boards the events make', 
     // A failed assertion must not leave the watcher holding the suite open.
     core.close()
     fs.rmSync(file, { force: true })
+  }
+})
+
+test('a line the hook was still writing is not lost: its tail finishes it on the next read', async () => {
+  const t = tailing('carry')
+  try {
+    // A first whole line proves the watcher is awake; a half line publishes nothing to wait for.
+    fs.appendFileSync(t.file, line({ event: 'sessionStart' }))
+    await until(() => t.boards.length >= 1, 'the watcher to read the first line')
+    // The hook's line arrives in two writes, with the watcher reading between them: the first is not
+    // one JSON object, and the offset must not move past it.
+    fs.appendFileSync(t.file, '{"event":"preToolUse","callId":"c1","tool":"read_file","filePa')
+    await new Promise(r => setTimeout(r, 200)) // longer than the watcher's debounce: it has read, and dropped nothing
+    assert.equal(t.core.board().entries.length, 0, 'a half line is not an event yet')
+    fs.appendFileSync(t.file, 'th":"/w/src/a.ts"}\n')
+    await until(() => t.core.board().entries.length === 1, 'the finished line to become one row')
+    const entries = t.core.board().entries
+    assert.equal(entries.length, 1, 'the split line became exactly one event')
+    assert.equal(entries[0].station, 'files')
+    assert.equal(entries[0].label, 'src/a.ts')
+  } finally {
+    t.stop()
+  }
+})
+
+test('two whole lines in one write become two events, in the order they were written', async () => {
+  const t = tailing('two-lines')
+  try {
+    fs.appendFileSync(t.file, line({ event: 'preToolUse', callId: 'c1', tool: 'read_file', filePath: '/w/src/first.ts' }) + line({ event: 'preToolUse', callId: 'c2', tool: 'create_file', filePath: '/w/src/second.ts' }))
+    await until(() => t.core.board().entries.length === 2, 'both lines to become rows')
+    const labels = t.core.board().entries.map(e => e.label)
+    assert.deepEqual(labels, ['src/first.ts', 'src/second.ts'])
+  } finally {
+    t.stop()
+  }
+})
+
+test('a truncated events file is read again from its start, with nothing held over from before', async () => {
+  const t = tailing('truncate')
+  try {
+    fs.appendFileSync(t.file, line({ event: 'sessionStart' }))
+    await until(() => t.boards.length >= 1, 'the watcher to read the first line')
+    // A half line is left in the carry, then the file is emptied: those bytes belong to no line of the new one.
+    fs.appendFileSync(t.file, '{"event":"preToolUse","tool":"read_file"')
+    await new Promise(r => setTimeout(r, 200)) // the watcher has read it and is holding its bytes
+    fs.writeFileSync(t.file, '')
+    await new Promise(r => setTimeout(r, 200)) // the watcher has seen the file shrink under its offset
+    fs.appendFileSync(t.file, line({ event: 'preToolUse', callId: 'c1', tool: 'create_file', filePath: '/w/src/after.ts' }))
+    await until(() => t.core.board().entries.length === 1, 'the line written after the truncation to become a row')
+    // The half line did not survive to be spliced onto the new one: it would have made it unparsable.
+    assert.equal(t.core.board().entries[0].label, 'src/after.ts')
+    assert.equal(t.core.board().entries.length, 1)
+  } finally {
+    t.stop()
   }
 })
 
@@ -178,12 +252,26 @@ test('the SSE face opens with the setup frame, then the snapshot, then every boa
   }
 })
 
-test('the standalone palette menu and page styles expose Fraunhofer light', () => {
+test('the page palette menu and styles expose Fraunhofer light', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8')
   const css = fs.readFileSync(path.join(__dirname, '..', 'main.css'), 'utf8')
 
   assert.match(html, /<option value="fraunhofer">Fraunhofer light<\/option>/)
   assert.match(css, /:root\[data-theme='fraunhofer'\]\s*\{\s*--fg: #1c3f52;\s*--bg: #f5f2ea;/)
+})
+
+test('the page has no controls of its own, and the workshop keeps its own', () => {
+  const pageHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8')
+  const pageCss = fs.readFileSync(path.join(__dirname, '..', 'main.css'), 'utf8')
+  // In the browser the map scales with the window: no zoom, fold or show row, and no rule hiding one.
+  assert.ok(!pageHtml.includes('id="buttons"'), 'the page shell must carry no button row')
+  assert.ok(!/#buttons\s*\{/.test(pageCss), 'the page styles must hide no button row')
+  // The bar's menu button wears the class the shared renderer's buttons wear: the class stays for it.
+  assert.match(pageHtml, /id="menubtn" class="btn"/)
+  assert.match(pageCss, /^\.btn \{/m)
+  // The workshop is the surface that does have them, and the renderer is shared with it.
+  const demoHtml = fs.readFileSync(path.join(__dirname, '..', '..', 'demo', 'index.html'), 'utf8')
+  assert.ok(demoHtml.includes('id="buttons"'), 'the workshop keeps its own buttons')
 })
 
 test('the CLI door: wrong feet are refused with a message, a config typo is not one', async () => {

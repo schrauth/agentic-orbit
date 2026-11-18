@@ -21,13 +21,13 @@ Control characters are taken out of every label before it is drawn.
 
 ## What it keeps, and where
 
-- The hook writes one compact JSON line per call — the event's name, the tool's name, a short description, a command's name, a skill's name, ids, timings and status, no content — to a file in the OS temp folder of the machine the session runs on. The app reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The host binds `127.0.0.1` only, and writes nothing.
+- The hook writes one compact JSON line per call, and every key in it is one of these: `v` (the line's format version), `event`, `tool`, `model`, `session`, `callId`, `agentId`, `ts`, `status`, `error`, `aborted`, `description`, `commandName`, `skill`, `fileTail` (a file's last two path parts), `urlHost` (an address's host), `promptTokens`. No key holds content. The line goes to a file in the OS temp folder of the machine the session runs on. The app reads it from there and deletes nothing; the OS clears its temp folder on its own schedule. The path is `$TMPDIR/agentic-orbit-<hash of the workspace path>.jsonl`. The host binds `127.0.0.1` only, and writes nothing.
 - The page keeps one choice between visits, in the browser's own local storage: how many lines its log holds. The model's name is read from the current session's events — and, when the proxy is on, written there as one more line — and kept nowhere else.
 - Nothing else is written anywhere, and nothing is ever sent anywhere: the app makes no network requests and talks to no one.
 
 ## The proxy
 
-The loopback proxy is off by default. When you turn it on, it listens on `127.0.0.1` only, forwards each request to the base URL you set and reads the token usage from the stream. Per model request it appends one compact line — the model's name and the prompt token count, the same figures the map shows — to the same machine-local temporary file the workspace hook writes. It writes nothing anywhere else, keeps nothing between requests, and reads no text of the stream into memory beyond the token figures it extracts.
+The loopback proxy is off by default. When you turn it on, it listens on `127.0.0.1` only, forwards each request to the base URL you set and reads the token usage from the stream. Per model request it appends one compact line — the model's name and the prompt token count, the same figures the map shows — to the same machine-local temporary file the workspace hook writes. It writes nothing anywhere else and keeps nothing between requests. What it holds of the answer while it runs is bounded, and it holds no text of it once the request is done: it searches a `usage` block, keeping at most the last 64 KB of an answer for that search, and if it finds none it counts the request's own size instead. Request bodies are held whole while they are forwarded, because a body cut short would reach the model corrupted; a request is the person's own and the operator's own size bound.
 
 ## Faults
 

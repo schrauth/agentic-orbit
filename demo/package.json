@@ -1,7 +1,7 @@
 {
   "name": "agentic-orbit-demo",
   "private": true,
-  "description": "Browser workshop for the map's design: the real drawing, driven by fake events. Nothing here ships in the extension.",
+  "description": "Browser workshop for the map's design: the real drawing, driven by fake events. Nothing here ships.",
   "scripts": {
     "build": "esbuild main.ts --bundle --outfile=bundle.js --format=iife",
     "watch": "esbuild main.ts --bundle --outfile=bundle.js --format=iife --watch --servedir=.",

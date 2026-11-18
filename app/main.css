@@ -1,5 +1,5 @@
-/* The live page's own look: the demo page's stylesheet with the workshop controls gone, and a
-   status bar in their place — one word says whether the host's stream is flowing. Nothing here ships. */
+/* The live page's own look: the workshop's stylesheet with its controls gone, and a status bar in
+   their place — one word says whether the host's stream is flowing. This is the stylesheet the app serves. */
 :root,
 :root[data-theme='dark'] {
   --fg: #ebe6dc;
@@ -373,11 +373,6 @@ body.menu-open #drawer {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-/* The shared renderer still writes the zoom buttons, but the page keeps that element hidden:
-   in a browser the map scales with the window on its own. */
-#buttons {
-  display: none;
 }
 .btn {
   background: transparent;

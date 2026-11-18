@@ -50,15 +50,23 @@ answer "where did the work go".
 
 **Status:** Accepted
 
-**Decision:** `hooks/` never imports from `vscode-extension/`, `vscode` or
-any engine; `vscode-extension/src/board.ts` stays free of VS Code imports;
-the webview (`vscode-extension/src/webview/`) imports nothing from the
-extension host and communicates only through messages.
+**Decision:** `hooks/` never imports from `app/` or any engine — it
+imports `types/` and its own modules, and nothing else. `app/` may import
+`hooks/`. The state module, [`app/board.ts`](../app/board.ts), imports
+only `types/` and `hooks/`, never a host module (`server`, `http`, `cli`,
+`proxy`, `hookWatcher`, `eventWriter`) and never the DOM. The page,
+[`app/main.ts`](../app/main.ts), imports `hooks/` and `./render` and no
+host module: it is handed a projection and draws it.
 
 **Rationale:** The classification, drawing and wording logic must stay
-testable and reusable outside the engine; the webview must stay sandbox-
-safe. Contracts live in `types/index.d.ts` and the hook event schema, so
-cross-module changes go through the Architect.
+testable and reusable outside the engine; the page must stay a renderer
+that the workshop ([`demo/`](../demo/)) can share, with no way to reach
+the host's state. Contracts live in [`types/index.d.ts`](../types/index.d.ts)
+and the hook event schema, so cross-module changes go through the
+Architect. The bundling half of this boundary is checked mechanically —
+[`app/test/quality.test.cjs`](../app/test/quality.test.cjs) fails if the
+page's bundle carries a `require`/`import` (M-001); the import direction
+itself is a review rule with no automated check.
 
 ### ADR-004: The loopback proxy is the one network exception
 

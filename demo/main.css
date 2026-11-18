@@ -1,4 +1,4 @@
-/* The demo page's own look: the webview's stylesheet, with the VS Code variables a plain browser
+/* The workshop's own look: the page's stylesheet, with the editor variables a plain browser
    does not have replaced by the map's own dark and light palettes. Nothing here ships. */
 :root,
 :root[data-theme='dark'] {

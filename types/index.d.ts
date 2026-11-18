@@ -19,7 +19,13 @@ export type HookEvent = {
   aborted?: boolean
   description?: string
   commandName?: string
+  /** The file a call worked on, reduced by the hook to its last two path parts. A name, never a path. */
+  fileTail?: string
+  /** The host of the address a call reached, reduced by the hook. A host alone, never a path or a query. */
+  urlHost?: string
+  /** @deprecated The full path an older events file holds. Read and reduced with `lastTwo`; never written. */
   filePath?: string
+  /** @deprecated The full address an older events file holds. Read and reduced with `hostOf`; never written. */
   url?: string
   /** The name of the skill a call loaded; a name, never the text the skill carried. */
   skill?: string

@@ -27,7 +27,6 @@ A few things on the map are drawn and ready, but nothing reports them yet:
 
 - **Browser** waits: no tool of Copilot's is read as this station, so pages Copilot fetches light **Network** instead.
 - **Hooks** waits: it is drawn for guard hooks that intervene in a call — refusing it, asking for permission, or holding it up. The map can show such refusals in red, but the hook pipeline reports no blocking event, so nothing arrives at this station yet.
-- **Memory has a second count** — a `↓` under the station, for what a hook put in front of the model unasked. No hook reports what it brought, so the `↓` never appears yet.
 - **A call in the background** would keep its light and its clock hands after the turn that started it is over, until the task reports it ended. No event yet says which call that is, so every call ends when its turn does.
 
 All of these stay outside the smoke test for the same reason: there is nothing to fire at them.
@@ -96,7 +95,7 @@ Under the map are a line that says what runs now, and the last rows:
 | `✕` | failed or blocked |
 | `◆` | a change of model |
 
-Finished calls that follow one another at one station fold into one row, marked `+2` for the two it stands for besides the one named. While the model thinks — the person's message open, no call running, the centre breathing — the line says so; an open call or the finished turn takes the words back. Buttons at the end of the line zoom the map, fold the pane to that one line and bring the map back.
+Finished calls that follow one another at one station fold into one row, marked `+2` for the two it stands for besides the one named. While the model thinks — the person's message open, no call running, the centre breathing — the line says so; an open call or the finished turn takes the words back. The map has no zoom or fold controls of its own: it scales with the window, and the looks menu at the top bar tunes the rest.
 
 ## How it sees Copilot work
 
@@ -104,7 +103,7 @@ Two decoupled sources are available. The hook — the map's main feed — is Cop
 
 ### Workspace hooks
 
-The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name.
+The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name, a file's last two path parts, and an address's host — never a directory above the file, never a query string, never a login.
 
 The hook is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the app is not running, so the agent is never blocked. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
 
@@ -118,7 +117,7 @@ The app reads its setup from a JSON file passed with `--config` (see the [App gu
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `coreName` | `COPILOT` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
+| `coreName` | `CORE` | What the circle in the middle of the map says, up to ten characters; once a model answers, its family stands there instead |
 | `contextWindowLimit` | `128000` | Tokens the ring is full at |
 | `layout` | `you-top` | `you-top` / `you-bottom` |
 | `language` | `en` | `en`, `ru`, `es`, `fr`, `de`, `it` or `pt` |

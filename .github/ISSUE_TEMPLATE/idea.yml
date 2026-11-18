@@ -21,11 +21,11 @@ body:
   - type: checkboxes
     id: keeps
     attributes:
-      label: It keeps to what the mod is
-      description: See "What the mod must stay" in CONTRIBUTING.md.
+      label: It keeps to what the app is
+      description: See "Before you send a change" in CONTRIBUTING.md.
       options:
         - label: It needs no content on a label (no command line, query, file text or full path)
-        - label: It needs no network request, file read or process from the mod
+        - label: It needs no network request, file read or process from the app
   - type: dropdown
     id: who
     attributes:

@@ -8,12 +8,15 @@ import { classifyCopilot } from './classifyCopilot'
 import type { Setup } from '../hooks/setup'
 
 /** The state the translation carries between events: the board, the calls still open,
- * the names parked for subagents not yet started, and the model the session last showed. */
+ * the names parked for subagents not yet started, and the model the session last showed.
+ * The two maps belong to the session that is running: a reset empties both. */
 export type ApplierState = {
   board: Board
-  /** callId → the id of the entry the call started, while the call runs. */
+  /** callId → the id of the entry the call started, while the call runs. A call's end or failure takes
+   * its id out; a session reset empties the map, for a call of the old session can never end here. */
   open: Map<string, string>
-  /** callId → the parked label (the parkedNames semantics). */
+  /** callId → the label a subagent launch parked for the child that call will start. Emptied by the
+   * child's claim, by a failed launch, by the turn's end, by the person's next message, and by a reset. */
   parked: Map<string, string>
   lastModel?: string
 }
@@ -41,8 +44,9 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
   switch (e.event) {
     case 'sessionStart': {
       s.board = transitionBoard(s.board, { type: 'reset' }, now).board
-      // A new session launches no one: names parked for the old one belong to no child here.
+      // A new session launches no one and carries no open call: both maps belong to the session that ended.
       s.parked.clear()
+      s.open.clear()
       if (e.model !== undefined) {
         const before = s.lastModel
         s.lastModel = e.model
@@ -58,14 +62,17 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       break
     }
     case 'userPromptSubmitted': {
-      // A subagent's own prompt carries its agent id and must leave the parked names alone;
-      // a message from the person themselves ends every launch of the turn before.
-      if (e.agentId === undefined) s.parked.clear()
+      // A child agent's own prompt is an instruction, not a message from the person: it adds no row,
+      // clears no fault, and leaves the parked names alone. The child is already named by the
+      // description of the call that launched it.
+      if (e.agentId !== undefined) break
+      // A message from the person themselves ends every launch of the turn before.
+      s.parked.clear()
       s.board = transitionBoard(s.board, { type: 'prompt', label: setup.t.newMessage }, now).board
       break
     }
     case 'preToolUse': {
-      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath, skill: e.skill }, setup)
+      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, urlHost: e.urlHost, url: e.url, fileTail: e.fileTail, file_path: e.filePath, skill: e.skill }, setup)
       // A call that launches a subagent also names it: the short description only, its prompt is content.
       // The id the child circles under is its own session's, minted only when the child starts, so
       // the launch cannot carry it. The name waits under the launch call's id until the child's first
@@ -133,7 +140,7 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       break
     }
     case 'errorOccurred': {
-      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, url: e.url, file_path: e.filePath, skill: e.skill }, setup)
+      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, urlHost: e.urlHost, url: e.url, fileTail: e.fileTail, file_path: e.filePath, skill: e.skill }, setup)
       const id = e.callId !== undefined ? s.open.get(e.callId) : undefined
       if (e.callId !== undefined) s.open.delete(e.callId)
       // The call failed, so the child it meant to start never came: its parked name goes back.

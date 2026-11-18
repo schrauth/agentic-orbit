@@ -12,11 +12,13 @@ The repository carries its own Copilot agents in [`.github/agents/`](.github/age
 
 ## Before you send a change
 
-- `cd app && npm ci && npm test` passes; this builds the app and runs its focused regression tests.
+- `cd app && npm ci && npm test` passes; this type-checks the app, builds it and runs its focused regression tests.
 - `cd demo && npm ci && npm run typecheck` passes; the demo is built from the same shared `hooks/` code as the app, so this catches drift between them. CI runs both on every pull request and every push to `main`.
 - Nothing new reaches the network, reads files outside its own workspace hook file, or starts processes other than the hook it installs.
 - A label never holds content: a file keeps the last two parts of its path, a web address its host, a shell command its description or name.
 - The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the app is not running.
+
+There is no linter or formatter configured: the type checks and the tests are the gate. Match the style of the file you are editing.
 
 ## Words
 

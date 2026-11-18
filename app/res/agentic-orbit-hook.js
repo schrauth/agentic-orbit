@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Agentic Orbit telemetry hook for GitHub Copilot. Fail-safe by contract:
-//   - always exits 0, within a few milliseconds, whether the extension runs or not;
+//   - always exits 0, within a few milliseconds, whether the host runs it or not;
 //   - for preToolUse always prints a valid allow decision, so the agent is never blocked;
 //   - on any error it writes nothing and stays silent;
-//   - it appends one compact JSON line of METADATA ONLY (event, tool name, timings, status,
-//     a short description, a command name) to a local file. No code, no prompt text,
-//     no file contents, no query strings. Everything stays on this machine.
+//   - it appends one compact JSON line of METADATA ONLY (event, tool name, ids, timings, status,
+//     a short description, a command's name, a skill's name, a file's last two path parts, an
+//     address's host) to a local file. No code, no prompt text, no file contents, no path above
+//     the file's own name, no query strings, no credentials. Everything stays on this machine.
 
 'use strict'
 
@@ -62,8 +63,8 @@ function oneLine(input, argv) {
     aborted: bool(input.aborted) || bool(input.isAborted),
     description: short(str(input.description) || str(input.explanation), 120),
     commandName: undefined,
-    filePath: undefined,
-    url: undefined,
+    fileTail: undefined,
+    urlHost: undefined,
     promptTokens: num(input.prompt_tokens) || num(input.promptTokens),
   }
     // The name of a shell command only: never its arguments, never its line.
@@ -78,12 +79,14 @@ function oneLine(input, argv) {
   var command = str(input.command) || str(input.command_line) || str(input.commandLine) || str(args.command)
   if (command !== '') out.commandName = short(firstWord(command), 40)
   var path = str(input.file_path) || str(input.filePath) || str(input.path) || str(args.file_path) || str(args.filePath) || str(args.path)
-  if (path !== '') out.filePath = short(path, 160)
+  // The file's last two parts only: enough for the map to name the row, and no directory above it.
+  if (path !== '') out.fileTail = tail(path)
   // The name of the skill a call loads only: never its text, never what it was told to do.
   var skill = str(input.skill) || str(args.skill)
   if (skill !== '') out.skill = short(skill, 64)
   var url = str(input.url) || str(input.uri) || str(args.url) || str(args.uri)
-  if (url !== '') out.url = short(url, 160)
+  // The address's host only: never its path, never its query, for a query carries what was asked.
+  if (url !== '') out.urlHost = hostOnly(url)
   var status = str(input.status) || str(input.result_status) || str(input.resultStatus)
   if (status !== '') out.status = short(status, 24)
   for (var key in out) {
@@ -95,6 +98,29 @@ function oneLine(input, argv) {
 function firstWord(command) {
   var trimmed = command.trim().replace(/^[(`]'?/, '')
   return trimmed.split(/\s+/)[0] || trimmed.slice(0, 40)
+}
+
+// The last two parts of a path: the same reduction the map draws as a row's name, and nothing above it.
+function tail(path) {
+  var parts = path.replace(/\\/g, '/').split('/').filter(Boolean)
+  return short(parts.slice(-2).join('/'), 120)
+}
+
+// The host of an address and nothing else. A value that is not shaped like a host yields '', so a
+// malformed address writes no host at all rather than a guess at one.
+function hostOnly(url) {
+  var text = str(url).trim()
+  if (text === '') return ''
+  // The scheme, if any, then the authority up to the first path, query or fragment.
+  var afterScheme = /^[a-z][a-z0-9+.-]*:\/\/(.*)$/i.exec(text)
+  var rest = afterScheme === null ? text : afterScheme[1]
+  var authority = rest.split(/[/?#]/)[0]
+  // A login is content: drop it, and drop the port with it, which the map does not draw.
+  var host = authority.slice(authority.lastIndexOf('@') + 1).replace(/:\d+$/, '').toLowerCase()
+  if (!/^[a-z0-9.-]{1,120}$/.test(host)) return ''
+  // A host is a dotted name or localhost; anything else is a path segment or a word, and is left out.
+  if (host.indexOf('.') < 0 && host !== 'localhost') return ''
+  return host
 }
 
 function str(v) {

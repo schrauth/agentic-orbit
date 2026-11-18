@@ -1,5 +1,5 @@
 // The demo page: a fake clock walks the chosen scenario's steps through the fake session, and the map is
-// drawn from the same board and the same drawing the extension uses, on the same 1-second cadence the panel keeps.
+// drawn from the same board and the same drawing the app uses, on the same 1-second cadence the page keeps.
 // The words on the controls live here: the demo is a workshop, not a shipped surface.
 import { LANGUAGES } from '../hooks/text'
 import { FakeSession, demoSetup } from './engine'
@@ -9,7 +9,7 @@ import type { ViewProjection } from '../types'
 import { renderView } from '../app/render'
 
 const BASE = 1_770_000_000_000
-/** How often the map is redrawn while it runs: the panel keeps the same beat. */
+/** How often the map is redrawn while it runs: the page keeps the same beat. */
 const REDRAW_MS = 1000
 
 type Options = { scenario: number; speed: number; playing: boolean; theme: 'dark' | 'light' | 'auto' | 'fraunhofer'; layout: 'you-top' | 'you-bottom'; motion: 'full' | 'reduced'; pace: 'normal' | 'slow'; language: string }
@@ -49,7 +49,7 @@ function playPause(): void {
   renderControls()
 }
 
-/** The clock moved: every step whose time has come is applied, and the map is redrawn on the panel's beat. */
+/** The clock moved: every step whose time has come is applied, and the map is redrawn on the page's beat. */
 function tick(dtReal: number): void {
   if (state.playing) state.clock += dtReal * state.speed
   const steps = scenario().steps

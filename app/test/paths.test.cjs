@@ -243,7 +243,7 @@ test("a subagent's prompt is not the person's message: no row and no cleared fau
 test('a blocked line closes the open call at the hooks station, or lands there alone', () => {
   const s = emptyState()
   const at = (ev, ms) => applyHookEvent(s, ev, setup, ms)
-  // The observer's preToolUse opens the call; the guard's blocked line closes it as a refusal.
+  // The observer's preToolUse opens the call; a producer's blocked line closes it as a refusal.
   at({ event: 'preToolUse', callId: 'g1', tool: 'edit_file', filePath: '/w/.github/agents/builder.md' }, 100)
   const open = s.board.entries.at(-1)
   assert.equal(open.station, 'files')
@@ -262,44 +262,6 @@ test('a blocked line closes the open call at the hooks station, or lands there a
   assert.equal(alone.status, 'block')
   assert.equal(alone.label, setup.t.stations.hooks)
   assert.equal(s.board.faults.hooks, 2)
-})
-
-test('the guard denies only its two rules, and writes one names-only blocked line', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ao-guard-'))
-  const file = path.join(dir, 'events.jsonl')
-  const guard = path.join(__dirname, '..', 'res', 'agentic-orbit-guard.js')
-  const run = payload => {
-    const r = spawnSync(process.execPath, [guard], {
-      input: typeof payload === 'string' ? payload : JSON.stringify(payload),
-      env: { ...process.env, AGENTIC_ORBIT_EVENTS_FILE: file },
-      encoding: 'utf8',
-      timeout: 5000,
-    })
-    assert.equal(r.status, 0)
-    return JSON.parse(r.stdout)
-  }
-  // An edit that targets the protected definitions is denied, including every path in an edits array.
-  const edit = run({ tool_name: 'edit_file', tool_use_id: 'g1', tool_input: { file_path: '/w/.github/agents/builder.md' } })
-  assert.equal(edit.permissionDecision, 'deny')
-  assert.match(edit.permissionDecisionReason, /\.github\/agents\//)
-  assert.equal(run({ tool_name: 'apply_patch', tool_use_id: 'g2', tool_input: { edits: [{ file_path: '/w/.github/agents/reviewer.md' }] } }).permissionDecision, 'deny')
-  // Reading them is not an edit, and an edit elsewhere is not the protected directory.
-  assert.equal(run({ tool_name: 'read_file', tool_use_id: 'g3', tool_input: { file_path: '/w/.github/agents/builder.md' } }).permissionDecision, 'allow')
-  assert.equal(run({ tool_name: 'create_file', tool_use_id: 'g4', tool_input: { file_path: '/w/src/other.ts' } }).permissionDecision, 'allow')
-  // A subagent call loses its Git rights, wrappers and all; the main chat keeps them.
-  assert.equal(run({ tool_name: 'run_in_terminal', tool_use_id: 'g5', agent_id: 'a1', tool_input: { command: 'sudo -u root git commit -m x' } }).permissionDecision, 'deny')
-  assert.equal(run({ tool_name: 'run_in_terminal', tool_use_id: 'g6', tool_input: { command: 'git status' } }).permissionDecision, 'allow')
-  // In doubt the guard allows: a malformed payload never blocks a call.
-  assert.equal(run('not json').permissionDecision, 'allow')
-  const lines = fs.readFileSync(file, 'utf8').trim().split('\n').map(line => JSON.parse(line))
-  assert.deepEqual(lines.map(line => [line.status, line.tool, line.callId, line.description]), [
-    ['blocked', 'edit_file', 'g1', 'guard: agents-protected'],
-    ['blocked', 'apply_patch', 'g2', 'guard: agents-protected'],
-    ['blocked', 'run_in_terminal', 'g5', 'guard: git-monopoly'],
-  ])
-  const raw = fs.readFileSync(file, 'utf8')
-  assert.ok(!raw.includes('.github/agents/builder.md') && !raw.includes('git commit'), raw)
-  fs.rmSync(dir, { recursive: true, force: true })
 })
 
 test('the writer appends the line the hook could have written, and never throws', async () => {

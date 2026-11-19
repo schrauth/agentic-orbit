@@ -12,7 +12,7 @@ Inspired from [lot-map](https://github.com/alexeyw/lot-map) by Aleksei Volodin.
 
 ## Run the map
 
-Watch a real Copilot session in a browser window of its own. Agentic Orbit runs beside the project: it does not install itself into it, reads only the events file its workspace hooks write, and binds to your machine only.
+Watch a real Copilot session in a browser window of its own. Agentic Orbit runs beside the project: it adds no dependency to it, reads only the events file its workspace hook writes, and binds to your machine only.
 
 ### 1. Install the workspace hooks (once per project)
 
@@ -25,7 +25,7 @@ npm run build
 npm start -- --install-hooks /absolute/path/to/the/project
 ```
 
-If the project already has `.github/hooks/hooks.json`, back it up first: the installer overwrites that file. Start a new Copilot session afterwards so it loads the hooks. Add `--guard` to also install the two opt-in guards — the `.github/agents/` change protection and the subagent Git monopoly. They encode this repository's rules and are not needed to visualize a project; most other projects want only the observer.
+If the project already has `.github/hooks/hooks.json`, back it up first: the installer overwrites that file. Start a new Copilot session afterwards so it loads the hooks. The app ships no guard: a project's own `preToolUse` hook can deny a call and report it, which lights the Hooks station; see [Hooks for your project](docs/hooks.md#guards).
 
 ### 2. Watch the project
 
@@ -37,7 +37,7 @@ Open <http://127.0.0.1:8318>. Pass the project path absolutely so the host and t
 
 The app does not require our hook script: any producer that appends the event lines works. [Hooks for your project](docs/hooks.md) shows the format, a manifest, a minimal adapter and how to test the feed.
 
-Copilot is the one producer with a ready-made hook today: the map reads the events its workspace hooks — the observer and, opt-in, the guards — write. The event format is host-neutral, so another agent host can feed the same map through its own adapter; no such adapter ships yet.
+Copilot is the one producer with a ready-made observer today: the map reads the events its workspace hook writes. The event format is host-neutral, so another agent host can feed the same map through its own adapter; no such adapter ships yet.
 
 - Keep the map full-size on a second screen or shared display.
 - See every call in a console-style log, with timestamp, station, label and duration.

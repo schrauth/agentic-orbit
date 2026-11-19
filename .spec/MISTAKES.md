@@ -24,7 +24,7 @@ merge or delete an entry without updating every reference to it.
 | Area | Covers | Entries |
 | --- | --- | --- |
 | `app/` | The host — `server`, `http`, `cli`, `proxy`, `eventApplier`, `board`, `classifyCopilot`, `hookWatcher`, `eventWriter`, `hookManifest` — and the page it serves, `main.ts` and `render.ts`, which ships as one classic script | M-001 |
-| `app/res` | The installed hooks and their manifests — `agentic-orbit-hook.js`, `hooks.json` (observer, fail-safe) and `agentic-orbit-guard.js`, `guard.json` (opt-in guards, deliberate denial) — must stay safe in their opposite ways | — |
+| `app/res` | The installed observer and its manifest — `agentic-orbit-hook.js`, `hooks.json` — must stay fail-safe and never block a call | — |
 | `hooks/` | Pure library: classification, drawing, feed, wording (`text.ts`), the projection (`view.ts`) | — |
 | `types` | Contracts in `types/index.d.ts`, and the hook event schema | — |
 | `docs` | README, CONTRIBUTING, PRIVACY, SECURITY, CHANGELOG, `docs/` | — |

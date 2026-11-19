@@ -29,7 +29,7 @@ That writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js`
 npm start -- --workspace /absolute/path/to/the/project
 ```
 
-Do **not** add `--guard` for a foreign project unless you want this repository's policy rules. The guards protect `.github/agents/` and the subagent Git monopoly; they are not part of the visualization contract. See [Guards](#guards) below.
+The installer writes only the observer. The app ships no guard and defines no policy; if you want your own, see [Guards](#guards) below.
 
 If the project already has `.github/hooks/hooks.json`, back it up first: the installer overwrites it.
 
@@ -188,12 +188,18 @@ The map should show a Shell call that starts and finishes. If it stays dark, che
 
 ## Guards
 
-The `--guard` option installs the two guards this repository uses: an edit under `.github/agents/` is denied, and a subagent's `git` command is denied. They are policy, not plumbing. A foreign project usually wants neither.
+A guard is a project's own policy, not part of this app. The app installs none and defines no rules.
 
-If you want your own policy, write a `preToolUse` hook that returns `{"permissionDecision":"deny","permissionDecisionReason":"…"}` and appends a line with `status: "blocked"`:
+If you want your own policy, point a `preToolUse` command hook at your script:
+
+```json
+{"version":1,"hooks":{"preToolUse":[{"type":"command","command":"node .github/hooks/my-guard.js","timeoutSec":5}]}}
+```
+
+The script returns `{"permissionDecision":"deny","permissionDecisionReason":"…"}` and appends a line with `status: "blocked"`:
 
 ```json
 {"v":1,"event":"errorOccurred","callId":"t1","tool":"edit_file","status":"blocked"}
 ```
 
-The app then lights the **Hooks** station red and names the tool. The reason string is for the agent, not the map; keep it a rule name, never the payload.
+The app then lights the **Hooks** station red and names the tool. The reason string is for the agent, not the map; keep it a rule name, never the payload. Deny only on an explicit rule match, allow in doubt and exit `0`: Copilot treats a crashed command hook as a denial.

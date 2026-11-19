@@ -144,8 +144,8 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       if (e.callId !== undefined) s.open.delete(e.callId)
       // The call failed, so the child it meant to start never came: its parked name goes back.
       unparkName(s, e.callId)
-      // A blocked line is the guard's own verdict: the hooks station is its classification, and the
-      // tool name its label. No classifier dispatch, no reconstructed input.
+      // A blocked line is the producer's own verdict: the hooks station is its classification, and
+      // the tool name its label. No classifier dispatch, no reconstructed input.
       if (e.status === 'blocked') {
         s.board = transitionBoard(s.board, { type: 'failure', id, station: 'hooks', label: e.tool ?? setup.t.stations.hooks, status: 'block' }, now).board
         break

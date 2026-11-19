@@ -7,7 +7,7 @@ const { classifyShell } = require('../out/test-entry.js')
 const { projectView } = require('../out/test-entry.js')
 const { setupFrom } = require('../out/test-entry.js')
 const { emptyBoard, transitionBoard } = require('../out/test-entry.js')
-const { HOOK_EVENTS, guardJson, hookJson } = require('../out/test-entry.js')
+const { HOOK_EVENTS, hookJson } = require('../out/test-entry.js')
 
 test('shell classification keeps wrappers, nested network calls, and PowerShell file commands', () => {
   const setup = setupFrom()
@@ -87,18 +87,6 @@ test('hook manifest lists every event exactly once and parses as JSON', () => {
     assert.equal(entries.length, 1, `${event} must appear exactly once`)
     assert.equal(entries[0].type, 'command')
   }
-})
-
-test('the guard manifest is one preToolUse command hook with a short timeout', () => {
-  const manifest = guardJson('.github/hooks/agentic-orbit-guard.js')
-  const parsed = JSON.parse(manifest)
-
-  assert.equal(parsed.version, 1)
-  assert.deepEqual(Object.keys(parsed.hooks), ['preToolUse'])
-  assert.equal(parsed.hooks.preToolUse.length, 1)
-  assert.equal(parsed.hooks.preToolUse[0].type, 'command')
-  assert.match(parsed.hooks.preToolUse[0].command, /agentic-orbit-guard\.js$/)
-  assert.equal(parsed.hooks.preToolUse[0].timeoutSec, 5)
 })
 
 // M-001 / ADR-005: the page loads this file as a classic <script src>, where

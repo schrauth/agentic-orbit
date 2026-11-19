@@ -21,7 +21,7 @@ when it clarifies a real trade-off.
 
 ### ADR-001: The workspace hook is fail-safe
 
-**Status:** Accepted — amended by ADR-010 for the opt-in guards
+**Status:** Accepted
 
 **Decision:** The installed hook always exits `0` within milliseconds and
 answers `preToolUse` with a valid allow JSON, even when the extension is
@@ -198,8 +198,16 @@ host restart as today. Plan: `.spec/plans/multi-session-boards-plan.md`.
 
 ### ADR-010: Guards block deliberately, opt-in only
 
-**Status:** Accepted
+**Status:** Superseded by ADR-011
 
 **Decision:** Two opt-in workspace guards — the agent-definitions guard and the Git-monopoly guard — deny a tool call when an explicit project rule matches. They are installed only with `--install-hooks <dir> --guard`, answer allow in doubt, catch their own faults, always exit `0` within milliseconds, and report a denial as one names-only `errorOccurred` line with `status: 'blocked'`. The observer hook keeps ADR-001's unconditional fail-safe.
 
 **Rationale:** The guards enforce rules the repository already documents (D-004's change protection and the Version Control Agent's Git monopoly). Copilot counts a crashed command hook as a denial — the inverse of the observer's fail-safe — so the guard fails open on anything but an explicit rule match. A timeout falls through to the normal permission flow; only a rule match denies. The Hooks station lights from a real event, so D-002 stays true.
+
+### ADR-011: Guards are project-owned; the app only draws the refusal
+
+**Status:** Accepted
+
+**Decision:** The repository ships no guard engine and no guard rules. It keeps only the visualization contract: an `errorOccurred` line with `status: 'blocked'` closes the open call at the Hooks station (or lands there alone), fault-counted and alarm-drawn. Policy hooks belong to the project and are installed there; this repository's own guards stay local and untracked under `.github/hooks/`.
+
+**Rationale:** The two guards encoded this repository's rules, not the product's. Shipping them invited foreign projects to install rules they do not need and put project-specific policy in the app's source. The visualization is the reusable part; a project can write its own `preToolUse` guard and report a denial through the same names-only line.

@@ -15,7 +15,7 @@ Agentic Orbit shows Copilot activity as a live map in a browser app on your mach
 | **Browser** | browser tools — none of Copilot's reaches this station yet, so it waits |
 | **Agents** | subagents; their own calls start from this station |
 | **Skills** | a skill the model runs, named in the row |
-| **Hooks** | an opt-in guard refuses a call — an edit under `.github/agents/`, or a subagent's `git` command — and the row names the tool |
+| **Hooks** | a producer reports a deliberate refusal (`status: "blocked"`) and the row names the tool |
 
 ### Memory is yours to name
 
@@ -98,22 +98,19 @@ Finished calls that follow one another at one station fold into one row, marked 
 
 ## How it sees Copilot work
 
-Two decoupled sources are available. The observer hook — the map's main feed — is Copilot's and reports Copilot's events only; the optional guards are the second producer and write only when they deny a call. No other agent host's story reaches the map yet: another IDE or host would need its own hook writing the same compact lines; [Hooks for your project](./hooks.md) shows that format and a minimal adapter.
+Two decoupled sources are available. The observer hook — the map's main feed — is Copilot's and reports Copilot's events only; a project's own guard can be the second producer and write only when it denies a call. No other agent host's story reaches the map yet: another IDE or host would need its own hook writing the same compact lines; [Hooks for your project](./hooks.md) shows that format and a minimal adapter.
 
 ### Workspace hooks
 
-The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Add `--guard` to install the two opt-in guards beside the observer. The observer appends one compact JSON line per call to a file in the OS temp folder; the guards append one only when they deny — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name, a file's last two path parts, and an address's host — never a directory above the file, never a query string, never a login.
+The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. The app ships no guard. The observer appends one compact JSON line per call to a file in the OS temp folder; a project's own guard appends one only when it denies — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name, a file's last two path parts, and an address's host — never a directory above the file, never a query string, never a login.
 
 The observer is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the app is not running, so it never blocks the agent. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
 
-### Guards
+### A deliberate refusal
 
-The guards are opt-in and installed only with `--guard`. They enforce two project rules instead of merely documenting them:
+The app ships no guard and enforces no policy: that belongs to the project. A project's own `preToolUse` hook can deny a call and append one names-only line with `status: "blocked"` to the same events file. The map then lights the **Hooks** station red and names the tool, never the command line or the path. [Hooks for your project](./hooks.md#guards) shows the line and the hook shape.
 
-- **Agent definitions:** an edit whose target lies under `.github/agents/` is denied, including every path in an `edits` array. Reading them is not an edit and stays allowed.
-- **Git monopoly:** a shell command whose command name is `git` is denied when the call comes from a subagent; the main chat keeps its Git rights. Wrappers such as `sudo`, `env` and `timeout` are seen through.
-
-A denial is deliberate and never an accident: a guard denies only on an explicit rule match, answers allow in doubt, catches its own faults and always exits `0` within milliseconds — Copilot counts a crashed command hook as a denial. Its manifest pins a five-second timeout; a timeout falls through to the normal permission flow, so a hung guard cannot block a call. On a denial the guard appends one names-only line with `status: "blocked"` to the same events file; the map lights the **Hooks** station red and the feed row names the tool, never the command line or the path.
+If you write such a guard, keep it safe: deny only on an explicit rule match, answer allow in doubt, catch your own faults and always exit `0` within milliseconds — Copilot counts a crashed command hook as a denial. A timeout falls through to the normal permission flow, so a hung guard cannot block a call.
 
 ### The loopback proxy
 

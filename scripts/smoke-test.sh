@@ -17,13 +17,6 @@ if [ ! -f "$HOOK" ]; then
   exit 1
 fi
 
-# The guard is opt-in; the rehearsal still runs against the real script from the app's source
-# when the workspace has not installed it.
-GUARD=.github/hooks/agentic-orbit-guard.js
-if [ ! -f "$GUARD" ]; then
-  GUARD=app/res/agentic-orbit-guard.js
-fi
-
 events_file() {
   # The hook honours the same variable, so both agree on where the lines go.
   if [ -n "${AGENTIC_ORBIT_EVENTS_FILE:-}" ]; then
@@ -43,12 +36,6 @@ BEFORE=$(wc -l < "$FILE" 2>/dev/null || echo 0)
 # stdout is dropped: the allow JSON answers Copilot, not the terminal.
 fire() {
   printf '%s' "$2" | node "$HOOK" "event=$1" > /dev/null
-  sleep 1
-}
-
-# guard <json> — one preToolUse payload through the real guard script; its allow/deny JSON is dropped.
-guard() {
-  printf '%s' "$1" | node "$GUARD" > /dev/null
   sleep 1
 }
 
@@ -100,9 +87,9 @@ echo "8. A failed call                          → red, until the next message"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"t8","tool_input":{"command":"date"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"t8","error":true}'
 
-echo "9. A guard refuses an edit                → Hooks (red, edit_file)"
+echo "9. A producer reports a refusal           → Hooks (red, edit_file)"
 fire preToolUse  '{"tool_name":"edit_file","tool_use_id":"t9","tool_input":{"file_path":".github/agents/builder.md"}}'
-guard            '{"tool_name":"edit_file","tool_use_id":"t9","tool_input":{"file_path":".github/agents/builder.md"}}'
+fire errorOccurred '{"tool_name":"edit_file","tool_use_id":"t9","status":"blocked"}'
 
 echo "— Subagents done                          → planets fade one after another"
 fire agentStop '{"agent_id":"a1"}'

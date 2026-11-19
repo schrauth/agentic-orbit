@@ -89,7 +89,7 @@ export function finish(board: Board, id: string | undefined, status: Status, now
   }
 }
 
-/** An action that began at one station ends at another: the guard's verdict moves the row, renames it and counts the fault there. */
+/** An action that began at one station ends at another: the producer's verdict moves the row, renames it and counts the fault there. */
 function finishAt(board: Board, id: string | undefined, status: Status, station: StationId, label: string, now: number): Board {
   if (id === undefined) return board
   const open = board.entries.find(e => e.id === id && e.status === 'run')
@@ -143,7 +143,7 @@ export function transitionBoard(board: Board, transition: BoardTransition, now: 
     case 'failure': {
       const status = transition.status ?? 'err'
       if (transition.id !== undefined) {
-        // A guard's blocked verdict moves the row to the station that refused it; an error stays where it began.
+        // A producer's blocked verdict moves the row to the station that refused it; an error stays where it began.
         return { board: status === 'block' ? finishAt(board, transition.id, status, transition.station, transition.label, now) : finish(board, transition.id, status, now) }
       }
       const started = begin(board, { station: transition.station, label: transition.label, status, startedAt: now, endedAt: now }, now)

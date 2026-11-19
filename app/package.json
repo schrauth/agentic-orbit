@@ -4,7 +4,7 @@
   "description": "The live map of the agent's work: a small Node host that reads the workspace hook's events file and serves the live page on loopback.",
   "scripts": {
     "typecheck": "tsc -p .",
-    "build": "esbuild cli.ts --bundle --platform=node --format=cjs --outfile=out/server.js && esbuild test-entry.ts --bundle --platform=node --format=cjs --outfile=out/test-entry.js && esbuild main.ts --bundle --outfile=out/web/bundle.js --format=iife && node -e \"const fs = require('fs'); fs.mkdirSync('out/web', {recursive: true}); for (const f of ['index.html', 'main.css']) fs.copyFileSync(f, 'out/web/' + f); fs.mkdirSync('out/res', {recursive: true}); fs.copyFileSync('res/agentic-orbit-hook.js', 'out/res/agentic-orbit-hook.js'); fs.copyFileSync('res/agentic-orbit-guard.js', 'out/res/agentic-orbit-guard.js')\"",
+    "build": "esbuild cli.ts --bundle --platform=node --format=cjs --outfile=out/server.js && esbuild test-entry.ts --bundle --platform=node --format=cjs --outfile=out/test-entry.js && esbuild main.ts --bundle --outfile=out/web/bundle.js --format=iife && node -e \"const fs = require('fs'); fs.mkdirSync('out/web', {recursive: true}); for (const f of ['index.html', 'main.css']) fs.copyFileSync(f, 'out/web/' + f); fs.mkdirSync('out/res', {recursive: true}); fs.copyFileSync('res/agentic-orbit-hook.js', 'out/res/agentic-orbit-hook.js')\"",
     "start": "npm run build && node out/server.js",
     "test": "npm run typecheck && npm run build && node --test test/*.test.cjs"
   },

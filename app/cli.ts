@@ -5,7 +5,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { eventsFileFor } from './hookWatcher'
-import { hookJson } from './hookManifest'
+import { guardJson, hookJson } from './hookManifest'
 import { startProxy } from './proxy'
 import type { ProxyServer } from './proxy'
 import { serveCore } from './server'
@@ -42,6 +42,7 @@ const HELP = `Agentic Orbit — the live map in a plain browser window.
                                            memoryLabels, contextWindowLimit) — the palette defaults
                                            to dark, the memory servers to ["memory"]
   --install-hooks <dir>                    write .github/hooks/ into the workspace and exit
+  --guard                                  with --install-hooks, also install the opt-in guards
   --proxy <targetBaseUrl>                  also start the loopback proxy for the context window
   --proxy-port <n>                         where the proxy listens (default 8317)
 `
@@ -52,6 +53,7 @@ type Args = {
   port: number
   config?: string
   installHooks?: string
+  guard: boolean
   proxy?: string
   proxyPort: number
   help: boolean
@@ -67,7 +69,7 @@ const value = (args: string[], flag: string, at: number): string => {
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { port: 8318, proxyPort: 8317, help: false }
+  const args: Args = { port: 8318, proxyPort: 8317, guard: false, help: false }
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i]
     if (flag === '--help') args.help = true
@@ -76,6 +78,7 @@ function parseArgs(argv: string[]): Args {
     else if (flag === '--port') args.port = Number(value(argv, flag, ++i))
     else if (flag === '--config') args.config = value(argv, flag, ++i)
     else if (flag === '--install-hooks') args.installHooks = value(argv, flag, ++i)
+    else if (flag === '--guard') args.guard = true
     else if (flag === '--proxy') args.proxy = value(argv, flag, ++i)
     else if (flag === '--proxy-port') args.proxyPort = Number(value(argv, flag, ++i))
     else {
@@ -101,12 +104,16 @@ function setupFromConfig(file: string): HostSetup {
   return setup
 }
 
-/** The same two files --install-hooks writes: the script, the manifest. */
-function installHooksInto(dir: string): void {
+/** The observer's two files, plus the guard's two when asked: script and manifest each. */
+function installHooksInto(dir: string, guard: boolean): void {
   const hooks = path.join(dir, '.github', 'hooks')
   fs.mkdirSync(hooks, { recursive: true })
   fs.copyFileSync(path.join(__dirname, 'res', 'agentic-orbit-hook.js'), path.join(hooks, 'agentic-orbit-hook.js'))
   fs.writeFileSync(path.join(hooks, 'hooks.json'), hookJson('.github/hooks/agentic-orbit-hook.js'))
+  if (guard) {
+    fs.copyFileSync(path.join(__dirname, 'res', 'agentic-orbit-guard.js'), path.join(hooks, 'agentic-orbit-guard.js'))
+    fs.writeFileSync(path.join(hooks, 'guard.json'), guardJson('.github/hooks/agentic-orbit-guard.js'))
+  }
 }
 
 async function main(): Promise<void> {
@@ -115,9 +122,14 @@ async function main(): Promise<void> {
     process.stdout.write(HELP)
     return
   }
+  if (args.guard && args.installHooks === undefined) {
+    process.stderr.write('--guard needs --install-hooks\n')
+    process.exit(2)
+  }
   if (args.installHooks !== undefined) {
-    installHooksInto(args.installHooks)
-    process.stdout.write(`hooks written to ${path.join(args.installHooks, '.github', 'hooks')} — the event file is watched; nothing leaves this machine.\n`)
+    installHooksInto(args.installHooks, args.guard)
+    const guard = args.guard ? ' and the opt-in guards' : ''
+    process.stdout.write(`hooks written to ${path.join(args.installHooks, '.github', 'hooks')}${guard} — the event file is watched; nothing leaves this machine.\n`)
     return
   }
 

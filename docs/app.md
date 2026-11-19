@@ -1,6 +1,6 @@
 # Browser app
 
-Agentic Orbit is a browser app: a small Node host watches the workspace hook's events file and serves the live map on a page bound to your machine's loopback only. Nothing it shows is content — names, timings and figures. Today that hook is Copilot's — the one producer there is; a second agent host's hook is future work, not configuration.
+Agentic Orbit is a browser app: a small Node host watches the workspace hook's events file and serves the live map on a page bound to your machine's loopback only. Nothing it shows is content — names, timings and figures. Today those hooks are Copilot's — the observer and the opt-in guards; a second agent host's hook is future work, not configuration.
 
 ## Quick start
 
@@ -17,7 +17,7 @@ Open <http://127.0.0.1:8318>. The watched project needs the workspace hooks inst
 npm start -- --install-hooks <path-to-the-project>
 ```
 
-That command writes `.github/hooks/` into the project and exits. Start a new Copilot session so it loads the hooks, then start the host with `--workspace`.
+That command writes `.github/hooks/` into the project and exits. Add `--guard` to install the opt-in guards too; without it, only the observer is written. Start a new Copilot session so it loads the hooks, then start the host with `--workspace`.
 
 You can instead point directly to an events file with `--events-file <path>`; provide exactly one of `--workspace` and `--events-file`.
 
@@ -30,6 +30,7 @@ You can instead point directly to an events file with `--events-file <path>`; pr
 | `--port <n>` | Page port; default `8318`, bound to loopback only |
 | `--config <file>` | Read initial map setup values from a JSON file |
 | `--install-hooks <dir>` | Write `.github/hooks/` into that workspace and exit |
+| `--guard` | With `--install-hooks`, also write the opt-in guard script and its manifest |
 | `--proxy <baseUrl>` | Also start the loopback proxy for context-window telemetry |
 | `--proxy-port <n>` | Proxy port; default `8317` |
 

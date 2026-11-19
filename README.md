@@ -21,9 +21,9 @@ npm run build
 npm start -- --workspace <path-to-the-project-being-watched>
 ```
 
-Open <http://127.0.0.1:8318>. The project needs the workspace hooks installed. To install them from the app, run `npm start -- --install-hooks <path-to-the-project>` once, then start a new Copilot session and run the host command above.
+Open <http://127.0.0.1:8318>. The project needs the workspace hooks installed. To install them from the app, run `npm start -- --install-hooks <path-to-the-project>` once, then start a new Copilot session and run the host command above. Add `--guard` to install the two opt-in guards — the `.github/agents/` change protection and the subagent Git monopoly — beside the observer; without it, only the observer is written.
 
-Copilot is the one producer today: the map reads the events its workspace hook writes. The app itself runs beside any editor, but no other agent host's hook exists — wiring one up is future work, not a flag.
+Copilot is the one producer today: the map reads the events its workspace hooks — the observer and, opt-in, the guards — write. The app itself runs beside any editor, but no other agent host's hook exists — wiring one up is future work, not a flag.
 
 - Keep the map full-size on a second screen or shared display.
 - See every call in a console-style log, with timestamp, station, label and duration.

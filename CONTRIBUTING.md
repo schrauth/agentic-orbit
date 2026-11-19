@@ -4,7 +4,7 @@ Thank you for taking the time to help.
 
 ## The project in one line
 
-A browser app that draws a live map of GitHub Copilot's work. It never blocks the agent, never sends anything anywhere, and never shows content — only names. Today only Copilot's workspace hook tells the map its story: the app runs beside any editor, but a second producer — another IDE's or agent host's hook — is future work.
+A browser app that draws a live map of GitHub Copilot's work. Its observer never blocks the agent; the two opt-in guards deny only explicit rule matches. It never sends anything anywhere and never shows content — only names. Today only Copilot's workspace hooks tell the map its story: the app runs beside any editor, but a second producer — another IDE's or agent host's hook — is future work.
 
 ## The agent team
 
@@ -16,7 +16,8 @@ The repository carries its own Copilot agents in [`.github/agents/`](.github/age
 - `cd demo && npm ci && npm run typecheck` passes; the demo is built from the same shared `hooks/` code as the app, so this catches drift between them. CI runs both on every pull request and every push to `main`.
 - Nothing new reaches the network, reads files outside its own workspace hook file, or starts processes other than the hook it installs.
 - A label never holds content: a file keeps the last two parts of its path, a web address its host, a shell command its description or name.
-- The hook script stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the app is not running.
+- The observer hook stays fail-safe: it always exits `0` within milliseconds, whatever it is handed, and answers `preToolUse` with a valid allow JSON, even when the app is not running.
+- The guard is deliberately fail-closed in Copilot's eyes, so it must never crash: deny only on an explicit rule match, answer allow in doubt, catch every fault and always exit `0` within milliseconds. It writes names only, like the observer.
 
 There is no linter or formatter configured: the type checks and the tests are the gate. Match the style of the file you are editing.
 

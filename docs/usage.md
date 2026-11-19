@@ -15,7 +15,7 @@ Agentic Orbit shows Copilot activity as a live map in a browser app on your mach
 | **Browser** | browser tools — none of Copilot's reaches this station yet, so it waits |
 | **Agents** | subagents; their own calls start from this station |
 | **Skills** | a skill the model runs, named in the row |
-| **Hooks** | hooks that refuse a call, ask for permission or take a moment — none is reported yet, so the station waits |
+| **Hooks** | an opt-in guard refuses a call — an edit under `.github/agents/`, or a subagent's `git` command — and the row names the tool |
 
 ### Memory is yours to name
 
@@ -26,10 +26,9 @@ Agentic Orbit shows Copilot activity as a live map in a browser app on your mach
 A few things on the map are drawn and ready, but nothing reports them yet:
 
 - **Browser** waits: no tool of Copilot's is read as this station, so pages Copilot fetches light **Network** instead.
-- **Hooks** waits: it is drawn for guard hooks that intervene in a call — refusing it, asking for permission, or holding it up. The map can show such refusals in red, but the hook pipeline reports no blocking event, so nothing arrives at this station yet.
 - **A call in the background** would keep its light and its clock hands after the turn that started it is over, until the task reports it ended. No event yet says which call that is, so every call ends when its turn does.
 
-All of these stay outside the smoke test for the same reason: there is nothing to fire at them.
+Both stay outside the smoke test for the same reason: there is nothing to fire at them.
 
 ### How shell commands are read
 
@@ -99,13 +98,22 @@ Finished calls that follow one another at one station fold into one row, marked 
 
 ## How it sees Copilot work
 
-Two decoupled sources are available. The hook — the map's main feed — is Copilot's and reports Copilot's events only: no other agent host's story reaches the map yet. Another IDE or host would need its own hook writing the same compact lines; that adapter is future work, not a setting.
+Two decoupled sources are available. The observer hook — the map's main feed — is Copilot's and reports Copilot's events only; the optional guards are the second producer and write only when they deny a call. No other agent host's story reaches the map yet: another IDE or host would need its own hook writing the same compact lines; that adapter is future work, not a setting.
 
 ### Workspace hooks
 
-The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Each hook call appends one compact JSON line to a file in the OS temp folder — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name, a file's last two path parts, and an address's host — never a directory above the file, never a query string, never a login.
+The app's `--install-hooks <path-to-the-project>` option writes `.github/hooks/hooks.json` and `.github/hooks/agentic-orbit-hook.js` into the project. Add `--guard` to install the two opt-in guards beside the observer. The observer appends one compact JSON line per call to a file in the OS temp folder; the guards append one only when they deny — metadata only: the event, tool name, ids, timings, status, a short description, a command's name. The app watches that file and turns the lines into map events: a session's start and its model, your messages, every tool call's start and end, failures, and the end of a turn. One line holds metadata only: the event, tool name, ids, timings, status, a short description, a command's name, a skill's name, a file's last two path parts, and an address's host — never a directory above the file, never a query string, never a login.
 
-The hook is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the app is not running, so the agent is never blocked. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
+The observer is fail-safe by design: it always exits `0` within milliseconds and answers `preToolUse` with a valid allow JSON, even when the app is not running, so it never blocks the agent. Hooks are loaded when a Copilot session starts, so install them before starting a new session.
+
+### Guards
+
+The guards are opt-in and installed only with `--guard`. They enforce two project rules instead of merely documenting them:
+
+- **Agent definitions:** an edit whose target lies under `.github/agents/` is denied, including every path in an `edits` array. Reading them is not an edit and stays allowed.
+- **Git monopoly:** a shell command whose command name is `git` is denied when the call comes from a subagent; the main chat keeps its Git rights. Wrappers such as `sudo`, `env` and `timeout` are seen through.
+
+A denial is deliberate and never an accident: a guard denies only on an explicit rule match, answers allow in doubt, catches its own faults and always exits `0` within milliseconds — Copilot counts a crashed command hook as a denial. Its manifest pins a five-second timeout; a timeout falls through to the normal permission flow, so a hung guard cannot block a call. On a denial the guard appends one names-only line with `status: "blocked"` to the same events file; the map lights the **Hooks** station red and the feed row names the tool, never the command line or the path.
 
 ### The loopback proxy
 

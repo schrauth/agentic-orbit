@@ -10,6 +10,17 @@ export const HOOK_EVENTS = [
   'errorOccurred',
 ] as const
 
+/** The guard's manifest: one opt-in preToolUse command hook. A short timeout keeps a hung guard from stalling a call. */
+export function guardJson(guardTarget: string): string {
+  const hook = {
+    version: 1,
+    hooks: {
+      preToolUse: [{ type: 'command', command: `node ${guardTarget}`, timeoutSec: 5 }],
+    },
+  }
+  return `${JSON.stringify(hook, null, 2)}\n`
+}
+
 /** The manifest text Copilot reads: version 1, each event a command hook that runs on every shell. */
 export function hookJson(hookTarget: string): string {
   // Copilot's hook names differ from the wire events in one place:

@@ -85,7 +85,7 @@ export type BoardTransition =
   | { type: 'prompt'; label: string }
   | { type: 'entryStarted'; start: BoardEntryStart }
   | { type: 'entryFinished'; id?: string; status: Status }
-  | { type: 'failure'; id?: string; station: StationId; label: string }
+  | { type: 'failure'; id?: string; station: StationId; label: string; status?: Status }
   | { type: 'agentFinished'; agentId: string }
   | { type: 'turnFinished'; label: string; status: 'ok' | 'err'; mark?: 'done' }
   | { type: 'modelStep'; model: string; step: number; label: string; promptTokens: number; limit: number }

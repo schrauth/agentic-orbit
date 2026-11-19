@@ -7,7 +7,7 @@ const { classifyShell } = require('../out/test-entry.js')
 const { projectView } = require('../out/test-entry.js')
 const { setupFrom } = require('../out/test-entry.js')
 const { emptyBoard, transitionBoard } = require('../out/test-entry.js')
-const { HOOK_EVENTS, hookJson } = require('../out/test-entry.js')
+const { HOOK_EVENTS, guardJson, hookJson } = require('../out/test-entry.js')
 
 test('shell classification keeps wrappers, nested network calls, and PowerShell file commands', () => {
   const setup = setupFrom()
@@ -45,6 +45,24 @@ test('board transitions preserve call counts, errors, and turn completion', () =
   assert.equal(board.entries.at(-1)?.mark, 'done')
 })
 
+test('a failure transition records the status it is given, and err without one', () => {
+  const started = transitionBoard(emptyBoard(), { type: 'entryStarted', start: { station: 'hooks', label: 'edit_file' } }, 1000)
+  const blocked = transitionBoard(started.board, { type: 'failure', id: started.id, station: 'hooks', label: 'edit_file', status: 'block' }, 1100).board
+  assert.equal(blocked.entries.find(entry => entry.id === started.id)?.status, 'block')
+  assert.equal(blocked.faults?.hooks, 1)
+
+  const open = transitionBoard(emptyBoard(), { type: 'entryStarted', start: { station: 'files', label: 'README.md' } }, 1200)
+  const failed = transitionBoard(open.board, { type: 'failure', id: open.id, station: 'files', label: 'README.md' }, 1300).board
+  assert.equal(failed.entries.find(entry => entry.id === open.id)?.status, 'err')
+  assert.equal(failed.faults?.files, 1)
+
+  // Without an open entry the failure opens and closes its own row, blocked when asked.
+  const alone = transitionBoard(emptyBoard(), { type: 'failure', station: 'hooks', label: 'run_in_terminal', status: 'block' }, 1400).board
+  assert.equal(alone.entries.at(-1)?.status, 'block')
+  assert.equal(alone.entries.at(-1)?.station, 'hooks')
+  assert.equal(alone.faults?.hooks, 1)
+})
+
 test('view projection includes feed rows, counts, and the shared drawing', () => {
   const setup = setupFrom({ language: 'en' })
   let board = transitionBoard(emptyBoard(), { type: 'prompt', label: setup.t.newMessage }, 1000).board
@@ -69,6 +87,18 @@ test('hook manifest lists every event exactly once and parses as JSON', () => {
     assert.equal(entries.length, 1, `${event} must appear exactly once`)
     assert.equal(entries[0].type, 'command')
   }
+})
+
+test('the guard manifest is one preToolUse command hook with a short timeout', () => {
+  const manifest = guardJson('.github/hooks/agentic-orbit-guard.js')
+  const parsed = JSON.parse(manifest)
+
+  assert.equal(parsed.version, 1)
+  assert.deepEqual(Object.keys(parsed.hooks), ['preToolUse'])
+  assert.equal(parsed.hooks.preToolUse.length, 1)
+  assert.equal(parsed.hooks.preToolUse[0].type, 'command')
+  assert.match(parsed.hooks.preToolUse[0].command, /agentic-orbit-guard\.js$/)
+  assert.equal(parsed.hooks.preToolUse[0].timeoutSec, 5)
 })
 
 // M-001 / ADR-005: the page loads this file as a classic <script src>, where

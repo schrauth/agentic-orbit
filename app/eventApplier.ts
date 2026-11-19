@@ -140,11 +140,17 @@ export function applyHookEvent(s: ApplierState, e: HookEvent, setup: Setup, now:
       break
     }
     case 'errorOccurred': {
-      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, urlHost: e.urlHost, url: e.url, fileTail: e.fileTail, file_path: e.filePath, skill: e.skill }, setup)
       const id = e.callId !== undefined ? s.open.get(e.callId) : undefined
       if (e.callId !== undefined) s.open.delete(e.callId)
       // The call failed, so the child it meant to start never came: its parked name goes back.
       unparkName(s, e.callId)
+      // A blocked line is the guard's own verdict: the hooks station is its classification, and the
+      // tool name its label. No classifier dispatch, no reconstructed input.
+      if (e.status === 'blocked') {
+        s.board = transitionBoard(s.board, { type: 'failure', id, station: 'hooks', label: e.tool ?? setup.t.stations.hooks, status: 'block' }, now).board
+        break
+      }
+      const { station, label } = classifyCopilot(e.tool ?? '', { description: e.description, command: e.commandName, urlHost: e.urlHost, url: e.url, fileTail: e.fileTail, file_path: e.filePath, skill: e.skill }, setup)
       s.board = transitionBoard(s.board, { type: 'failure', id, station, label: e.tool ?? label }, now).board
       break
     }

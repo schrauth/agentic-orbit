@@ -89,6 +89,18 @@ export function finish(board: Board, id: string | undefined, status: Status, now
   }
 }
 
+/** An action that began at one station ends at another: the guard's verdict moves the row, renames it and counts the fault there. */
+function finishAt(board: Board, id: string | undefined, status: Status, station: StationId, label: string, now: number): Board {
+  if (id === undefined) return board
+  const open = board.entries.find(e => e.id === id && e.status === 'run')
+  if (open === undefined) return board
+  return {
+    ...board,
+    entries: board.entries.map(e => (e === open ? { ...e, station, label: clean(label), status, endedAt: now } : e)),
+    ...(isFault(status) ? { faults: oneMore(board.faults, station) } : {}),
+  }
+}
+
 /** A subagent's loop is over: it keeps circling for a while yet, and a call of its that never reported back is settled. */
 export function agentDone(board: Board, agentId: string, now: number): Board {
   return {
@@ -128,13 +140,16 @@ export function transitionBoard(board: Board, transition: BoardTransition, now: 
       return begin(board, transition.start, now)
     case 'entryFinished':
       return { board: finish(board, transition.id, transition.status, now) }
-    case 'failure':
-      return {
-        board:
-          transition.id !== undefined
-            ? finish(board, transition.id, 'err', now)
-            : begin(board, { station: transition.station, label: transition.label, status: 'err', startedAt: now, endedAt: now }, now).board,
+    case 'failure': {
+      const status = transition.status ?? 'err'
+      if (transition.id !== undefined) {
+        // A guard's blocked verdict moves the row to the station that refused it; an error stays where it began.
+        return { board: status === 'block' ? finishAt(board, transition.id, status, transition.station, transition.label, now) : finish(board, transition.id, status, now) }
       }
+      const started = begin(board, { station: transition.station, label: transition.label, status, startedAt: now, endedAt: now }, now)
+      // An explicit fault status counts; the absent field keeps the old no-entry behavior unchanged.
+      return { board: transition.status !== undefined && isFault(status) ? { ...started.board, faults: oneMore(board.faults, transition.station) } : started.board }
+    }
     case 'agentFinished':
       return { board: agentDone(board, transition.agentId, now) }
     case 'turnFinished':

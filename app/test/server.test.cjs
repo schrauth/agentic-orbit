@@ -274,6 +274,31 @@ test('the page has no controls of its own, and the workshop keeps its own', () =
   assert.ok(demoHtml.includes('id="buttons"'), 'the workshop keeps its own buttons')
 })
 
+test('the installer writes the guard only when --guard is given', () => {
+  const server = path.join(__dirname, '..', 'out', 'server.js')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ao-install-'))
+  const hooks = path.join(dir, '.github', 'hooks')
+  const observer = spawnSync(process.execPath, [server, '--install-hooks', dir], { encoding: 'utf8', timeout: 5000 })
+  assert.equal(observer.status, 0)
+  assert.ok(fs.existsSync(path.join(hooks, 'agentic-orbit-hook.js')))
+  assert.ok(fs.existsSync(path.join(hooks, 'hooks.json')))
+  assert.ok(!fs.existsSync(path.join(hooks, 'agentic-orbit-guard.js')), 'the guard is opt-in')
+  assert.ok(!fs.existsSync(path.join(hooks, 'guard.json')), 'the guard manifest is opt-in')
+
+  const guarded = spawnSync(process.execPath, [server, '--install-hooks', dir, '--guard'], { encoding: 'utf8', timeout: 5000 })
+  assert.equal(guarded.status, 0)
+  assert.ok(fs.existsSync(path.join(hooks, 'agentic-orbit-guard.js')))
+  const manifest = JSON.parse(fs.readFileSync(path.join(hooks, 'guard.json'), 'utf8'))
+  assert.equal(manifest.hooks.preToolUse[0].command, 'node .github/hooks/agentic-orbit-guard.js')
+  assert.equal(manifest.hooks.preToolUse[0].timeoutSec, 5)
+
+  // The flag alone installs nothing.
+  const alone = spawnSync(process.execPath, [server, '--guard'], { encoding: 'utf8', timeout: 5000 })
+  assert.notEqual(alone.status, 0)
+  assert.match(alone.stderr, /--guard needs --install-hooks/)
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
 test('the CLI door: wrong feet are refused with a message, a config typo is not one', async () => {
   const server = path.join(__dirname, '..', 'out', 'server.js')
   for (const [args, message] of [

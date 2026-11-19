@@ -202,4 +202,4 @@ The script returns `{"permissionDecision":"deny","permissionDecisionReason":"…
 {"v":1,"event":"errorOccurred","callId":"t1","tool":"edit_file","status":"blocked"}
 ```
 
-The app then lights the **Hooks** station red and names the tool. The reason string is for the agent, not the map; keep it a rule name, never the payload. Deny only on an explicit rule match, allow in doubt and exit `0`: Copilot treats a crashed command hook as a denial.
+The app then lights the **Hooks** station red and names the tool. A deny alone is not enough for the map: Copilot reports the failed call at the tool's own station, so the Shell or Files circle turns red. The `status: "blocked"` line is what moves the row to the Hooks station. The reason string is for the agent, not the map; keep it a rule name, never the payload. Deny only on an explicit rule match, allow in doubt and exit `0`: Copilot treats a crashed command hook as a denial.

@@ -108,7 +108,7 @@ The observer is fail-safe by design: it always exits `0` within milliseconds and
 
 ### A deliberate refusal
 
-The app ships no guard and enforces no policy: that belongs to the project. A project's own `preToolUse` hook can deny a call and append one names-only line with `status: "blocked"` to the same events file. The map then lights the **Hooks** station red and names the tool, never the command line or the path. [Hooks for your project](./hooks.md#guards) shows the line and the hook shape.
+The app ships no guard and enforces no policy: that belongs to the project. A project's own `preToolUse` hook can deny a call and append one names-only line with `status: "blocked"` to the same events file. The map then lights the **Hooks** station red and names the tool, never the command line or the path. A denial without that line only marks the tool's own station, because Copilot reports the failed call there. [Hooks for your project](./hooks.md#guards) shows the line and the hook shape.
 
 If you write such a guard, keep it safe: deny only on an explicit rule match, answer allow in doubt, catch your own faults and always exit `0` within milliseconds — Copilot counts a crashed command hook as a denial. A timeout falls through to the normal permission flow, so a hung guard cannot block a call.
 

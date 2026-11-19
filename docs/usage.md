@@ -98,7 +98,7 @@ Finished calls that follow one another at one station fold into one row, marked 
 
 ## How it sees Copilot work
 
-Two decoupled sources are available. The observer hook — the map's main feed — is Copilot's and reports Copilot's events only; the optional guards are the second producer and write only when they deny a call. No other agent host's story reaches the map yet: another IDE or host would need its own hook writing the same compact lines; that adapter is future work, not a setting.
+Two decoupled sources are available. The observer hook — the map's main feed — is Copilot's and reports Copilot's events only; the optional guards are the second producer and write only when they deny a call. No other agent host's story reaches the map yet: another IDE or host would need its own hook writing the same compact lines; [Hooks for your project](./hooks.md) shows that format and a minimal adapter.
 
 ### Workspace hooks
 

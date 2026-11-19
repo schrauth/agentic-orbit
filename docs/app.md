@@ -11,13 +11,13 @@ npm run build
 npm start -- --workspace <path-to-the-project-being-watched>
 ```
 
-Open <http://127.0.0.1:8318>. The watched project needs the workspace hooks installed. To install them from the app package:
+Open <http://127.0.0.1:8318>. The watched project needs a producer for the events file: the workspace hooks below, or its own hook writing the same lines (see [Hooks for your project](./hooks.md)). To install the ready-made observer from the app package:
 
 ```bash
 npm start -- --install-hooks <path-to-the-project>
 ```
 
-That command writes `.github/hooks/` into the project and exits. Add `--guard` to install the opt-in guards too; without it, only the observer is written. Start a new Copilot session so it loads the hooks, then start the host with `--workspace`.
+That command writes `.github/hooks/` into the project and exits. Add `--guard` to install the opt-in guards too; without it, only the observer is written. The guards encode this repository's rules (`.github/agents/` edits and the subagent Git monopoly) and are not needed to visualize a project. Start a new Copilot session so it loads the hooks, then start the host with `--workspace`.
 
 You can instead point directly to an events file with `--events-file <path>`; provide exactly one of `--workspace` and `--events-file`.
 

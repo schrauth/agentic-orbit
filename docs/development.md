@@ -19,7 +19,7 @@ AGENTIC_ORBIT_EVENTS_FILE=/tmp/agentic-orbit-smoke.jsonl scripts/smoke-test.sh
 AGENTIC_ORBIT_EVENTS_FILE=/tmp/agentic-orbit-storm.jsonl scripts/subagent-storm.sh
 ```
 
-The smoke test writes 26 events. The longer storm writes 45 events across seven subagents and takes about a minute, with varied simulated tool durations.
+The smoke test writes 45 events and takes about 70 seconds, with a beat between the steps. Its four subagents arrive one after another and each makes a call of their own, so their planets reach Files, Shell, Network and Memory. The longer storm writes 45 events across seven subagents and takes about a minute, with varied simulated tool durations.
 
 ## Browser demo
 

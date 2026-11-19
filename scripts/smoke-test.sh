@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Agentic Orbit smoke test: fires harmless, synthetic events of each kind through the real
-# hook script, so every station lights up on the map in a controlled way. Three subagents
-# run at once, so their planets circle the Agents station together.
+# hook script, so every reporting station lights up on the map in a controlled way.
+# Four subagents arrive one after another and each makes a call of its own, so their
+# planets gather around the Agents station and reach Files, Shell, Network and Memory.
+# Two memory calls of the main agent light the Memory station too. The run takes about
+# 70 seconds, with a beat between the steps.
 #
 #   - Nothing is read, written or sent: the events carry names and figures only.
 #   - Open the map first (Agentic Orbit: Open); each pulse appears as it fires.
@@ -30,13 +33,15 @@ events_file() {
 }
 
 FILE=$(events_file)
-BEFORE=$(wc -l < "$FILE" 2>/dev/null || echo 0)
+# A file that is not there yet is the normal first run: zero lines, and no error about it.
+BEFORE=0
+if [ -f "$FILE" ]; then BEFORE=$(wc -l < "$FILE"); fi
 
 # fire <event> <json> — one line into the event file, then a beat to watch the pulse.
 # stdout is dropped: the allow JSON answers Copilot, not the terminal.
 fire() {
   printf '%s' "$2" | node "$HOOK" "event=$1" > /dev/null
-  sleep 1
+  sleep 1.5
 }
 
 echo "Events file: $FILE"
@@ -75,19 +80,52 @@ echo "6. A skill runs                           → Skills (commit)"
 fire preToolUse  '{"tool_name":"skill","tool_use_id":"t6","tool_input":{"skill":"commit"}}'
 fire postToolUse '{"tool_name":"skill","tool_use_id":"t6"}'
 
-echo "7. Subagents at once                      → Agents: three planets circle together"
-fire preToolUse  '{"tool_name":"task","tool_use_id":"t7a","agent_id":"a1","description":"research","tool_input":{"description":"research"}}'
-fire preToolUse  '{"tool_name":"task","tool_use_id":"t7b","agent_id":"a2","description":"write texts","tool_input":{"description":"write texts"}}'
-fire preToolUse  '{"tool_name":"task","tool_use_id":"t7c","agent_id":"a3","description":"compare","tool_input":{"description":"compare"}}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"t7a","agent_id":"a1"}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"t7b","agent_id":"a2"}'
-fire postToolUse '{"tool_name":"task","tool_use_id":"t7c","agent_id":"a3"}'
+echo "7. Memory search                          → Memory (search notes)"
+fire preToolUse  '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1","tool_input":{"query":"smoke plan"}}'
+fire postToolUse '{"tool_name":"mcp__memory__search_notes","tool_use_id":"m1"}'
 
-echo "8. A failed call                          → red, until the next message"
+echo "8. Memory write                           → Memory (write notes)"
+fire preToolUse  '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2","tool_input":{"id":"smoke"}}'
+fire postToolUse '{"tool_name":"mcp__memory__write_notes","tool_use_id":"m2"}'
+
+echo "9. Subagents arrive one after another"
+echo "   »research« starts                      → Agents: name parked"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7a","description":"research","tool_input":{"description":"research"}}'
+echo "   »research« reads a file                → Agents: planet, Files: pulse"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"c1","agent_id":"a1","tool_input":{"file_path":"/tmp/smoke/research.md"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"c1","agent_id":"a1"}'
+echo "   »research« asks the memory            → Agents: planet, Memory: pulse"
+fire preToolUse  '{"tool_name":"mcp__memory__search_notes","tool_use_id":"c4","agent_id":"a1","tool_input":{"query":"smoke findings"}}'
+fire postToolUse '{"tool_name":"mcp__memory__search_notes","tool_use_id":"c4","agent_id":"a1"}'
+
+echo "   »write texts« starts                   → Agents: second name parked"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7b","description":"write texts","tool_input":{"description":"write texts"}}'
+echo "   »write texts« runs a command          → Agents: planet, Shell: pulse"
+fire preToolUse  '{"tool_name":"bash","tool_use_id":"c2","agent_id":"a2","tool_input":{"command":"date"}}'
+fire postToolUse '{"tool_name":"bash","tool_use_id":"c2","agent_id":"a2"}'
+
+echo "   »compare« starts                       → Agents: third name parked"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7c","description":"compare","tool_input":{"description":"compare"}}'
+echo "   »compare« fetches a page              → Agents: planet, Network: pulse"
+fire preToolUse  '{"tool_name":"webfetch","tool_use_id":"c3","agent_id":"a3","tool_input":{"url":"https://example.com/compare"}}'
+fire postToolUse '{"tool_name":"webfetch","tool_use_id":"c3","agent_id":"a3"}'
+
+echo "   »check sources« starts                 → Agents: fourth name parked"
+fire preToolUse  '{"tool_name":"task","tool_use_id":"t7d","description":"check sources","tool_input":{"description":"check sources"}}'
+echo "   »check sources« reads a file          → Agents: planet, Files: pulse"
+fire preToolUse  '{"tool_name":"view","tool_use_id":"c5","agent_id":"a4","tool_input":{"file_path":"/tmp/smoke/sources.md"}}'
+fire postToolUse '{"tool_name":"view","tool_use_id":"c5","agent_id":"a4"}'
+
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7a"}'
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7b"}'
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7c"}'
+fire postToolUse '{"tool_name":"task","tool_use_id":"t7d"}'
+
+echo "10. A failed call                         → red, until the next message"
 fire preToolUse  '{"tool_name":"bash","tool_use_id":"t8","tool_input":{"command":"date"}}'
 fire postToolUse '{"tool_name":"bash","tool_use_id":"t8","error":true}'
 
-echo "9. A producer reports a refusal           → Hooks (red, edit_file)"
+echo "11. A producer reports a refusal          → Hooks (red, edit_file)"
 fire preToolUse  '{"tool_name":"edit_file","tool_use_id":"t9","tool_input":{"file_path":".github/agents/builder.md"}}'
 fire errorOccurred '{"tool_name":"edit_file","tool_use_id":"t9","status":"blocked"}'
 
@@ -95,15 +133,16 @@ echo "— Subagents done                          → planets fade one after ano
 fire agentStop '{"agent_id":"a1"}'
 fire agentStop '{"agent_id":"a2"}'
 fire agentStop '{"agent_id":"a3"}'
+fire agentStop '{"agent_id":"a4"}'
 
 echo "— Answer ready                            → wide ring"
 fire agentStop '{}'
 
 AFTER=$(wc -l < "$FILE")
 echo
-echo "Lines after: ${AFTER} (expected: $((BEFORE + 28)))"
-if [ "$AFTER" -ge "$((BEFORE + 28))" ]; then
-  echo "✓ All events written. Panel open? Then every station should have lit up."
+echo "Lines after: ${AFTER} (expected: $((BEFORE + 45)))"
+if [ "$AFTER" -ge "$((BEFORE + 45))" ]; then
+  echo "✓ All events written. Panel open? Then every reporting station should have lit up."
 else
   echo "✕ Lines are missing — the hook did not write every event."
   exit 1
